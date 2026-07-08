@@ -1,0 +1,126 @@
+.custom-input-height .el-input--small .el-input__inner {
+    height: 40px;
+}
+
+.custom-input-height .el-input__inner {
+    height: 40px;
+}
+
+.custom-input-height {
+    height: 40px;
+}
+
+.right-button.el-button--small {
+    font-size: 16px;
+    line-height: 19px;
+    padding: 9px 30px;
+}
+
+.el-button--small {
+    font-size: 14px !important;
+    line-height: 16px;
+    padding: 10px 16px;
+}
+
+.right-button.el-button--info {
+    border: 0;
+}
+
+.el-pagination.is-background .el-pager li {
+    border-radius: 2px;
+}
+
+.el-table th.el-table__cell > .cell {
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.el-table--border .el-table__cell:first-child .cell {
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.el-checkbox__inner {
+    width: 16px;
+    height: 16px;
+}
+
+.el-table--border .el-table__cell, .el-table__body-wrapper .el-table--border.is-scrolling-left ~ .el-table__fixed {
+    border-right: 0;
+}
+
+.el-table::before {
+    height: 0;
+}
+
+.el-table tr {
+    font-size: 14px;
+    line-height: 16px;
+}
+
+.el-table--border::after, .el-table--group::after {
+    width: 0;
+}
+
+.el-table .cell {
+    padding-right: 16px;
+    padding-left: 16px;
+    line-height: 32px;
+}
+
+.el-pagination__editor.el-input .el-input__inner {
+    height: 28px;
+    width: 28px;
+}
+
+.el-range-editor--small.el-input__inner {
+    height: 40px;
+}
+
+.el-tree-node__content > label.el-checkbox {
+    margin-right: 12px !important;
+}
+
+.title-bg-tab {
+    height: 46px;
+    background-image: url("@/assets/images/navigation-bar/title-bg-tab.png");
+    background-color: #081738;
+    background-size: 100% 100%;
+    padding-left: 10px;
+}
+
+.title-bg-tab span {
+    font-family: YouSheBiaoTiHei, serif;
+    background: linear-gradient(180deg, #FFFFFF 60%, #A2B8F2 100%);
+    -webkit-background-clip: text;
+    color: transparent;
+    font-size: 24px;
+    line-height: 46px;
+    text-align: left;
+}
+
+.gt-right-content {
+    height: 100%
+}
+
+.page {
+    margin-right: 18px;
+    margin-left: 10px;
+    margin-bottom: 10px;
+    height: 64px;
+}
+
+.page-left {
+    margin-right: 18px;
+    margin-left: 10px;
+    margin-bottom: 10px;
+    height: 54px;
+}
+
+.el-pagination {
+    padding: 10px !important;
+    float: right;
+}
+.custom-elinput-height{
+    height: 32px;
+}

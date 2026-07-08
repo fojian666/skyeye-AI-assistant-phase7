@@ -1,0 +1,100 @@
+// 与 cyber-tokens.css / 目标css.txt portal 深色主题对齐
+$cyber-bg: #020810;
+$cyber-bg-deep: #061220;
+$cyber-bg-panel: linear-gradient(165deg, rgba(16, 38, 66, 0.94) 0%, rgba(6, 20, 42, 0.88) 48%, rgba(3, 12, 28, 0.94) 100%);
+$cyber-bg-panel-deep: rgba(3, 12, 28, 0.95);
+$cyber-accent: #00f3ff;
+$cyber-accent-dim: rgba(0, 243, 255, 0.28);
+$cyber-accent-glow: rgba(0, 200, 255, 0.24);
+$cyber-text: #ffffff;
+$cyber-text-secondary: rgba(190, 220, 245, 0.84);
+$cyber-text-muted: rgba(140, 182, 214, 0.78);
+$cyber-border: rgba(0, 243, 255, 0.42);
+$cyber-border-strong: rgba(0, 243, 255, 0.75);
+$cyber-success: #00ff88;
+$cyber-warning: #ffb84d;
+$cyber-danger: #ff6b6b;
+$cyber-radius: 4px;
+$cyber-radius-pill: 20px;
+
+@mixin cyber-panel {
+  background: var(--panel-bg);
+  backdrop-filter: var(--panel-backdrop);
+  border: 1px solid var(--panel-border);
+  border-top-color: var(--panel-border-top);
+  border-left-color: var(--panel-border-left);
+  border-bottom-color: var(--panel-border-bottom);
+  border-right-color: var(--panel-border-right);
+  border-radius: 6px;
+  box-shadow: var(--panel-shadow);
+  color: var(--text-primary);
+}
+
+@mixin cyber-panel-corners {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 22px;
+    height: 22px;
+    border-top: 2px solid var(--panel-corner);
+    border-left: 2px solid var(--panel-corner);
+    border-radius: 5px 0 0;
+    box-shadow: 0 0 14px var(--panel-corner-shadow);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 22px;
+    height: 22px;
+    border-bottom: 2px solid var(--panel-corner);
+    border-right: 2px solid var(--panel-corner);
+    border-radius: 0 0 5px;
+    box-shadow: 0 0 14px var(--panel-corner-shadow);
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+@mixin cyber-panel-title {
+  position: relative;
+  padding-left: 14px;
+  font-weight: 600;
+  color: var(--panel-title-color);
+  letter-spacing: 0.04em;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 14px;
+    background: var(--brand-accent);
+    box-shadow: 0 0 8px var(--brand-accent-shadow);
+    border-radius: 2px;
+  }
+}
+
+@mixin cyber-glow-text {
+  color: var(--brand-accent);
+  text-shadow: 0 0 12px var(--brand-accent-shadow);
+}
+
+@mixin cyber-scrollbar {
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 243, 255, 0.25);
+    border-radius: 2px;
+  }
+  &::-webkit-scrollbar-track { background: transparent; }
+}

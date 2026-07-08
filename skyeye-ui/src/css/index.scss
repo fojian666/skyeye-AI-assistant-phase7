@@ -1,0 +1,44 @@
+@import 'src/css/public';
+@import 'src/css/theme/cyber-global';
+@import 'src/css/theme/header-nav';
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font-family-ui, 'Microsoft YaHei', 'PingFang SC', sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-attachment: fixed;
+  line-height: var(--text-line-height, 1.55);
+  letter-spacing: var(--text-letter-spacing, 0.01em);
+  // overflow-x: auto;
+  // overflow-y: auto;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+body,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+label,
+input,
+textarea,
+select,
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+}

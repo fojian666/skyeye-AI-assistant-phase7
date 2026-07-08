@@ -1,0 +1,38 @@
+# Build and Release Folders
+bin-debug/
+bin-release/
+[Oo]bj/
+[Bb]in/
+__pycache__/
+static/layers/
+
+# Runtime/generated route planning artifacts
+# These are created by upload/filter/plan jobs and may contain json, geojson,
+# shp sidecar files, kmz/zip exports, and temporary job status files.
+static/route_jobs/
+static/route_plan/
+static/shp/
+logs/
+
+# Local IDE metadata
+.idea/
+
+# Other files and folders
+.settings/
+*.log
+*.txt
+# Executables
+*.swf
+*.air
+*.ipa
+*.apk
+*.pyc
+*.tif
+*.pth
+*.th
+*.bin
+
+# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
+# should NOT be excluded as they contain compiler settings and other important
+# information for Eclipse / Flash Builder.
+/apps/panorama/change_detection/dinov2_large/pytorch_model.bin

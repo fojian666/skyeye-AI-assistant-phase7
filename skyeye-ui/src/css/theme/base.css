@@ -1,0 +1,4 @@
+:root {
+    --head-background: linear-gradient(90deg, #00f3ff 0%, #00b8d4 50%, #00ff88 100%);
+    --global-neutral-color: rgba(190, 220, 245, 0.84);
+}

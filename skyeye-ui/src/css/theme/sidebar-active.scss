@@ -1,0 +1,86 @@
+/* 子页面侧栏 / 菜单 / 树 / 工具栏 — 统一选中态 */
+
+/* ── 左侧图标菜单（数据管理、视频检测、智能分析等） ── */
+.se-universal-left .side-bar.active,
+.se-universal-left .active,
+.se-content-left .side-bar.active,
+.se-content-left .active,
+.se-content-left ul li .side-bar.active,
+.gt-left .side-bar.active,
+.gt-left .active {
+  background: var(--chip-active-bg) !important;
+  border: 1px solid var(--chip-active-border) !important;
+  box-shadow: 0 0 12px var(--button-hover-shadow) !important;
+}
+
+.se-universal-left .side-bar.active i,
+.se-universal-left .side-bar.active .panoramaTitle,
+.se-universal-left .active i,
+.se-universal-left .active .panoramaTitle,
+.se-content-left .side-bar.active i,
+.se-content-left .side-bar.active .panoramaTitle,
+.se-content-left .active i,
+.se-content-left .active .panoramaTitle,
+.gt-left .side-bar.active i,
+.gt-left .side-bar.active .panoramaTitle,
+.gt-left .active i,
+.gt-left .active .panoramaTitle {
+  color: var(--brand-accent) !important;
+  font-weight: 600;
+}
+
+.se-universal-left ul li:hover .side-bar,
+.se-content-left ul li:hover,
+.se-content-left ul li:hover .side-bar,
+.gt-left ul li:hover .side-bar {
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+}
+
+/* ── 工具栏 / 列表项文本选中 ── */
+.toolbar .active,
+.toolbar div.active,
+.map-toolbar .active,
+.toolbar span.active,
+.status-list span.active,
+.content-body span.active,
+ul li.active {
+  color: var(--brand-accent) !important;
+  font-weight: 600;
+}
+
+/* ── Element Tree 选中 ── */
+.el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content,
+.tree-container .el-tree-node.is-current > .el-tree-node__content {
+  background: var(--chip-active-bg) !important;
+  color: var(--brand-accent) !important;
+}
+
+/* ── Ant Design 侧栏菜单选中（运维中心保持亮色，见 dark.css .se-usercenter） ── */
+.ant-menu-item-selected,
+.ant-menu-item-selected-item {
+  color: var(--brand-accent) !important;
+  background: var(--chip-active-bg) !important;
+  border-right: 3px solid var(--brand-accent) !important;
+}
+
+.ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: var(--brand-accent) !important;
+}
+
+.se-usercenter .ant-menu-item-selected,
+.se-usercenter .ant-menu-item-selected-item {
+  color: #1890ff !important;
+  background: #e6f7ff !important;
+  border-right: 3px solid #1890ff !important;
+}
+
+.se-usercenter .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: #1890ff !important;
+}
+
+/* ── Element Menu 选中 ── */
+.el-menu-item.is-active {
+  color: var(--brand-accent) !important;
+  background: var(--chip-active-bg) !important;
+}

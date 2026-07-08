@@ -1,0 +1,52 @@
+{
+  "name": "@supermap/babel-plugin-import",
+  "version": "0.0.1",
+  "description": "Component modular import plugin for babel.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SuperMap/babel-plugin-import"
+  },
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "gulp",
+    "published": "npm run build && npm publish --access public",
+    "lint": "eslint --ext .js src"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint",
+      "prettier --write"
+    ]
+  },
+  "keywords": [
+    "babel-plugin",
+    "SuperMap"
+  ],
+  "author": "",
+  "license": "MIT",
+  "optionalDependencies": {
+    "fsevents": "^2.3.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.16.0",
+    "@babel/helper-module-imports": "^7.0.0",
+    "@babel/preset-env": "^7.16.8",
+    "@babel/runtime": "^7.0.0",
+    "babel-core": "^7.0.0-0",
+    "eslint": "^7.1.0",
+    "eslint-config-airbnb": "^18.1.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-prettier": "^3.1.3",
+    "gulp": "^4.0.2",
+    "gulp-babel": "^8.0.0",
+    "lint-staged": "^10.2.8",
+    "prettier": "^2.0.5"
+  },
+  "files": [
+    "src",
+    "lib",
+    "package.json",
+    "README.md"
+  ]
+}

@@ -1,0 +1,51 @@
+/* Copyright© 2000 - 2023 SuperMap Software Co.Ltd. All rights reserved.
+ * This program are made available under the terms of the Apache License, Version 2.0
+ * which accompanies this distribution and is available at http://www.apache.org/licenses/LICENSE-2.0.html.*/
+import {AddressMatchService, addressMatchService} from './AddressMatchService';
+import {ChartService, chartService} from './ChartService';
+import {DataFlowService, dataFlowService} from './DataFlowService';
+import {DatasetService, datasetService} from './DatasetService';
+import {DatasourceService, datasourceService} from './DatasourceService';
+import {FeatureService, featureService} from './FeatureService';
+import {FieldService, fieldService} from './FieldService';
+import {GridCellInfosService, gridCellInfosService} from './GridCellInfosService';
+import {GeoprocessingService, geoprocessingService} from './GeoprocessingService';
+import {LayerInfoService, layerInfoService} from './LayerInfoService';
+import {MapService, mapService} from './MapService';
+import {MeasureService, measureService} from './MeasureService';
+import {NetworkAnalyst3DService, networkAnalyst3DService} from './NetworkAnalyst3DService';
+import {NetworkAnalystService, networkAnalystService} from './NetworkAnalystService';
+import {ProcessingService, processingService} from './ProcessingService';
+import {QueryService, queryService} from './QueryService';
+import {ServiceBase} from './ServiceBase';
+import {SpatialAnalystService, spatialAnalystService} from './SpatialAnalystService';
+import {ThemeService, themeService} from './ThemeService';
+import {TrafficTransferAnalystService, trafficTransferAnalystService} from './TrafficTransferAnalystService';
+import {WebPrintingJobService, webPrintingJobService} from './WebPrintingJobService';
+import {ImageService, imageService} from './ImageService';
+import {ImageCollectionService, imageCollectionService} from './ImageCollectionService';
+
+export {AddressMatchService, addressMatchService};
+export {ChartService, chartService};
+export {DataFlowService, dataFlowService};
+export {DatasetService, datasetService};
+export {DatasourceService, datasourceService};
+export {FeatureService, featureService};
+export {FieldService, fieldService};
+export {GridCellInfosService, gridCellInfosService};
+export {GeoprocessingService, geoprocessingService};
+export {LayerInfoService, layerInfoService};
+export {MapService, mapService};
+export {MeasureService, measureService};
+export {NetworkAnalyst3DService, networkAnalyst3DService};
+export {NetworkAnalystService, networkAnalystService};
+export {ProcessingService, processingService};
+export {QueryService, queryService};
+export {ServiceBase};
+export {SpatialAnalystService, spatialAnalystService};
+export {ThemeService, themeService};
+export {TrafficTransferAnalystService, trafficTransferAnalystService};
+export {WebPrintingJobService, webPrintingJobService};
+export {ImageService, imageService};
+export {ImageCollectionService, imageCollectionService};
+export { KnowledgeGraphService } from './KnowledgeGraphService';

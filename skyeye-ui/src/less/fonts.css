@@ -1,0 +1,10 @@
+@font-face {
+    font-family: 'YouSheBiaoTiHei';
+    font-weight: normal;
+    font-style: normal;
+    src: url('./YouSheBiaoTiHei.ttf') format('truetype');
+}
+
+.Impact {
+    font-family: 'Impact', sans-serif;
+}

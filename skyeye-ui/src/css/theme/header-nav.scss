@@ -1,0 +1,96 @@
+/* 顶部导航按钮 — 对齐目标css .nav-btn */
+
+.se-header-btn,
+.menu-3d-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 4px;
+  background: var(--button-bg);
+  border: 1px solid var(--button-border);
+  box-shadow: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
+  transform: none;
+  transform-style: flat;
+}
+
+.se-header-btn a,
+.menu-3d-container a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--button-color);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  height: 100%;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.se-header-btn a .iconfont,
+.menu-3d-container a .iconfont {
+  font-size: 16px;
+  color: inherit;
+}
+
+.se-header-left ul li:not(.menu_active):hover .menu-3d-container,
+.se-header-right ul li:not(.menu_active):hover .menu-3d-container,
+.se-header-extra:hover .menu-3d-container,
+.se-header-btn:hover,
+.se-header-action-btn:hover {
+  border-color: var(--button-hover-border);
+  box-shadow: 0 0 16px var(--button-hover-shadow);
+}
+
+.se-header-left ul li:not(.menu_active):hover a,
+.se-header-right ul li:not(.menu_active):hover a,
+.se-header-extra:hover a,
+.se-header-btn:hover a,
+.se-header-action-btn:hover {
+  color: var(--brand-accent);
+}
+
+.se-header-left ul li.menu_active .menu-3d-container,
+.se-header-right ul li.menu_active .menu-3d-container {
+  border-color: var(--button-hover-border);
+  box-shadow: 0 0 16px var(--button-hover-shadow);
+}
+
+.se-header-left ul li.menu_active a,
+.se-header-right ul li.menu_active a {
+  color: var(--brand-accent);
+  font-weight: 600;
+}
+
+.se-header-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 96px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 4px;
+  background: var(--button-bg);
+  border: 1px solid var(--button-border);
+  color: var(--button-color);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+
+  .iconfont {
+    font-size: 16px;
+  }
+}
+
+.se-header-action-btn:hover {
+  color: var(--brand-accent);
+}

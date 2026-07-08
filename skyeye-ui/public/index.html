@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+    <title>低空智能服务平台</title>
+    <script src="/config/config.js"></script>
+    <link href="<%= BASE_URL %>static/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <script src="<%= BASE_URL %>static/Cesium/Cesium.js"></script>
+    <script src="<%= BASE_URL %>static/Cesium/clip-plane.js"></script>
+    <script
+      type="text/javascript"
+      src="<%= BASE_URL %>static/js/pannellum.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="<%= BASE_URL %>static/js/libpannellum.js"
+    ></script>
+<!--    <script src="/static/js/autofit.min.js"></script>-->
+</head>
+
+<body>
+<noscript>
+    <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled.
+        Please enable it to continue.</strong>
+</noscript>
+<div id="app"></div>
+<!-- built files will be auto injected -->
+<script>
+    // window.onload = function () {
+    //     autofit.init({
+    //         dh: 1080,
+    //         dw: 1920,
+    //         el: "#app",
+    //         resize: true
+    //     });
+    // }
+    document.title = window.config.system_name;
+</script>
+</body>
+</html>

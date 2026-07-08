@@ -1,0 +1,315 @@
+
+
+::v-deep .custom-input-height .el-input--small .el-input__inner {
+  height: 40px;
+}
+
+::v-deep .custom-input-height .el-input__inner {
+  height: 40px;
+}
+
+::v-deep .custom-input-height {
+  height: 40px;
+}
+
+::v-deep .el-input__inner {
+  border-radius: 2px;
+  background-color: #00092d;
+}
+
+::v-deep .right-button.el-button--small {
+  font-size: 16px;
+  color: #FFFFFF;
+  line-height: 19px;
+  padding: 9px 30px;
+}
+
+::v-deep .right-button.el-button--medium {
+  font-size: 16px;
+  color: #FFFFFF;
+  line-height: 19px;
+  padding: 9px 30px;
+}
+
+::v-deep .el-button--small {
+  font-size: 14px;
+  line-height: 16px;
+  padding: 10px 16px;
+}
+
+::v-deep .right-button.el-button--primary {
+  background: linear-gradient(0deg, #3B8DF1 0%, rgba(0, 99, 191, 0) 100%);
+}
+
+::v-deep .right-button.el-button--info {
+  background: rgba(255, 255, 255, 0.2);
+  border: 0;
+}
+
+::v-deep .el-button--primary {
+  background: #177DE4;
+}
+
+::v-deep .el-button--info {
+  border-radius: 2px 2px 2px 2px;
+  border: 1px solid #49B8FF;
+  background: #050e1f;
+}
+
+::v-deep .el-button--danger {
+  background: #ED3F14;
+}
+
+::v-deep .el-pagination__total {
+  color: #8C8C8C;
+}
+
+::v-deep .el-table, .el-table__expanded-cell {
+  background-color: #00092d;
+}
+
+::v-deep .el-table--border, .el-table--group {
+  border: 1px solid #fff;
+}
+
+::v-deep .el-pagination.is-background .btn-prev {
+  background: #00092d;
+  color: white;
+}
+
+::v-deep .el-pagination.is-background .btn-prev[disabled] {
+  color: #606266;
+}
+
+::v-deep .el-pagination.is-background .btn-next {
+  background: #00092d;
+  color: white;
+}
+
+::v-deep .el-pagination.is-background .btn-next[disabled] {
+  color: #606266;
+}
+
+::v-deep .el-pagination.is-background .el-pager li {
+  border-radius: 2px;
+  background: #00092d;
+  border: 1px solid #177DE4;
+  color: white !important;
+}
+
+
+::v-deep .el-table th.el-table__cell > .cell {
+  padding-left: 16px;
+  padding-right: 16px;
+  background: #00092d;
+}
+
+::v-deep .el-table--border .el-table__cell:first-child .cell {
+  padding-left: 16px;
+  padding-right: 16px;
+  background: #00092d;
+}
+
+::v-deep .el-checkbox__inner {
+  width: 16px;
+  height: 16px;
+  background-color: transparent;
+}
+
+::v-deep .el-table th.el-table__cell:nth-child(even) {
+  background: #00092d;
+}
+
+::v-deep .el-table th.el-table__cell:nth-child(odd) {
+  background: #00092d;
+}
+
+/* 单数行（odd） */
+::v-deep .el-table tbody tr:nth-child(odd) td.el-table__cell:nth-child(odd) {
+  background-color: #00092d; /* 单数行-单数列 */
+}
+
+::v-deep .el-table tbody tr:nth-child(odd) td.el-table__cell:nth-child(even) {
+  background-color: #00092d; /* 单数行-双数列 */
+}
+
+/* 双数行（even） */
+::v-deep .el-table tbody tr:nth-child(even) td.el-table__cell:nth-child(odd) {
+  background-color: #00092d; /* 双数行-单数列 */
+}
+
+::v-deep .el-table tbody tr:nth-child(even) td.el-table__cell:nth-child(even) {
+  background-color: #00092d; /* 双数行-双数列 */
+}
+
+::v-deep .el-table th.el-table__cell.is-leaf {
+  border-bottom: 1px solid #fff;
+}
+
+::v-deep .el-table td.el-table__cell {
+  border-bottom: 1px solid #fff;
+}
+
+::v-deep .ttable .el-table {
+  background: #00092d;
+}
+
+::v-deep .el-table--border .el-table__cell, .el-table__body-wrapper .el-table--border.is-scrolling-left ~ .el-table__fixed {
+  border-right: 0;
+}
+
+::v-deep .el-table::before {
+  height: 0;
+}
+
+::v-deep .el-table tr {
+  background-color: transparent;
+  font-size: 14px;
+  color: #FFFFFF;
+  line-height: 16px;
+}
+
+::v-deep .el-table--border::after, .el-table--group::after {
+  width: 0;
+}
+
+::v-deep .el-date-editor .el-range-input {
+  background-color: transparent;
+  color: #fff;
+}
+
+::v-deep .el-table .cell {
+  padding-right: 16px;
+  padding-left: 16px;
+  line-height: 32px;
+}
+
+::v-deep .el-pagination__editor.el-input .el-input__inner {
+  height: 28px;
+  width: 28px;
+}
+
+.el-range-editor--small.el-input__inner {
+  height: 40px;
+}
+
+
+::v-deep .el-pagination.is-background .el-pager li:not(.disabled).active {
+  background: #00092d !important;
+}
+
+::v-deep .el-input-group__append, .el-input-group__prepend {
+  background-color: transparent;
+}
+
+.page {
+  background: #00092d;
+}
+
+.blue {
+  color: #49B8FF !important;
+}
+
+.red {
+  color: #ED3F14 !important;
+}
+
+.orange {
+  color: #FF9900 !important;
+}
+
+.green {
+  color: #19BE6B !important;
+}
+
+
+.se-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  gap: 0.5rem;
+  background-color: #00092d;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.se-left-content {
+  width: 320px;
+  min-width: 320px;
+  height: calc(100% - 2px);
+  border-radius: 2px;
+  border-right: 1px solid rgba(232, 234, 237, 0.2);
+  background-color: #00092d;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.se-right-content {
+  flex: 1;
+  height: calc(100% - 2px);
+  flex-direction: column;
+  border-radius: 2px;
+  background-color: #00092d;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+
+.left-content-header,
+.right-content-header {
+  padding: 0 16px;
+  border-bottom: 1px solid #dcdcdc;
+  color: white;
+  font-weight: 700;
+  font-size: 16px;
+  height: 40px;
+  line-height: 40px;
+}
+
+::v-deep .el-dialog{
+  background-color: #00092d !important;
+}
+::v-deep .el-dialog__title{
+  color:#fff
+}
+::v-deep .el-form-item__label {
+  color: #fff;
+}
+.se-content-left{
+  background: #00092d;
+  border-right: 1px solid rgba(232, 234, 237, 0.2);
+}
+
+.se-dm-left {
+  width: 95px;
+  background: #00092d;
+  border-right: 1px solid rgba(232,234,237,.2);
+}
+.se-content .se-content-left .panoramaTitle{
+  color: #fff;
+}
+.se-icon {
+  color:  #fff;
+}
+/* 左侧底部 收缩/展开按钮 核心样式 - 固定在底部 */
+.collapse-btn {
+  width: 100%;
+  overflow: hidden;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.2s ease;
+}
+.collapse-btn:hover {
+  color: #fff;
+}
+.se-content-right {
+  height: 100%;
+  flex: 1;
+  width: 0;
+  background-color: #00092d;
+  color: #fff;
+  box-sizing: border-box;
+}

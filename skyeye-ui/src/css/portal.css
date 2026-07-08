@@ -1,0 +1,554 @@
+.navbar-ul{
+    height: 100%;
+}
+.navbar-header{
+    margin: 0 10%;
+    height: 100%;
+}
+.navbar-logo{
+    padding: 12px 0;
+    height: 100%;
+}
+.navbar-ul li{
+    height: 100%;
+    list-style: none;
+    color: white;
+    display: inline-block;
+    padding: 0 30px;
+    line-height: 60px;
+    font-size: 18px;
+}
+.icon-xiangzuo, .icon-xiangyou1 {
+    font-size: 1.5rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+#ai-classic-case-list-scroll {
+    text-align: center;
+    margin: 0 auto;
+    width: 80%;
+    overflow: hidden;
+}
+
+.ai-classic-case-item {
+    padding: 20px 10px 0px 10px;
+    width: 25%;
+    height: 350px;
+    cursor: pointer;
+    animation: all 1.5s;
+}
+
+.ai-classic-case-item:hover {
+    padding: 10px 5px 0px 10px;
+}
+
+.home {
+    width: 100%;
+    height: 100%
+    /*white-space: nowrap;*/
+}
+
+.ai-banner-list {
+    position: relative;
+    width: 100%;
+    min-height: 610px;
+    height: 100vh;
+}
+
+.ai-banner-list ul {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    overflow: hidden;
+}
+
+.ai-banner-list ul li {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    z-index: 100;
+}
+
+.color {
+    background-color: #ffffff;
+}
+
+.title-header {
+    z-index: 999;
+    margin: 0 auto;
+    text-align: center;
+    width: 100%;
+    height: 4rem;
+    position: fixed;
+    color: white;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.title-header-2 {
+    z-index: 999;
+    margin: 0 auto;
+    text-align: center;
+    width: 100%;
+    position: fixed;
+    height: 4rem;
+    color: white;
+    display: inline-block;
+    background-color: rgba(47, 50, 56, 0.5);
+    white-space: nowrap;
+
+}
+
+.color {
+    background: #ffffff !important;
+    color: #ffffff !important;
+    opacity: 1 !important
+}
+
+.title-header p, .title-header-2 p {
+    font-size: 1.5rem;
+    float: left;
+    margin-right: 20%;
+}
+
+.navbar-ul li a {
+    color: white !important;
+}
+
+
+.left {
+    position: absolute;
+    top: 50%;
+    left: 0;
+
+}
+
+.right {
+    position: absolute;
+    top: 50%;
+    right: 0;
+}
+
+.ai-footer {
+    height: 3%;
+    background-color: #E2E7F3;
+    margin: 0 auto;
+    text-align: center;
+    width: 100%;
+    position: fixed;
+    color: #AFB3BF;
+    display: table;
+
+
+}
+
+.ai-footer span {
+    vertical-align: center;
+    margin-bottom: 1rem;
+}
+
+
+.ai-banner-text {
+    position: absolute;
+    top: 35%;
+    left: 25%;
+    width: 50%;
+}
+
+.ai-banner-text .ai-banner-title {
+    line-height: 80px;
+    font-size:  calc(100vw * 60 / 1920);
+    text-align: center;
+    color: white;
+}
+
+.ai-banner-introduce {
+    color: white;
+    letter-spacing: 2px;
+}
+
+.ai-banner-button {
+    display: table;
+    border: 1px solid #fff !important;
+    width: 24%;
+    height: 3rem;
+    font-size: 18px;
+    color: white;
+    font-weight: 300;
+    margin: 5% auto;
+    text-align: center;
+}
+
+.ai-banner-button span {
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+    vertical-align: middle;
+    display: table-cell;
+}
+
+@keyframes scaleDraw { /*定义关键帧、scaleDrew是需要绑定到选择器的关键帧名称*/
+    0% {
+        transform: scale(1); /*开始为原始大小*/
+    }
+    25% {
+        transform: scale(1.2); /*放大1.1倍*/
+    }
+
+}
+
+.banner {
+    -webkit-animation-name: scaleDraw; /*关键帧名称*/
+    -webkit-animation-timing-function: ease-in-out; /*动画的速度曲线*/
+    -webkit-animation-iteration-count: infinite; /*动画播放的次数*/
+    -webkit-animation-duration: 20s; /*动画所花费的时间*/
+}
+
+/*样本*/
+.ai-annotation {
+    height: 100%;
+    width: 100%;
+    background-image: url("@/assets/portal/bg3.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.ai-annotation-body {
+    text-align: center;
+    margin: 0 auto;
+    display: flex;
+    width: 80%;
+    height: 100%;
+    padding: 8% 100px;
+    color: #ffffff;
+}
+
+.ai-annotation-left {
+    width: 75%;
+    position: relative;
+}
+
+.ai-annotation-right {
+    flex: 1;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+}
+.ai-annotation-button{
+    padding: 20px 0;
+    text-align: left;
+}
+.ai-annotation-title{
+    text-align: left;
+}
+
+.ai-annotation-introduce{
+    color: hsla(0, 0%, 100%, .7);
+    text-align: justify;
+    line-height: 36px;
+    font-size: 16px;
+    padding-bottom: 10px;
+    margin: 0 auto;
+    font-family: PingFangSC-Regular;
+
+}
+.ai-annotation-building{
+    margin-right: 30%;
+    margin-top: -40px;
+}
+.ai-annotation-multi-classification{
+    margin-left: 20%;
+    margin-top: -40px;
+}
+.ai-annotation-land-consolidation{
+    margin-left: 12%;
+}
+.ai-annotation-construction-behavior{
+    margin-right: 12%;
+}
+.ai-annotaion-img {
+    width: 50%;
+    height: 50%;
+    float: left;
+}
+.ai-annotation-see {
+    border: 1px solid #ffffff;
+    padding: 15px 40px;
+    border-radius: 25px;
+    color: #ffffff;
+}
+.ai-annotation-body img {
+    width: 224px;
+    height: 246px;
+}
+.ai-annotation-road{
+    width: 230px;
+    height: 280px;
+    margin-top: 6%;
+    margin-left: 35%;
+    position: absolute;
+    text-align: center;
+}
+.ai-annotation-left p{
+    background-image:-webkit-linear-gradient(bottom,#88f0ed,#c7f2ff);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+/*技术路线*/
+.ai-roadmap {
+    height: 100%;
+    width: 100%;
+    background-image: url("@/assets/portal/bg2.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.ai-roadmap-body, .ai-model-body {
+    padding: 8% 100px;
+    margin: 0 auto;
+    text-align: center;
+    display: flex;
+    vertical-align: middle;
+    width: 80%;
+    height: 100%;
+}
+
+.ai-roadmap-left {
+    width: 40%;
+    margin-top: 4%;
+    border-image: linear-gradient(-57deg, #4584ff, #0c0d0e) 1 1 round;
+}
+
+.ai-roadmap-right {
+    flex: 1;
+    background-image: url("@/assets/images/ai_roadmap.png");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    border-image: linear-gradient(-57deg, #4584ff, #0c0d0e) 1 1 round;
+}
+
+.ai-roadmap-title {
+    color: white !important;
+    font-size:  calc(100vw * 40 / 1920);
+    text-align: left;
+    padding: 10% 20% 0 5%;
+}
+
+.ai-roadmap-introduce {
+    text-align: justify;
+    line-height: 36px;
+    font-size: calc(100vw * 16 / 1920);
+    padding: 0 5%;
+    color: hsla(0, 0%, 100%, .7);
+    font-family: PingFangSC-Regular;
+    margin-bottom: 32px;
+}
+.ai-roadmap-see{
+    padding: 15px 40px;
+    border-radius: 25px;
+    font-size: 16px;
+    color: #ffffff;
+    background-color: #4584ff;
+    text-align: left;
+}
+.ai-roadmap-button {
+    text-align: left;
+    margin-left: 5%;
+}
+
+/*模型*/
+.ai-model {
+    height: 100%;
+    width: 100%;
+    background-image: url("@/assets/portal/bg4.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.ai-model-right {
+    flex: 1;
+    position: relative;
+    border-image: linear-gradient(-57deg, #4584ff, #0c0d0e) 1 1 round;
+}
+
+.ai-model-title {
+    color: white !important;
+    font-size:  calc(100vw * 40 / 1920);
+    padding: 10% 20% 0 0;
+    text-align: left;
+}
+.ai-model-button{
+    text-align: left;
+}
+.ai-model-see {
+    background-color: #4584ff;
+    padding: 15px 40px;
+    font-size: 1rem;
+    color: white;
+    border-radius: 25px;
+
+}
+
+.ai-model-left {
+    width: 30%;
+    border-image: linear-gradient(-57deg, #4584ff, #0c0d0e) 1 1 round;
+}
+.ai-model-introduce {
+    text-align: justify;
+    line-height: 36px;
+    font-size: 16px;
+    padding-right: 5%;
+    color: hsla(0, 0%, 100%, .7);
+    font-family: PingFangSC-Regular;
+    margin-bottom: 32px;
+}
+.ai-model-right ul:first-child {
+    height: 100%;
+    padding: 0;
+}
+
+.ai-model-right ul:first-child li {
+    height: 100%;
+    list-style: none;
+}
+
+.ai-model-right ul li video {
+    width: 100%;
+    height: 100%;
+    object-fit: fill
+}
+
+.list1 {
+    list-style: none;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    position: absolute;
+    width: 20%;
+    height: 2.5rem;
+    top: 90%;
+    margin: 0 44%;
+}
+
+.list1 li {
+    cursor: pointer;
+    width: 30px;
+    height: 6px;
+    background: #ffffff;
+    opacity: 0.44;
+    padding: 0 8px;
+    border-radius: 4px;
+}
+
+/*典型案例*/
+.ai-classic-case {
+    height: 100%;
+    width: 100%;
+    background-image: url("@/assets/portal/bg5.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.ai-classic-case-body {
+    margin: 0 auto;
+    padding-top: 2%;
+    text-align: center;
+    width: 80%;
+}
+
+.ai-classic-case-title, .ai-annotation-title {
+    font-size:  calc(100vw * 40 / 1920);
+    color: #ffffff;
+    padding: 40px 0 10px 0;
+}
+
+.ai-classic-case-introduce{
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 400;
+    padding-bottom: 10px;
+    text-indent: 2rem;
+    text-align: left;
+    margin: 0 auto;
+    width: 80%;
+
+}
+
+.ai-classic-case-button {
+    padding: 20px 0;
+    text-align: center;
+}
+
+
+.ai-classic-case-see{
+    border: 1px solid #ffffff;
+    padding: 15px 40px;
+    border-radius: 25px;
+    color: #ffffff;
+}
+
+.ai-classic-case-list {
+    margin: 10px auto;
+    text-align: center;
+    width: 100%;
+    position: relative;
+
+
+}
+.ai-classic-case-img-list{
+    height: 400px;
+    white-space: nowrap;
+    width: 100%;
+}
+.ai-classic-case-list-left {
+    margin-right: 5px;
+    top: 40%;
+    left: 5%;
+    font-size: 1.5rem;
+    position: absolute;
+}
+
+.ai-classic-case-list-right {
+    top: 40%;
+    right: 5%;
+    position: absolute;
+}
+.icon-huidaodingbu {
+    bottom: 20px;
+    position: fixed;
+    right: 40px;
+    font-size: 40px;
+}
+
+.tyzx {
+    margin-left: 4px;
+}
+
+.ai-logo-left {
+    width: 120px;
+    height: 40px;
+    vertical-align: middle;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.ai-logo-right {
+    width: 100px;
+    height: 20px;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.login-out:hover {
+    cursor: pointer;
+}
+
+.portal-username {
+    padding-right: 20px;
+    color: hsla(0, 0%, 100%, .6);
+}
+.experience-center{
+    cursor: pointer;
+}

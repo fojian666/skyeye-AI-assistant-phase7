@@ -1,0 +1,11 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="icon/map/bji">
+<path id="Union" d="M19.4882 2.25H5.26182C4.42869 2.25 3.75 2.95078 3.75 3.81261V20.1874C3.75 20.5944 3.90009 20.9796 4.172 21.2712C4.61359 21.7456 5.33578 21.8828 5.91223 21.5977L12.375 18.4137L18.8378 21.5977C19.0444 21.6999 19.2619 21.75 19.4882 21.75C20.3213 21.75 21 21.0492 21 20.1874V3.81261C21 2.95078 20.3213 2.25 19.4882 2.25ZM16.6929 11.9021H8.05706V9.98689H16.6929V11.9021ZM16.6929 8.67673H8.05706V6.76155H16.6929V8.67673Z" fill="url(#paint0_linear_200_15710)"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_200_15710" x1="12.375" y1="2.25" x2="12.375" y2="21.75" gradientUnits="userSpaceOnUse">
+<stop stop-color="white"/>
+<stop offset="1" stop-color="#64D6FF"/>
+</linearGradient>
+</defs>
+</svg>

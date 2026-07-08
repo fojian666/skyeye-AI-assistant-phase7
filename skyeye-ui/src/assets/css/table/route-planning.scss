@@ -1,0 +1,121 @@
+.title {
+  width: 100%;
+  height: 46px;
+  line-height: 46px;
+  padding: 0 12px 0 32px;
+  background-image: url("@/assets/images/common/tittle-bg.png");
+  background-color: #081738;
+  background-size: cover;
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: space-between;
+}
+
+.title span {
+  font-family: YouSheBiaoTiHei, serif;
+  background: linear-gradient(180deg, #FFFFFF 50%, #A2B8F2 100%);
+  -webkit-background-clip: text;
+  color: transparent;
+  font-size: 24px;
+  line-height: 46px;
+  text-align: left;
+}
+
+.sub-title {
+  padding: 13px;
+  font-weight: 700;
+  font-size: 16px;
+  color: #FFFFFF;
+  height: 32px;
+  line-height: 19px;
+  background: linear-gradient(90deg, #0063BF 0%, rgba(10, 28, 62, 0.2) 100%);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.form {
+  padding:  10px;
+}
+
+.left {
+  width: 320px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.right {
+  flex: 1;
+  height: 100%;
+}
+
+.search-button {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+}
+
+.plan-infos {
+  flex: 1;
+  width: calc(100% - 32px);
+  margin: 0 16px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.plantable {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+
+.custom-button {
+  margin-left: 10px;
+}
+
+.form-item-vertical {
+  display: flex;
+  flex-direction: row;
+  text-align: left !important;
+}
+
+.mapcontainer {
+  height: 100%;
+}
+
+.btn {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.action-list {
+  list-style: none; /* 移除列表前的默认项目符号 */
+  padding: 0; /* 移除默认的内边距 */
+  margin: 0; /* 移除默认的外边距 */
+  display: flex;
+}
+
+.action-item {
+  cursor: pointer; /* 鼠标悬停时显示指针样式 */
+  padding: 5px; /* 添加一些内边距 */
+}
+
+.action-item:hover {
+  color: #2db6f4;
+}
+
+.bottom-title {
+  height: 30px;
+  margin-top: 5px;
+  background: linear-gradient(45deg, #42b4f2, transparent);
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+::v-deep .el-select {
+  width: 100%;
+}

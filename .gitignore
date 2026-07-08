@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+skyeye-ui/node_modules/
+
+# Build
+dist/
+/build/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+
+# Database dumps (too large)
+*.sql
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+dev-server.log
+
+# Binary model files
+*.bin
+
+# Route planning runtime artifacts
+skyeye/static/route_jobs/
+skyeye/static/route_plan/
+skyeye/static/shp/
+skyeye/static/layers/
+
+# Other
+*.swf
+*.air
+*.ipa
+*.apk
+*.tif
+*.pth
+*.th
+*.mp4

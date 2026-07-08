@@ -1,0 +1,297 @@
+.toolbar-management{
+    width: auto;
+    height: 35px;
+    position: absolute;
+    top: 10px;
+    right: 45px;
+    border-radius: 5px;
+    z-index: 999;
+    font-weight: bold;
+    line-height: 35px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0 5px;
+    background-color: #38465e;
+    color: white;
+}
+.toolbar-management img{
+    width: 20px;
+    height: 20px;
+    margin-left: 5px;
+}
+
+.toolbar-management div {
+    cursor: pointer;
+}
+
+.draw-content div:hover {
+    color: #177de4;
+}
+.activateManagebar {
+    color: #1890ff;
+}
+
+.toolbar {
+    width: auto;
+    height: 35px;
+    position: absolute;
+    top: 60px;
+    right: 60px;
+    border-radius: 5px;
+    z-index: 999;
+    font-weight: bold;
+    line-height: 35px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0 5px;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+}
+
+.toolbar div {
+    cursor: pointer;
+}
+
+.toolbar div:hover {
+    color: #177de4;
+}
+.toolbar-text{
+    margin-right: 5px;
+}
+.toolbar-text1{
+    margin-right: 5px;
+    font-size: 15px;
+}
+.icon-toolbar{
+    margin: 6px;
+}
+
+/* 全屏按钮样式 */
+.fullscreen-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    z-index: 1000; /* 确保在地图之上 */
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    background-color: white;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+.fullscreen-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2) ;
+    transform: scale(1.05);
+}
+
+/* 全屏状态下的样式调整（可选） */
+.fullscreen-btn i {
+    font-size: 18px;
+    color: #333;
+}
+
+/* 全屏时隐藏页面其他元素（可选） */
+html:-webkit-full-screen {
+    overflow: hidden;
+}
+
+/* 确保全屏状态下地图占满整个屏幕 */
+.map-container:-webkit-full-screen {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+}
+/* 确保全屏状态下地图占满整个屏幕 */
+.map-container:-webkit-full-screen {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+}
+.fullscreen-btn{
+    background-color: rgba(0, 0, 0, 0.3);
+    border: none;
+
+}
+.fullscreen-btn i {
+    font-size: 18px;
+    color: #fff;
+}
+
+.leaflet-bar a {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: none;
+}
+
+.mark-content{
+    width: 340px;
+    height: auto;
+    display: flex;
+    background: #0b1a39;
+    position: absolute;
+    top: 10px;
+    /*right: 20px;*/
+    z-index: 999;
+    border-radius: 5px;
+    flex-direction: column;
+    border: #2d6696 1px solid;
+    max-height: 430px;
+    /*overflow-x: hidden;*/
+    padding: 5px;
+
+}
+.mark-top, .mark-top-list{
+    border-bottom: white 1px solid;
+    height: 30px;
+    width: 100%;
+    padding: 5px;
+    font-size: 14px;
+}
+.mark-top{
+    cursor: pointer;
+}
+.mark-top i{
+    float: right;
+    cursor: pointer;
+    margin-left: 10px;
+}
+.mark-top i:hover{
+    color: #177de4;
+}
+
+.mark-top2{
+    padding: 5px;
+}
+.mark-top2 i{
+    cursor: pointer;
+}
+.mark-top2 i:hover{
+    color: #177de4;
+}
+
+.mark-tool-content{
+    height: 40px;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    margin: 5px;
+    margin-left: 0px;
+    justify-content: space-around;
+}
+.mark-tool{
+    width: 20%;
+    height: 96%;
+    border: #2d6696 1px solid;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #192a41;
+    cursor: pointer;
+}
+.mark-tool img{
+    width: 50%;
+    height: 80%;
+}
+.style-setting-panel {
+    padding: 5px;
+    border-radius: 8px;
+    box-sizing: border-box;
+    text-align: left;
+}
+.setting-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    height: 30px;
+}
+.setting-label {
+    width: 80px;
+    text-align: left;
+    margin-right: 8px;
+    color: #fff;
+}
+:deep(.el-slider) {
+    flex: 1;
+}
+:deep(.el-color-picker) {
+    margin-left: 8px;
+}
+.colordiv{
+    flex: 1;
+    display: flex;
+}
+.mark-tool:hover{
+    background: #0a579d;
+}
+.mark-list{
+    width: 100%;
+    height: auto;
+    cursor: grab;
+}
+.mark-top-list i{
+    cursor: pointer;
+}
+
+.mark-list-container{
+    width: 100%;
+    max-height: 500px;
+    overflow-y: auto;
+}
+.mark-item{
+    height: 50px;
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+}
+.top-item{
+    font-size: 14px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    justify-items: center;
+    align-items: center;
+}
+.top-item-left{
+    width: 65%;
+}
+.top-item-left img{
+    width: 24px;
+    height: 24px;
+}
+.marker-edit{
+    width: 35%;
+    height: 100%;
+    float: right;
+}
+.bottom-item{
+    border-bottom: white 1px solid;
+}
+.drawbaractive{
+    background: #68879d;
+}
+.coordinate-box {
+    position: absolute;
+    bottom: 10px;
+    right: 60px;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    font-size: 12px;
+    color: #333;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    z-index: 999;
+}

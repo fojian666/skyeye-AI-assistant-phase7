@@ -1,0 +1,14 @@
+device_config:
+  panorama_path: "./data/panorama/3/"
+  map_path: './data/正射影像/巴布洛/巴布洛.tif'
+  land_patch_path: 'D:/mgr/耕地数据/南京/筛选耕地/DLTB.shp'
+  patch_dir: './data/points_info/'
+  stitch_dir: './data/stitching/info/'
+  layers_dir: './data/layers/'
+  single_tif_dir: './data/TIF/'
+  calibration_info_dir: './data/calibration_info/'
+  calibration_info_path: './data/calibration_info/3.pkl'
+ai_config:
+  ckpt_path: './model/model.ckpt'
+stitch_config:
+  panorama_info_path:

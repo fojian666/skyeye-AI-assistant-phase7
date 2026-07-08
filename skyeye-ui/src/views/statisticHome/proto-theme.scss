@@ -1,0 +1,23 @@
+// 统计大屏 — 引用全局赛博风变量
+@import '@/css/theme/cyber-variables.scss';
+
+$proto-bg: $cyber-bg;
+$proto-bg-panel: $cyber-bg-panel;
+$proto-bg-panel-deep: $cyber-bg-panel-deep;
+$proto-accent: $cyber-accent;
+$proto-accent-dim: $cyber-accent-dim;
+$proto-accent-glow: $cyber-accent-glow;
+$proto-text: $cyber-text;
+$proto-text-secondary: $cyber-text-secondary;
+$proto-text-muted: $cyber-text-muted;
+$proto-border: $cyber-border;
+$proto-border-strong: $cyber-border-strong;
+$proto-success: $cyber-success;
+$proto-warning: $cyber-warning;
+$proto-radius: $cyber-radius;
+$proto-radius-pill: $cyber-radius-pill;
+
+@mixin proto-panel { @include cyber-panel; }
+@mixin proto-panel-title { @include cyber-panel-title; }
+@mixin proto-glow-text { @include cyber-glow-text; }
+@mixin proto-scrollbar { @include cyber-scrollbar; }

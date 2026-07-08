@@ -1,0 +1,171 @@
+
+.background-full {
+  background: 0 0/100% 100% no-repeat;
+}
+
+.full {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.full-height {
+  height: 100%;
+}
+
+.text-left {
+  text-align: left !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-right {
+  text-align: right !important;
+}
+
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.text-ellipsis2 {
+  word-break: break-all;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; /* 这里是超出几行省略 */
+  overflow: hidden;
+}
+
+ul.list-unstyled {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+::-webkit-scrollbar {
+  /* 滚动条整体样式 */
+  width: 4px;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: rgba(0, 229, 255, 0.25);
+}
+::-webkit-scrollbar-track {
+  border-radius: 3px;
+  background: transparent;
+}
+
+.flex {
+  display: flex;
+}
+.flex-end {
+  @extend .flex-end-align;
+  @extend .flex-end-justify;
+}
+
+.flex-end-justify {
+  @extend .flex, .flex-center-justify;
+  align-items: flex-end;
+  align-content: flex-end;
+}
+
+.flex-end-align {
+  @extend .flex, .flex-center-align;
+  justify-content: flex-end;
+  justify-items: flex-end;
+}
+
+.flex-center {
+  @extend .flex-center-align;
+  @extend .flex-center-justify;
+}
+
+.flex-center-align {
+  @extend .flex;
+  align-items: center;
+  align-content: center;
+}
+
+.flex-center-justify {
+  @extend .flex;
+  justify-content: center;
+  justify-items: center;
+}
+
+.flex-space-between {
+  @extend .flex;
+  align-items: center;
+  align-content: center;
+  justify-content: space-between;
+}
+
+.flex-wrap {
+  @extend .flex;
+  flex-wrap: wrap;
+}
+
+.flex-column {
+  @extend .flex;
+  flex-direction: column;
+}
+
+.flex-1,
+.flex-spacer {
+  flex-grow: 1;
+}
+
+.flex-none {
+  flex: none;
+}
+
+.public-box-card {
+  margin: 0px;
+}
+
+
+.margin-bottom-22 {
+  margin-bottom: 20px;
+}
+
+public-margin-10 {
+  margin: 10px 0;
+}
+
+.public-el-button {
+  height: 34px;
+  padding: 10px 26px !important;
+  border-radius: 0;
+}
+
+.clearfix:after {
+  content : " ";
+  display : block ;
+  height : 0 ;
+  clear : both ;
+  visibility : hidden ;
+}
+.clearfix {
+  zoom : 1 ;
+}
+
+.el-message {
+    z-index:3000 !important;
+}
+
+.ytCascaderHeight{
+    ul{
+        height: 300px;
+    }
+
+}
+
+.esri-view .esri-view-surface {
+  background: #DDDDDD;
+}
