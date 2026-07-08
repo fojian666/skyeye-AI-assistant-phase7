@@ -69,4 +69,7 @@ urlpatterns = [
     path('system-name', views.get_system_name), # 获取系统名称
     path('region/get-region-tree-by-user', views.proxy_region_tree_by_user),
     path('region/region-info-list', views.proxy_region_info_list),
+
+    # AI Chat
+    path('chat/completions', views.chat_completions),
 ]

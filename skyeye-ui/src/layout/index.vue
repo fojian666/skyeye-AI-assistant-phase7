@@ -2,16 +2,19 @@
   <div class="full">
     <Header v-show="isShow && showHeader"></Header>
     <router-view :class="isShow && showHeader ? 'router-box' : 'router-box_index'"/>
+    <ChatModel />
   </div>
 </template>
 
 <script>
 import Header from './components/Header.vue';
+import ChatModel from '@/components/chat/ChatModel.vue';
 
 export default {
   name: 'Layout',
   components: {
-    Header
+    Header,
+    ChatModel,
   },
   data() {
     return {

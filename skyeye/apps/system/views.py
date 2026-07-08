@@ -1,5 +1,6 @@
 import ast
 import base64
+import configparser
 import datetime
 import json
 import os
@@ -2533,3 +2534,269 @@ def proxy_region_info_list(request):
             'latitude': region.latitude,
         })
     return JsonResponse(response_data)
+
+
+# ============================================================
+# AI Chat — LangGraph + DeepSeek
+# ============================================================
+
+from langgraph.graph import StateGraph, START, END
+from typing_extensions import TypedDict
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, ToolMessage
+from langchain_openai import ChatOpenAI
+
+
+def _get_llm(tools=None):
+    config = configparser.ConfigParser()
+    config.read(os.path.join(settings.BASE_DIR, 'config.ini'), encoding='utf-8')
+    api_key = config.get('deepseek', 'api_key')
+    api_url = config.get('deepseek', 'api_url')
+    model = config.get('deepseek', 'model')
+    llm = ChatOpenAI(
+        api_key=api_key, base_url=api_url, model=model,
+        temperature=0.7, max_tokens=4096,
+    )
+    if tools:
+        llm = llm.bind_tools(tools)
+    return llm
+
+
+SYSTEM_PROMPT = (
+    '你是天巡系统（SkyEye）的 AI 智能助手，具备无人机巡检、全景图分析、'
+    '目标检测、航线规划、GIS 遥感等领域的专业知识。'
+    '你可以自由发挥、推理、给出建议，不受限制。'
+    '当用户想跳转到某个页面时，调用 navigate_page 工具，path 参数必须从工具描述中列出的路由列表中选择。'
+    '当用户提及任何地点/区域/行政区时，必须直接调用 map_action 工具，不要反问或确认，系统会自动匹配城市并决定是定位还是画边界。'
+    '调用工具时务必填写所有必填参数，不要留空。'
+    '用中文回答，风格灵活自然。'
+)
+
+
+class ChatState(TypedDict):
+    messages: list
+
+
+def _raw_messages_to_lc(raw_messages):
+    lc_msgs = []
+    for m in raw_messages:
+        role = m['role']
+        content = m.get('content', '')
+        if role == 'system':
+            lc_msgs.append(SystemMessage(content=content))
+        elif role == 'user':
+            lc_msgs.append(HumanMessage(content=content))
+        elif role == 'assistant':
+            ai = AIMessage(content=content)
+            if m.get('tool_calls'):
+                ai.tool_calls = m['tool_calls']
+            lc_msgs.append(ai)
+        elif role == 'tool':
+            lc_msgs.append(ToolMessage(
+                content=content, tool_call_id=m.get('tool_call_id', ''),
+            ))
+    return lc_msgs
+
+
+def _geocode_amap(address, city=''):
+    """高德地理编码：地名 → 经纬度"""
+    config = configparser.ConfigParser()
+    config.read(os.path.join(settings.BASE_DIR, 'config.ini'), encoding='utf-8')
+    api_key = config.get('amap', 'api_key')
+    params = {'key': api_key, 'address': address, 'output': 'JSON'}
+    if city:
+        params['city'] = city
+    try:
+        resp = requests.get('https://restapi.amap.com/v3/geocode/geo', params=params, timeout=5)
+        data = resp.json()
+        if data.get('status') == '1' and data.get('geocodes'):
+            loc = data['geocodes'][0]['location']
+            lng, lat = loc.split(',')
+            return {'lat': float(lat), 'lng': float(lng), 'address': data['geocodes'][0].get('formatted_address', address)}
+    except Exception:
+        pass
+    return None
+
+
+def _get_district_amap(keywords, city='', subdistrict=0):
+    """高德行政区划：地名 → 边界 polygon + 中心点"""
+    import logging
+    logger = logging.getLogger(__name__)
+    config = configparser.ConfigParser()
+    conf_path = os.path.join(settings.BASE_DIR, 'config.ini')
+    config.read(conf_path, encoding='utf-8')
+    api_key = config.get('amap', 'api_key')
+    params = {
+        'key': api_key, 'keywords': keywords,
+        'subdistrict': subdistrict, 'extensions': 'all',
+    }
+    try:
+        resp = requests.get('https://restapi.amap.com/v3/config/district', params=params, timeout=5)
+        data = resp.json()
+        logger.info(f'District API keywords={keywords} status={data.get("status")} count={data.get("count")}')
+        if data.get('status') == '1' and data.get('districts'):
+            districts = data['districts']
+            # 有城市时，过滤同名异城的结果
+            if city and len(districts) > 1:
+                city_geo = _geocode_amap(city)
+                if city_geo:
+                    filtered = []
+                    for d in districts:
+                        center_str = d.get('center', '')
+                        if center_str:
+                            c = center_str.split(',')
+                            if len(c) == 2:
+                                # 粗略判断：纬度差 < 1 度视为同城
+                                if abs(float(c[1]) - city_geo['lat']) < 1.0:
+                                    filtered.append(d)
+                    if filtered:
+                        districts = filtered
+            dist = districts[0]
+            polyline = dist.get('polyline', '')
+            center_str = dist.get('center', '')
+            points = []
+            if polyline:
+                for block in polyline.split('|'):
+                    pts = []
+                    for pair in block.split(';'):
+                        parts = pair.split(',')
+                        if len(parts) == 2:
+                            pts.append({'lng': float(parts[0]), 'lat': float(parts[1])})
+                    points.append(pts)
+            center = None
+            if center_str:
+                c = center_str.split(',')
+                if len(c) == 2:
+                    center = {'lng': float(c[0]), 'lat': float(c[1])}
+            return {
+                'name': dist.get('name', keywords),
+                'polygon': points,
+                'center': center,
+            }
+        logger.error(f'District API returned: {data}')
+    except Exception as e:
+        logger.error(f'District API error: {e}')
+    return None
+
+
+def _lc_to_result(msg):
+    result = {}
+    if msg.content:
+        result['content'] = msg.content
+    if msg.tool_calls:
+        # 归一化为 OpenAI 标准格式：{ id, type: 'function', function: { name, arguments } }
+        normalized = []
+        for tc in msg.tool_calls:
+            if isinstance(tc, dict):
+                # LangChain dict 格式 {name, args, id} → 转成 OpenAI 格式
+                if 'function' in tc:
+                    # 已是 OpenAI 格式
+                    normalized.append(tc)
+                else:
+                    args = tc.get('args', {})
+                    args_str = json.dumps(args, ensure_ascii=False) if isinstance(args, dict) else str(args or '')
+                    normalized.append({
+                        'id': tc.get('id', ''),
+                        'type': 'function',
+                        'function': {
+                            'name': tc.get('name', ''),
+                            'arguments': args_str,
+                        },
+                    })
+            else:
+                # Pydantic 对象
+                args = getattr(tc, 'args', {})
+                name = getattr(tc, 'name', '')
+                tid = getattr(tc, 'id', '')
+                args_str = json.dumps(args, ensure_ascii=False) if isinstance(args, dict) else str(args or '')
+                normalized.append({
+                    'id': tid,
+                    'type': 'function',
+                    'function': {
+                        'name': name,
+                        'arguments': args_str,
+                    },
+                })
+        result['tool_calls'] = normalized
+    result['finish_reason'] = 'tool_calls' if msg.tool_calls else 'stop'
+    return result
+
+
+def chat_completions(request):
+    """LangGraph + DeepSeek 聊天（单轮）"""
+    if request.method == 'OPTIONS':
+        resp = HttpResponse()
+        resp['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
+        resp['Access-Control-Allow-Credentials'] = 'false'
+        resp['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        resp['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        return resp
+
+    if request.method != 'POST':
+        return error('仅支持 POST 请求')
+
+    try:
+        body = json.loads(request.body)
+    except json.JSONDecodeError:
+        return error('请求体 JSON 解析失败')
+
+    raw_messages = body.get('messages', [])
+    if not raw_messages:
+        return error('messages 不能为空')
+
+    frontend_tools = body.get('tools')
+
+    has_system = any(m.get('role') == 'system' for m in raw_messages)
+    if not has_system:
+        raw_messages.insert(0, {'role': 'system', 'content': SYSTEM_PROMPT})
+
+    lc_msgs = _raw_messages_to_lc(raw_messages)
+    llm = _get_llm(tools=frontend_tools)
+
+    def node_chat(state: ChatState) -> dict:
+        response = llm.invoke(state['messages'])
+        return {'messages': [response]}
+
+    graph = StateGraph(ChatState)
+    graph.add_node('chat', node_chat)
+    graph.add_edge(START, 'chat')
+    graph.add_edge('chat', END)
+    compiled = graph.compile()
+
+    result_state = compiled.invoke({'messages': lc_msgs})
+    last_msg = result_state['messages'][-1]
+
+    result = _lc_to_result(last_msg)
+
+    # 后处理 map_action: 地名 → 坐标 + polygon（行政区划）
+    if result.get('tool_calls'):
+        for tc in result['tool_calls']:
+            fn = tc.get('function', {})
+            if fn.get('name') == 'map_action':
+                try:
+                    args = json.loads(fn['arguments']) if isinstance(fn.get('arguments'), str) else fn.get('arguments', {})
+                except (json.JSONDecodeError, TypeError):
+                    args = {}
+                if args.get('location') and not args.get('lat') and not args.get('polygon'):
+                    city = args.get('city', '南京')
+                    # 先试行政区划 API（有 polygon → 画边界）
+                    district = _get_district_amap(args['location'], city=city)
+                    if district and district.get('polygon'):
+                        args['polygon'] = district['polygon']
+                        args['name'] = district.get('name', args['location'])
+                        if district.get('center'):
+                            args['lat'] = district['center']['lat']
+                            args['lng'] = district['center']['lng']
+                    else:
+                        # 行政区划无 polygon 或非行政区，降级地理编码
+                        geo = _geocode_amap(args['location'], city)
+                        if geo:
+                            args['lat'] = geo['lat']
+                            args['lng'] = geo['lng']
+                            args['name'] = geo.get('address', args['location'])
+                    fn['arguments'] = json.dumps(args, ensure_ascii=False)
+
+    resp = ok_data(result)
+    origin = request.headers.get('Origin', '*')
+    resp['Access-Control-Allow-Origin'] = origin
+    resp['Access-Control-Allow-Credentials'] = 'false'
+    return resp

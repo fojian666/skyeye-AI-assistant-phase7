@@ -917,6 +917,25 @@ export default {
       this.applyApiCenterView();
     },
 
+    flyTo(lat, lng, zoom = 16) {
+      if (!this.map) return
+      this.map.flyTo([lat, lng], zoom, { duration: 1.5 })
+    },
+
+    drawRegion(polygon, name, lat, lng) {
+      if (!this.map) return
+      // 清除上一个区域
+      if (this._regionLayer) { this.map.removeLayer(this._regionLayer); this._regionLayer = null }
+      if (!polygon || !polygon.length) return
+      const rings = polygon.map(ring => ring.map(p => [p.lat, p.lng]))
+      this._regionLayer = L.polygon(rings, {
+        color: '#f56c6c', weight: 2, fillColor: '#f56c6c', fillOpacity: 0.15,
+      }).addTo(this.map)
+      // 飞到区域中心
+      if (lat != null && lng != null) this.map.flyTo([lat, lng], 14, { duration: 1.2 })
+      else if (rings[0] && rings[0].length) this.map.fitBounds(this._regionLayer.getBounds(), { padding: [30, 30], maxZoom: 16 })
+    },
+
     getZoom() {
       return this.currentShowZoom;
     },

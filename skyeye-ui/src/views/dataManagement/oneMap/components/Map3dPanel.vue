@@ -851,6 +851,27 @@ export default {
       });
     },
 
+    drawRegion(polygon, name, lat, lng) {
+      if (!this.viewer || !this.Cesium) return
+      const Cesium = this.Cesium
+      // 清除上一个区域
+      if (this._regionEntity) { this.viewer.entities.remove(this._regionEntity); this._regionEntity = null }
+      if (!polygon || !polygon.length) return
+      const positions = polygon[0].map(p => Cesium.Cartesian3.fromDegrees(p.lng, p.lat))
+      this._regionEntity = this.viewer.entities.add({
+        name: name || '区域',
+        polygon: {
+          hierarchy: new Cesium.PolygonHierarchy(positions),
+          material: Cesium.Color.RED.withAlpha(0.15),
+          outline: true,
+          outlineColor: Cesium.Color.RED,
+          outlineWidth: 2,
+        },
+      })
+      if (lat != null && lng != null) this.flyTo3D(lat, lng, 12)
+      else this.viewer.flyTo(this._regionEntity, { duration: 1.2 })
+    },
+
     resizeCesiumAfterLayout() {
       this.$nextTick(() => {
         requestAnimationFrame(() => {

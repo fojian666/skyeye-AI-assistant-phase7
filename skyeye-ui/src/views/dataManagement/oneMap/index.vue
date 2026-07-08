@@ -166,6 +166,31 @@ export default {
   },
   async mounted() {
     await this.fetchOneMapBundle({ time: '' });
+    this._onNavigateMap = (e) => {
+      const { lat, lng, address } = e.detail || {}
+      if (lat == null || lng == null) return
+      const panel = this.getActivePanel()
+      if (!panel) return
+      // 2D: flyTo（缓慢飞行）, 3D: flyTo3D
+      if (this.currentMode === '3d' && panel.flyTo3D) {
+        panel.flyTo3D(lat, lng, 16)
+      } else if (panel.flyTo) {
+        panel.flyTo(lat, lng, 16)
+      }
+    }
+    this._onDrawRegion = (e) => {
+      const { polygon, name, lat, lng } = e.detail || {}
+      if (!polygon || !polygon.length) return
+      const panel = this.getActivePanel()
+      if (!panel || !panel.drawRegion) return
+      panel.drawRegion(polygon, name, lat, lng)
+    }
+    window.addEventListener('navigate-map', this._onNavigateMap)
+    window.addEventListener('draw-region', this._onDrawRegion)
+  },
+  beforeDestroy() {
+    window.removeEventListener('navigate-map', this._onNavigateMap)
+    window.removeEventListener('draw-region', this._onDrawRegion)
   },
   methods: {
     filterNode(value, data) {

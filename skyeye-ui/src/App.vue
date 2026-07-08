@@ -40,6 +40,7 @@ export default {
         },
         changeTheme() {
             const theme = this.$store.state.theme;
+            document.documentElement.setAttribute('data-theme', theme);
             const head = document.head;
             // 遍历页面所有的link节点
             const links = document.getElementsByTagName('link');
