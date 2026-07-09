@@ -1,8 +1,8 @@
-# 天巡 SkyEye — 低空遥感智能巡检平台
+# 金陵阡陌（SkyEye）— 低空遥感智能巡检平台
 
 ## 项目概述
 
-天巡（SkyEye）是一个基于低空遥感和无人机技术的智能巡检平台，集成了 **GIS 地图（2D/3D）**、**全景图像分析**、**AI 目标检测**、**航线规划**、**图斑变化检测**、**资源管理** 等核心功能。  
+金陵阡陌（SkyEye）是一个基于低空遥感和无人机技术的智能巡检平台，集成了 **GIS 地图（2D/3D）**、**全景图像分析**、**AI 目标检测**、**航线规划**、**图斑变化检测**、**资源管理** 等核心功能。  
 平台通过 **DeepSeek 大模型** 提供 AI 智能助手，支持自然语言驱动地图导航、区域圈定、页面跳转等操作。
 
 ---
@@ -42,6 +42,9 @@ skyeye/
 │   │   ├── drone_track/          # 无人机轨迹（MQTT + WebSocket）
 │   │   ├── experience/           # 体验模块
 │   │   └── interpretation/       # AI 解译分析
+│   ├── utils_tools/
+│   │   └── district_cache.py     # ★ 行政区划边界缓存（内存 + JSON）
+│   ├── district_cache.json       # 江苏省 13 市 95 区县多边形缓存
 │   └── config.ini                # API Key 配置（gitignore）
 │
 ├── skyeye-ui/                    # Vue 前端
@@ -88,46 +91,66 @@ skyeye/
 | `map_action` | 地图定位 + 区域边界绘制 | 用户提及任何地点/区域 |
 | `query_data` | 查询系统数据 | 用户询问数据 |
 
-### 路由映射
+### 路由映射（17 条）
 
-AI 选择简短路径，前端自动补全到真实路由：
-
-| AI 路径 | 实际跳转 |
+| 页面 | 实际路径 |
 |------|------|
-| `/task-mgmt` | `/task-mgmt/verify-clue` |
-| `/data-management` | `/data-management/one-map` |
-| `/route-planning` | `/route-planning/manual-planning` |
-| `/panoramic-detection` | `/panoramic-detection/task-management` |
-| `/pattern-verifiy` | `/pattern-verifiy/map_overview` |
-| `/data_overview` | `/data_overview` |
+| 项目管理 | `/task-mgmt/verify-clue` |
+| 一张图 | `/data-management/one-map` |
+| 影像管理 | `/data-management/table` |
+| 全景规划 | `/route-planning/panoramicpoint-planning` |
+| 算法规划 | `/route-planning/algorithm-planning` |
+| 人工选点 | `/route-planning/manual-planning` |
+| 地图总览 | `/panoramic-detection/map-view` |
+| 范围管理 | `/panoramic-detection/grid-management` |
+| 批次管理 | `/panoramic-detection/task-management` |
+| 全景检测 | `/panoramic-detection/main-detection` |
+| 不检测区域 | `/panoramic-detection/frame-area` |
+| 全景变化 | `/panoramic-detection/panorama-change-detection` |
+| 场景管理 | `/panoramic-detection/scene` |
+| 线索总览 | `/panoramic-detection/clue-view` |
+| 临时批次 | `/panoramic-detection/main-detection-temp` |
+| 报告管理 | `/panoramic-detection/report` |
+| 任务管理 | `/pattern-verifiy/task_management` |
 
 ### 地图导航
 
-- 后端调高德 `geocode` API → 地名 → 经纬度
+- 后端调高德 `geocode` API → 地名 → 经纬度 + 完整地址名
 - 前端 `navigate-map` 事件 → 2D Map `flyTo()` / 3D Map `camera.flyTo()`
 - 平滑飞行动画
 
-### 区域圈定
+### 区域圈定（子区域彩色边界）
 
 - 后端调高德 `config/district` API → 地名 → polygon 边界坐标
-- 前端 `draw-region` 事件 → 2D `L.polygon()` / 3D `viewer.entities.add({ polygon })`
+- **子区域圈定**：输入"南京市"自动获取鼓楼区、秦淮区等 11 个区的独立边界，各分配不同颜色
+- 前端 `draw-region` 事件：
+  - 3D（Cesium）：主区域白色半透明底，子区域各色填充 + 描边
+  - 2D（Leaflet）：子区域 hover 显示名称 tooltip
 - 同步执行 `navigate-map`，定位到区域中心
+- 再次触发自动清除上一轮的图层
 
-### 主题适配
+### 行政区划缓存
 
-Header 切换亮色/暗色时：
-- `App.vue` → `document.documentElement.setAttribute('data-theme', theme)`
-- ChatModel 通过 `html[data-theme='light']` CSS 选择器适配
-- algorithmPlanning 侧栏同理
+- 预加载 **江苏省 13 市 95 区县**的多边形边界，存入 `district_cache.json`
+- 模块级内存缓存：首次加载后常驻内存，后续查询零磁盘 IO、零 API 调用
+- 支持管理命令 `python manage.py preload_districts` 刷新缓存
 
-### 组件特性
+### 追问建议
+
+每段 AI 回复正文后附 3 个用户可能追问的问题，以 `|||` 分隔。
+
+### 面板组件特性
 
 | 特性 | 说明 |
 |------|------|
 | 毛玻璃 | `backdrop-filter: blur(24px)` 半透明面板 |
 | GSAP 动画 | 打开弹性弹出 `back.out(1.7)` |
-| 拖拽 | fab / 面板头部均可拖拽 |
+| 拖拽 | fab / 面板头部均可拖拽，边界碰撞检测 |
+| 自由缩放 | 右下角拖拽把手，宽 320~700px，高 400~85vh |
 | 右侧吸附 | 点 `→` 吸附为全高右边栏，`←` 恢复浮动 |
+| 侧栏大圆 | 靠近面板边缘浮现大圆，hover 展开小圆（`←` 吸附 / `✕` 关闭） |
+| 角色名称 | 每条消息上方显示用户名和模型名 |
+| 主题适配 | 亮色/暗色自动适配，`html[data-theme]` 选择器 |
 | 关闭 | 即时消失，无残留黑条 |
 
 ---
