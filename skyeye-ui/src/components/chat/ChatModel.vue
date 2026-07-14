@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-wrapper" :class="[`theme-${theme}`, { 'query-mode': chatMode === 'query', 'summary-mode': chatMode === 'summary', 'reduce-motion': reduceMotion }]" :style="wrapperStyle">
+  <div class="chat-wrapper" :class="[`theme-${theme}`, { 'query-mode': chatMode === 'query', 'summary-mode': chatMode === 'summary', 'reduce-motion': reduceMotion }]" :style="wrapperStyle" role="complementary" aria-label="AI 助手面板">
     <!-- 悬浮按钮 -->
     <div v-if="!visible" class="chat-fab" @click="open" @mousedown="startDrag" title="AI 助手">
         <span class="fab-emoji">🤖</span>
@@ -9,7 +9,7 @@
     <!-- 聊天窗口 + 拓展槽 -->
       <div v-show="visible" class="panel-row" :class="{ docked }">
         <div class="panel-shell">
-          <div ref="panel" :class="['chat-panel', { docked, 'thinking-glow': streaming }]" :style="panelStyle">
+          <div ref="panel" :class="['chat-panel', { docked, 'thinking-glow': streaming }]" :style="panelStyle" role="dialog" aria-label="AI 助手对话窗口" :aria-modal="docked">
         <!-- 头部 -->
         <div class="chat-header" @mousedown="startDrag">
           <div class="chat-header-left">
@@ -40,7 +40,7 @@
         </div>
 
         <!-- 消息列表 -->
-        <div class="chat-body" ref="chatBody">
+        <div class="chat-body" ref="chatBody" role="log" aria-live="polite" aria-label="对话内容">
           <div v-if="messages.length === 0" class="chat-empty">
             <span class="empty-emoji">&#x1F916;</span>
             <p>你好！我是金陵阡陌 AI 助手</p>
@@ -124,6 +124,7 @@
               :placeholder="streaming ? 'AI 正在回复...' : '输入消息，Enter 发送'"
               :disabled="streaming"
               rows="1"
+              aria-label="输入消息"
               @keydown.enter.exact.prevent="send"
               @input="autoResize"
             ></textarea>
@@ -152,7 +153,7 @@
         </div>
 
         <!-- 右侧拓展槽 -->
-        <div v-show="!docked" class="side-rail" :class="{ visible: sideRailVisible }">
+        <div v-show="!docked" class="side-rail" :class="{ visible: sideRailVisible, 'show-hint': !railHintShown }">
           <div class="rail-item small spread-top-1" title="搜索定位"><i class="el-icon-search"></i></div>
           <div class="rail-item large" @click="toggleChatMode"
             :title="chatMode === 'query' ? '切换到智能摘要' : chatMode === 'summary' ? '切换到聊天模式' : '切换到数据查询模式'">
@@ -313,6 +314,7 @@ export default {
       currentContext: null,
       lastAutoSummaryKey: null,  // 防重复触发
       reduceMotion: false,       // 减少动态效果
+      railHintShown: false,     // side-rail 发现性提示（首次打开展示一次）
     }
   },
   computed: {
@@ -447,6 +449,7 @@ export default {
     open() {
       // 拖拽后不触发点击打开
       if (this.hasMoved) return
+      this.railHintShown = true  // 首次打开即标记提示已展示
       // 跳转后的残留消息，重置为欢迎界面
       if (this.messages.length === 1 && this.messages[0].content.startsWith('已为您跳转到')) {
         this.messages = []
@@ -513,13 +516,10 @@ export default {
     },
 
     toggleChatMode() {
-      if (this.chatMode === 'chat') {
-        this.chatMode = 'query'
-      } else if (this.chatMode === 'query') {
-        this.chatMode = 'summary'
-      } else {
-        this.chatMode = 'chat'
-      }
+      const map = { chat: 'query', query: 'summary', summary: 'chat' }
+      this.chatMode = map[this.chatMode]
+      const labels = { chat: '聊天模式 — 自由对话', query: '数据查询模式 — 检索系统数据', summary: '智能摘要 — 页面数据分析' }
+      this.$message({ message: labels[this.chatMode], type: 'info', duration: 2000, showClose: false })
     },
 
     collectContext() {
@@ -831,6 +831,15 @@ export default {
           .replace(/数据查询模式/g, '<strong>数据查询模式</strong>')
         return t
       }
+      if (this.reduceMotion) {
+        // 减少动效模式：跳过打字机，直接渲染全文
+        this.streamingText = renderInline(chars.join(''))
+        this.messages.push({ role: 'assistant', content: body, suggestions })
+        this.streamingText = ''
+        this.streaming = false
+        this.scrollToBottom()
+        return
+      }
       for (let i = 0; i < chars.length; i++) {
         if (this._stopRequested) {
           const partial = this.streamingText.replace(/<[^>]*>/g, '')
@@ -840,7 +849,7 @@ export default {
           return
         }
         this.streamingText = renderInline(this.streamingText.replace(/<[^>]*>/g, '') + chars[i])
-        await new Promise(r => setTimeout(r, this.reduceMotion ? 5 : 25))
+        await new Promise(r => setTimeout(r, 25))
         this.scrollToBottom()
       }
       this.messages.push({ role: 'assistant', content: body, suggestions })
@@ -893,7 +902,15 @@ export default {
     },
 
     clearMessages() {
-      this.messages = []
+      if (this.messages.length === 0) return
+      this.$confirm('确定要清空所有对话记录吗？此操作不可撤销。', '清空对话', {
+        confirmButtonText: '清空',
+        cancelButtonText: '取消',
+        type: 'warning',
+        confirmButtonClass: 'el-button--danger'
+      }).then(() => {
+        this.messages = []
+      }).catch(() => {})
     },
 
     scrollToBottom() {
@@ -925,6 +942,7 @@ export default {
           codeBlocks.push(`<code>${this.esc(code)}</code>`)
           return `%%CODEBLOCK_${codeBlocks.length - 1}%%`
         })
+      // esc() 转义 <>& 字符，后续 markdown 注入的标签（strong/em/br）由代码自身生成，非用户输入
       processed = this.esc(processed)
       processed = processed.replace(/\n/g, '<br>')
       processed = processed
@@ -1044,6 +1062,20 @@ export default {
     transform: translate(0, -50%);
     pointer-events: auto;
   }
+
+  /* 首次展示提示：短暂可见后消退 */
+  &.show-hint {
+    opacity: 0.45;
+    transform: translate(0, -50%);
+    pointer-events: auto;
+    animation: rail-hint-fade 2.5s ease-out forwards;
+    animation-delay: 0.5s;
+  }
+}
+
+@keyframes rail-hint-fade {
+  0%, 30% { opacity: 0.45; }
+  100% { opacity: 0; pointer-events: none; }
 }
 
 .rail-item {
@@ -1182,7 +1214,6 @@ export default {
   flex-direction: column;
   overflow: hidden;
   transform-origin: bottom right;
-  will-change: transform, opacity;
   transition: height 0.3s ease, border-radius 0.3s ease,
     border-color 0.3s ease,
     box-shadow 0.3s ease;
@@ -1751,7 +1782,7 @@ export default {
   max-height: 120px;
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.55); /* WCAG AA ≥4.5:1 对比度 */
   }
 
   &:disabled {
