@@ -946,7 +946,7 @@ export default {
 <style lang="scss" scoped>
 .chat-wrapper {
   position: fixed;
-  z-index: 100;  /* z: 面板层 */
+  z-index: 1000;  /* z: 面板层，高于普通页面元素 */
 }
 
 /* 悬浮按钮 — 灵动岛胶囊形 */
@@ -1033,7 +1033,7 @@ export default {
   top: 50%;
   width: 120px;
   height: 210px;
-  z-index: 110;  /* z: 侧栏层 */
+  z-index: 1010;  /* z: 侧栏层 */
   opacity: 0;
   transform: translate(16px, -50%);
   pointer-events: none;
@@ -1160,6 +1160,10 @@ export default {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 24px 64px rgba(0, 0, 0, 0.55);
+}
+
+.docked .panel-shell {
+  height: 100%;
 }
 
 /* 聊天面板 — 内核 */
