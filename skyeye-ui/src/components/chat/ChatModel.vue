@@ -1264,6 +1264,63 @@ export default {
   &:hover:not(:disabled) { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
 }
 
+/* —— 聊天区域模式底色 —— */
+.chat-wrapper.query-mode .chat-body {
+  background: radial-gradient(ellipse at 50% 0%, rgba(239, 68, 68, 0.05) 0%, transparent 60%);
+}
+.chat-wrapper.summary-mode .chat-body {
+  background: radial-gradient(ellipse at 50% 0%, rgba(245, 158, 11, 0.05) 0%, transparent 60%);
+}
+
+/* —— 侧边栏模式色 —— */
+/* 查询模式 */
+.chat-wrapper.query-mode .rail-item.large {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.45), rgba(220, 38, 38, 0.3));
+  border-color: rgba(239, 68, 68, 0.5);
+  color: rgba(255, 220, 210, 0.95);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 20px rgba(239, 68, 68, 0.25);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  &:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.55), rgba(220, 38, 38, 0.35));
+    border-color: rgba(239, 68, 68, 0.65);
+    box-shadow: 0 0 24px rgba(239, 68, 68, 0.4);
+  }
+}
+.chat-wrapper.query-mode .rail-item.small {
+  border-color: rgba(239, 68, 68, 0.25);
+  color: rgba(255, 180, 160, 0.8);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  &:hover {
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fff;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 18px rgba(239, 68, 68, 0.3);
+  }
+}
+
+/* 摘要模式 */
+.chat-wrapper.summary-mode .rail-item.large {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.45), rgba(217, 119, 6, 0.3));
+  border-color: rgba(245, 158, 11, 0.5);
+  color: rgba(255, 240, 200, 0.95);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 20px rgba(245, 158, 11, 0.25);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  &:hover {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.55), rgba(217, 119, 6, 0.35));
+    border-color: rgba(245, 158, 11, 0.65);
+    box-shadow: 0 0 24px rgba(245, 158, 11, 0.4);
+  }
+}
+.chat-wrapper.summary-mode .rail-item.small {
+  border-color: rgba(245, 158, 11, 0.25);
+  color: rgba(255, 220, 160, 0.8);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  &:hover {
+    border-color: rgba(245, 158, 11, 0.5);
+    color: #fff;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 18px rgba(245, 158, 11, 0.3);
+  }
+}
+
 /* 头部 — 毛玻璃顶栏 */
 .chat-header {
   display: flex;
