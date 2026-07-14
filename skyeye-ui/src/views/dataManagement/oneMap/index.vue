@@ -167,13 +167,17 @@ export default {
   async mounted() {
     await this.fetchOneMapBundle({ time: '' });
     this._onNavigateMap = (e) => {
-      const { lat, lng, address } = e.detail || {}
+      const { lat, lng, polygon, address } = e.detail || {}
       if (lat == null || lng == null) return
       const panel = this.getActivePanel()
       if (!panel) return
-      // 2D: flyTo（缓慢飞行）, 3D: flyTo3D
-      if (this.currentMode === '3d' && panel.flyTo3D) {
+      // 优先用 polygon fitBounds 自适应缩放
+      if (this.currentMode === '3d' && panel.flyToRegion3D) {
+        panel.flyToRegion3D(lat, lng, polygon)
+      } else if (this.currentMode === '3d' && panel.flyTo3D) {
         panel.flyTo3D(lat, lng, 16)
+      } else if (panel.flyToRegion) {
+        panel.flyToRegion(lat, lng, polygon)
       } else if (panel.flyTo) {
         panel.flyTo(lat, lng, 16)
       }

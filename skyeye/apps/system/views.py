@@ -7,6 +7,10 @@ import os
 import logging
 import time
 
+# LangChain 内部使用 asyncio，会触发 Django ORM 的 async 安全检测
+# 设置此环境变量允许在 event loop 存在时使用同步 ORM
+os.environ.setdefault('DJANGO_ALLOW_ASYNC_UNSAFE', 'true')
+
 import pandas as pd
 import requests
 from dateutil.relativedelta import relativedelta
@@ -2595,7 +2599,7 @@ def _get_llm(tools=None):
         temperature=0.7, max_tokens=4096,
     )
     if tools:
-        llm = llm.bind_tools(tools)
+        llm = llm.bind_tools(tools, tool_choice='auto')
     return llm
 
 
@@ -2603,7 +2607,8 @@ SYSTEM_PROMPT = (
     '你是金陵阡陌系统（SkyEye）的 AI 智能助手，具备无人机巡检、全景图分析、'
     '目标检测、航线规划、GIS 遥感等领域的专业知识。\n'
     '【重要规则 - 请严格遵守】\n'
-    '1. 当用户表达跳转/打开/前往某个页面的意图时，必须立即调用 navigate_page 工具，不要用文字回复代替。\n'
+    '1. 当用户明确表达跳转/打开/前往某个页面的意图时，调用 navigate_page 工具，不要用文字回复代替。\n'
+    '   不要在用户询问数据、统计等问题时调用 navigate_page。\n'
     '   区分要点：\n'
     '   - "项目管理" → /task-mgmt/verify-clue\n'
     '   - "一张图" → /data-management/one-map\n'
@@ -2620,14 +2625,14 @@ SYSTEM_PROMPT = (
     '   - "临时批次" → /panoramic-detection/main-detection-temp\n'
     '   - "报告管理" → /panoramic-detection/report\n'
     '   - "任务管理"（图斑核实场景）→ /pattern-verifiy/task_management\n'
-    '2. 当用户提及任何地点/区域/行政区时，必须直接调用 map_action 工具，不要反问或确认。\n'
+    '2. 当用户明确要求查看/定位某个具体地点时，调用 map_action 工具。不要将"防尘网""线索""图斑""批次"等业务术语误判为地点。\n'
     '3. 当用户提供任务编号时，调用 lookup_task 工具校验。\n'
     '4. 当用户询问系统内数据统计/数量/分布时，必须调用 query_data 工具。例如：\n'
     '   - "有多少全景图数据？" → query_data(query="当前全景图总数")\n'
     '   - "线索状态分布如何？" → query_data(query="线索按状态分组统计数量")\n'
     '   - "南京市有哪些批次？" → query_data(query="批次数据列表")\n'
     '   支持的数据类型：全景图、线索、图斑、图斑任务、批次、网格、航线、资源、AI模型、信息解读任务、多源任务、报告、核实任务、核实线索、飞行订单、场景。\n'
-    '5. 工具调用优先于文字回复。只有在不需要调用工具时，才进行纯文字回复。\n'
+    '5. 根据用户意图选择合适的工具。当问题明确对应某个工具时才调用，不确定时用文字回复，不要强行调用工具。\n'
     '【纯文字回复格式】\n'
     '纯文字回复时，正文后附加 |||，然后给出 3 个用户可能追问的问题，每行一个，不要编号。\n'
     '用中文回答，风格灵活自然。'
@@ -2638,98 +2643,202 @@ QUERY_SCHEMA = {
     'panorama_image': {
         'display': '全景图',
         'model': ('panorama', 'PanoramaImage'),
-        'desc': '全景图像数据，包含拍摄位置、状态、所属批次等信息',
-        'fields': {'status': {'type': 'int'}, 'batch_id': {'type': 'str'}},
+        'desc': '全景图像数据，包含拍摄位置、状态、所属批次、采集点等信息',
+        'fields': {
+            'status': {'type': 'int'},
+            'batch_id': {'type': 'str', 'desc': '所属批次ID'},
+            'upload_batch_id': {'type': 'str', 'desc': '上传批次ID'},
+            'point_id': {'type': 'str', 'desc': '采集点ID'},
+            'longitude': {'type': 'float'},
+            'latitude': {'type': 'float'},
+            'count': {'type': 'int', 'desc': '关联数量'},
+        },
     },
     'clue': {
         'display': '线索',
         'model': ('panorama', 'Clue'),
-        'desc': '问题线索，包含经纬度、地址、状态、评分等',
-        'fields': {'status': {'type': 'int', 'choices': {0: '待核实', 1: '已核实', 2: '已派发', 3: '已处置', 4: '已验收', 5: '已关闭'}}, 'address': {'type': 'str'}, 'position': {'type': 'str'}, 'score': {'type': 'float'}},
+        'desc': '问题线索，关联批次和全景图，包含经纬度、地址、状态、评分等',
+        'fields': {
+            'status': {'type': 'int', 'choices': {0: '待核实', 1: '已核实', 2: '已派发', 3: '已处置', 4: '已验收', 5: '已关闭'}},
+            'address': {'type': 'str'},
+            'position': {'type': 'str'},
+            'score': {'type': 'float'},
+            'batch_id': {'type': 'str', 'desc': '所属批次ID'},
+            'panorama_image_id': {'type': 'str', 'desc': '所属全景图ID'},
+            'inspector_id': {'type': 'str', 'desc': '核查员ID'},
+            'longitude': {'type': 'float'},
+            'latitude': {'type': 'float'},
+            'is_new_clue': {'type': 'int'},
+            'clue_source': {'type': 'str'},
+        },
     },
     'polygon_data': {
         'display': '图斑',
         'model': ('panorama', 'PolygonData'),
-        'desc': '图斑多边形数据，包含名称、状态、核实结论等',
-        'fields': {'status': {'type': 'int'}, 'verify_conclusion': {'type': 'str'}, 'unit_name': {'type': 'str'}, 'name': {'type': 'str'}},
+        'desc': '图斑多边形数据，关联图斑任务，包含名称、状态、核实结论等',
+        'fields': {
+            'status': {'type': 'int'},
+            'verify_conclusion': {'type': 'str'},
+            'unit_name': {'type': 'str'},
+            'name': {'type': 'str'},
+            'polygon_task_id': {'type': 'str', 'desc': '所属图斑任务ID'},
+        },
     },
     'polygon_task': {
         'display': '图斑任务',
         'model': ('panorama', 'PolygonTask'),
-        'desc': '图斑核实任务',
-        'fields': {'status': {'type': 'str'}, 'street': {'type': 'str'}, 'task_type': {'type': 'str'}},
+        'desc': '图斑核实任务，关联核查员',
+        'fields': {
+            'status': {'type': 'str'},
+            'street': {'type': 'str'},
+            'task_type': {'type': 'str'},
+            'verifier_id': {'type': 'str', 'desc': '核查员ID'},
+            'task_id': {'type': 'str'},
+            'need_verify': {'type': 'int'},
+            'verified': {'type': 'int'},
+        },
     },
     'batch': {
         'display': '批次',
         'model': ('panorama', 'Batch'),
-        'desc': '全景检测批次，包含时间段、状态、类型等',
-        'fields': {'status': {'type': 'int', 'choices': {0: '草稿', 1: '运行中', 2: '暂停', 3: '已完成'}}, 'batch_type': {'type': 'str'}, 'year': {'type': 'int'}, 'month': {'type': 'int'}, 'region': {'type': 'str'}},
+        'desc': '全景检测批次，关联网格，包含时间段、状态、类型等',
+        'fields': {
+            'status': {'type': 'int', 'choices': {0: '草稿', 1: '运行中', 2: '暂停', 3: '已完成'}},
+            'batch_type': {'type': 'str'},
+            'year': {'type': 'int'},
+            'month': {'type': 'int'},
+            'region': {'type': 'str'},
+            'grid_id': {'type': 'str', 'desc': '所属网格ID'},
+            'street': {'type': 'str'},
+            'count': {'type': 'int', 'desc': '全景图数量'},
+            'operator': {'type': 'str'},
+        },
     },
     'grid': {
         'display': '网格',
         'model': ('panorama', 'Grid'),
-        'desc': '地理网格划分，包含街道、区县',
-        'fields': {'county': {'type': 'str'}, 'street': {'type': 'str'}},
+        'desc': '地理网格划分，包含街道、区县、操作员',
+        'fields': {
+            'county': {'type': 'str'},
+            'street': {'type': 'str'},
+            'grid_operator_id': {'type': 'str', 'desc': '网格员ID'},
+            'uploader_id': {'type': 'str', 'desc': '上传者ID'},
+            'count': {'type': 'int', 'desc': '关联数量'},
+        },
     },
     'route': {
         'display': '航线',
         'model': ('panorama', 'Route'),
-        'desc': '飞行航线，包含类型、高度、起终点',
-        'fields': {'route_type': {'type': 'str'}, 'status': {'type': 'int'}},
+        'desc': '飞行航线，包含类型、状态、高度、起终点',
+        'fields': {
+            'route_type': {'type': 'str'},
+            'status': {'type': 'int'},
+            'name': {'type': 'str'},
+            'height': {'type': 'float'},
+            'start_point': {'type': 'str'},
+            'end_point': {'type': 'str'},
+        },
     },
     'resource': {
         'display': '资源',
         'model': ('panorama', 'Resource'),
         'desc': '地图资源服务，包含影像服务、矢量数据等',
-        'fields': {'source_type': {'type': 'str'}, 'data_type': {'type': 'str'}, 'county': {'type': 'str'}},
+        'fields': {
+            'source_type': {'type': 'str'},
+            'data_type': {'type': 'str'},
+            'county': {'type': 'str'},
+            'owner_id': {'type': 'str', 'desc': '所有者ID'},
+            'name': {'type': 'str'},
+        },
     },
     'model_ai': {
         'display': 'AI模型',
         'model': ('model', 'Models'),
         'desc': 'AI检测模型',
-        'fields': {'framework': {'type': 'str'}, 'network': {'type': 'str'}, 'status': {'type': 'int'}},
+        'fields': {
+            'framework': {'type': 'str'},
+            'network': {'type': 'str'},
+            'status': {'type': 'int'},
+            'name': {'type': 'str'},
+        },
     },
     'interpretation_task': {
         'display': '解译任务',
         'model': ('interpretation', 'InterpretationTask'),
         'desc': 'AI解译任务',
-        'fields': {'status': {'type': 'str'}, 'task_type': {'type': 'str'}, 'county': {'type': 'str'}},
+        'fields': {
+            'status': {'type': 'str'},
+            'task_type': {'type': 'str'},
+            'county': {'type': 'str'},
+            'name': {'type': 'str'},
+        },
     },
     'multivariate_task': {
         'display': '多元任务',
         'model': ('resource', 'MultivariateTask'),
-        'desc': '多元数据采集任务',
-        'fields': {'task_type': {'type': 'str'}, 'collect_type': {'type': 'str'}, 'organization': {'type': 'str'}},
+        'desc': '多元数据采集任务，关联无人机巢',
+        'fields': {
+            'task_type': {'type': 'str'},
+            'collect_type': {'type': 'str'},
+            'organization': {'type': 'str'},
+            'nest_id': {'type': 'str', 'desc': '无人机巢ID'},
+            'county': {'type': 'str'},
+            'task_status': {'type': 'int'},
+        },
     },
     'report': {
         'display': '报告',
         'model': ('report', 'Report'),
-        'desc': '检测报告',
-        'fields': {},
+        'desc': '检测报告，关联批次报告',
+        'fields': {
+            'batch_report_id': {'type': 'str', 'desc': '批次报告ID'},
+            'report_name': {'type': 'str'},
+            'village': {'type': 'str'},
+        },
     },
     'verify_task': {
         'display': '核实任务',
         'model': ('panorama', 'VerifyTask'),
         'desc': '图斑核实任务',
-        'fields': {'status': {'type': 'str'}},
+        'fields': {
+            'status': {'type': 'str'},
+            'task_name': {'type': 'str'},
+        },
     },
     'verify_clue': {
         'display': '核实线索',
         'model': ('panorama', 'VerifyClue'),
-        'desc': '待核实的线索数据',
-        'fields': {'level': {'type': 'str'}, 'status': {'type': 'str'}, 'address': {'type': 'str'}},
+        'desc': '待核实的线索数据，关联核实任务',
+        'fields': {
+            'level': {'type': 'str'},
+            'status': {'type': 'str'},
+            'address': {'type': 'str'},
+            'task_id': {'type': 'str', 'desc': '所属核实任务ID'},
+            'division_code': {'type': 'str'},
+        },
     },
     'fly_order': {
         'display': '飞行指令',
         'model': ('panorama', 'FlyOrder'),
-        'desc': '无人机飞行指令',
-        'fields': {'data_type': {'type': 'str'}, 'organization': {'type': 'str'}, 'status': {'type': 'str'}, 'county': {'type': 'str'}},
+        'desc': '无人机飞行指令，关联航线',
+        'fields': {
+            'data_type': {'type': 'str'},
+            'organization': {'type': 'str'},
+            'status': {'type': 'str'},
+            'county': {'type': 'str'},
+            'route_id': {'type': 'str', 'desc': '所属航线ID'},
+            'order_name': {'type': 'str'},
+            'collect_type': {'type': 'str'},
+        },
     },
     'scene': {
         'display': '场景',
         'model': ('panorama', 'Scene'),
-        'desc': '检测场景分类',
-        'fields': {},
+        'desc': '检测场景分类，关联操作员',
+        'fields': {
+            'operator_id': {'type': 'str', 'desc': '操作员ID'},
+            'scene_name': {'type': 'str'},
+        },
     },
 }
 
@@ -2741,12 +2850,14 @@ QUERY_PARSE_PROMPT = (
     '操作类型：count（总数）、filter_count（按条件过滤后计数）、group_count（按字段分组计数）\n'
     '过滤条件用 Django ORM 格式，例如：{{"status": 1}} 或 {{"address__contains": "鼓楼"}}\n'
     '分组用 group_field 字段指定。\n\n'
-    '重要：\n'
+    '重要规则（按优先级）：\n'
+    '1.【上下文优先】如果用户问题末尾附带了【上下文】，其中包含"用户已选中对象"和"字段映射"，'
+    '且用户问"这个/当前/该/此"等指代词时，必须使用 filter_count，'
+    '在 filters 中用字段映射指定的字段（如 batch_id）加上选中对象的值（如 LS32020000120260701）。\n'
+    '2. 如果用户有明确筛选条件（如"状态为1"、"鼓楼区的"、"某个具体ID的"），用 filter_count\n'
+    '3. 如果问分布（如"按状态分组"、"各类型有多少"），用 group_count\n'
+    '4. 只有用户明确问全表总数、没有任何筛选条件、也没有上下文选中对象时，才用 count\n'
     '- model 必须是上面列出的 key 之一\n'
-    '- operation 必须是 count/filter_count/group_count\n'
-    '- 如果用户只问总数（如"有多少"），用 count\n'
-    '- 如果有筛选条件（如"状态为1"、"鼓楼区的"），用 filter_count\n'
-    '- 如果问分布（如"按状态分组"、"各类型有多少"），用 group_count\n'
     '- filters 中的字段必须在对应表的 fields 里\n'
     '- 如果完全无法理解查询，返回 {{"error": "无法理解"}}\n\n'
     '用户问题：{query}\n'
@@ -2758,7 +2869,11 @@ def _parse_query_via_llm(query: str) -> dict:
     """用 LLM 将自然语言查询解析为结构化参数"""
     schema_lines = []
     for key, info in QUERY_SCHEMA.items():
-        fields_str = ', '.join(f'{k}({v["type"]})' for k, v in info['fields'].items())
+        parts = []
+        for k, v in info['fields'].items():
+            d = v.get('desc', '')
+            parts.append(f'{k}({v["type"]}{" " + d if d else ""})')
+        fields_str = ', '.join(parts)
         schema_lines.append(f'  {key}({info["display"]}): {info["desc"]} 字段=[{fields_str}]')
     schemas = '\n'.join(schema_lines)
 
@@ -2855,7 +2970,7 @@ def _execute_query(params: dict) -> str:
     return f'不支持的操作类型：{operation}'
 
 
-def _handle_query_data(args: dict) -> dict:
+def _handle_query_data(args: dict, context: dict = None) -> dict:
     """处理 query_data 工具调用"""
     query = args.get('query', '')
     if not query:
@@ -2863,6 +2978,18 @@ def _handle_query_data(args: dict) -> dict:
 
     logger = logging.getLogger('skyeye')
     logger.info(f'query_data 查询: {query}')
+
+    # 注入上下文到查询解析，让 LLM 知道字段映射
+    if context:
+        ctx_hints = []
+        sel = context.get('selected_info', '')
+        if sel:
+            ctx_hints.append(f'用户已选中对象：{sel}')
+        field_map = context.get('field_map', '')
+        if field_map:
+            ctx_hints.append(f'字段映射：{field_map}')
+        if ctx_hints:
+            query = query + '\n【上下文】' + '；'.join(ctx_hints)
 
     params = _parse_query_via_llm(query)
     if 'error' in params:
@@ -2966,8 +3093,228 @@ def _lc_to_result(msg):
     return result
 
 
+def _sse_event(data):
+    """格式化 SSE 事件"""
+    return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+def _generate_sse(raw_messages, frontend_tools, request, chat_mode='chat', context=None):
+    """SSE 生成器：按阶段流式返回事件"""
+    try:
+        has_system = any(m.get('role') == 'system' for m in raw_messages)
+        if not has_system:
+            prompt = SYSTEM_PROMPT
+            if chat_mode == 'chat':
+                prompt += (
+                    '\n\n【当前模式：聊天模式】'
+                    '\n你当前处于普通聊天模式，不具备数据查询（query_data）能力。'
+                    '\n如果用户询问数据统计/数量/分布等问题（如"有多少全景图""线索数据有多少条"等），'
+                    '\n请友好告知："当前处于聊天模式，如需查询系统数据，请点击侧边栏星星按钮切换到数据查询模式。"'
+                    '\n如果用户要求跳转页面、地图定位或查询任务编号，正常使用对应工具即可。'
+                )
+            if context and chat_mode in ('query', 'summary'):
+                ctx_lines = ['\n\n【当前上下文 — 用户正在操作的页面和对象】']
+                page = context.get('page', {})
+                if page:
+                    title = page.get('title', '') or page.get('name', '') or page.get('path', '')
+                    ctx_lines.append(f'- 用户当前页面：{title}（路径: {page.get("path", "")}）')
+                params = context.get('params', {})
+                query = context.get('query', {})
+                ctx_labels = []
+                for key, label in [('taskId', '任务编号'), ('clueId', '线索/图斑编号'), ('batchId', '批次编号')]:
+                    if params.get(key):
+                        ctx_labels.append(f'{label}: {params[key]}')
+                for key, label in [('selectedId', '选中对象'), ('taskId', '任务编号'), ('batchId', '批次编号'),
+                                   ('clueId', '线索编号'), ('gridId', '网格编号'), ('id', '选中ID')]:
+                    if query.get(key) and key not in params:
+                        ctx_labels.append(f'{label}: {query[key]}')
+                if ctx_labels:
+                    ctx_lines.append('- 用户已选中对象：' + '，'.join(ctx_labels))
+                page_path = page.get('path', '')
+                if 'verifyClue' in page_path or 'task-management' in page_path or 'taskManagement' in page_path:
+                    ctx_lines.append('- 【字段映射】选中 ID 是 batch_id，查询数据时请使用 batch 表的 batch_id 字段筛选，不要用 address__contains 等字段。')
+                elif 'clue-view' in page_path or 'clueView' in page_path:
+                    ctx_lines.append('- 【字段映射】此页面选中对象为线索，查询时请使用 clue 表的对应字段筛选。')
+                ctx_lines.append('用户说"这个任务"、"当前页面"、"该线索"等指代词时，请关联到以上上下文中的对象。')
+
+                # 摘要在 summary 模式下启用
+                if chat_mode == 'summary':
+                    has_selection = bool(ctx_labels)
+                    if has_selection:
+                        ctx_lines.append('\n【智能摘要规则】')
+                        ctx_lines.append('如果用户发出模糊询问（如"怎么样""什么情况""帮我看看""分析一下""汇总""总结""报告"），')
+                        ctx_lines.append('你应该自动调用 query_data 多次，收集该对象的进度、异常、待办、状态分布等维度数据，')
+                        ctx_lines.append('然后生成一份结构化摘要，包含：')
+                        ctx_lines.append('1. 📊 数据概况（总量/进度）')
+                        ctx_lines.append('2. ⚠️ 异常/风险项（如有疑似违法线索、检测失败等）')
+                        ctx_lines.append('3. 📋 待办事项')
+                        ctx_lines.append('4. 🟢/🟡/🔴 风险等级评估')
+                        ctx_lines.append('5. 💡 推荐下一步操作')
+                        ctx_lines.append('禁止编造数据，必须基于 query_data 返回的真实结果。若无选中对象则忽略此规则。')
+
+                # 追问生成规则
+                ctx_lines.append('\n【追问生成规则】')
+                ctx_lines.append('每次回复末尾，用 "|||" 分隔符生成 3 个与当前页面和选中对象高度相关的追问。')
+                ctx_lines.append('追问应与当前上下文紧密贴合，不要生成无关的通用问题。')
+
+                prompt += '\n'.join(ctx_lines)
+
+                # 构建 query_data 的第二层上下文
+                query_context = {}
+                if ctx_labels:
+                    selected_info = '，'.join(ctx_labels)
+                    query_context['selected_info'] = selected_info
+                if 'verifyClue' in page_path or 'task-management' in page_path or 'taskManagement' in page_path:
+                    query_context['field_map'] = 'batch 表的 batch_id 字段'
+                elif 'clue-view' in page_path or 'clueView' in page_path:
+                    query_context['field_map'] = 'clue 表的对应索引字段'
+            else:
+                query_context = {}
+            raw_messages.insert(0, {'role': 'system', 'content': prompt})
+
+        lc_msgs = _raw_messages_to_lc(raw_messages)
+        llm = _get_llm(tools=frontend_tools)
+
+        # 阶段 1: 理解问题
+        yield _sse_event({"phase": "understanding", "message": "正在理解问题..."})
+
+        # 多轮 Agent 循环：LLM 可反复调用工具，直到不再需要或达到上限
+        result = {}
+        for iteration in range(5):
+            def node_chat(state: ChatState) -> dict:
+                response = llm.invoke(state['messages'])
+                return {'messages': [response]}
+
+            graph = StateGraph(ChatState)
+            graph.add_node('chat', node_chat)
+            graph.add_edge(START, 'chat')
+            graph.add_edge('chat', END)
+            compiled = graph.compile()
+
+            result_state = compiled.invoke({'messages': lc_msgs})
+            last_msg = result_state['messages'][-1]
+            lc_msgs = result_state['messages']  # 累积消息，供下一轮使用
+
+            result = _lc_to_result(last_msg)
+            tool_calls = result.get('tool_calls')
+            if not tool_calls:
+                break  # LLM 不再需要工具，循环结束
+
+            # 处理工具调用
+            query_actions = []
+            emit_tool_calls = []    # 需要发给前端的工具调用（map/navigate/lookup）
+            for tc in tool_calls:
+                fn = tc.get('function', {})
+                tc_id = tc.get('id', '')
+                name = fn.get('name', '')
+
+                if name == 'map_action':
+                    yield _sse_event({"phase": "geocoding", "message": "正在定位地图..."})
+                    try:
+                        args = json.loads(fn['arguments']) if isinstance(fn.get('arguments'), str) else fn.get('arguments', {})
+                    except (json.JSONDecodeError, TypeError):
+                        args = {}
+                    if args.get('location') and not args.get('lat') and not args.get('polygon'):
+                        city = args.get('city', '南京')
+                        district = _get_district_amap(args['location'], city=city, subdistrict=1)
+                        if district and district.get('polygon'):
+                            args['polygon'] = district['polygon']
+                            if district.get('center'):
+                                args['lat'] = district['center']['lat']
+                                args['lng'] = district['center']['lng']
+                            if district.get('sub_regions'):
+                                args['sub_regions'] = district['sub_regions']
+                            geo = _geocode_amap(args['location'], city)
+                            args['name'] = geo.get('address', args['location']) if geo else district.get('name', args['location'])
+                        else:
+                            geo = _geocode_amap(args['location'], city)
+                            if geo:
+                                args['lat'] = geo['lat']
+                                args['lng'] = geo['lng']
+                                args['name'] = geo.get('address', args['location'])
+                        fn['arguments'] = json.dumps(args, ensure_ascii=False)
+                    # map_action 发给前端处理
+                    emit_tool_calls.append(tc)
+
+                elif name == 'lookup_task':
+                    yield _sse_event({"phase": "looking_up", "message": "正在查找任务..."})
+                    try:
+                        lookup_args = json.loads(fn['arguments']) if isinstance(fn.get('arguments'), str) else fn.get('arguments', {})
+                    except (json.JSONDecodeError, TypeError):
+                        lookup_args = {}
+                    task_id = lookup_args.get('task_id', '').strip()
+                    if task_id:
+                        batch = Batch.objects.filter(batch_id=task_id).first()
+                        if batch:
+                            lookup_args['_lookup_found'] = True
+                            lookup_args['_batch_name'] = batch.batch_name
+                            lookup_args['_status'] = batch.status
+                            lookup_args['_region'] = batch.region or ''
+                        else:
+                            lookup_args['_lookup_found'] = False
+                            lookup_args['_msg'] = f'未查询到任务编号为 {task_id} 的任务'
+                        fn['arguments'] = json.dumps(lookup_args, ensure_ascii=False)
+                    emit_tool_calls.append(tc)
+
+                elif name == 'navigate_page':
+                    emit_tool_calls.append(tc)
+
+                elif name == 'query_data':
+                    yield _sse_event({"phase": "querying", "message": "正在查询数据..."})
+                    try:
+                        query_args = json.loads(fn['arguments']) if isinstance(fn.get('arguments'), str) else fn.get('arguments', {})
+                    except (json.JSONDecodeError, TypeError):
+                        query_args = {}
+                    try:
+                        query_result = _handle_query_data(query_args, query_context)
+                        query_args.update(query_result)
+                    except Exception as qe:
+                        query_args['_query_result'] = f'查询失败：{str(qe)[:200]}'
+                    fn['arguments'] = json.dumps(query_args, ensure_ascii=False)
+                    query_actions.append(ToolMessage(content=query_args.get('_query_result', ''), tool_call_id=tc_id))
+
+            # 非查询类工具：直接发给前端，结束 Agent 循环
+            if emit_tool_calls:
+                yield _sse_event({"phase": "done", "result": {
+                    "content": "",
+                    "finish_reason": "tool_calls",
+                    "tool_calls": emit_tool_calls,
+                }})
+                return
+
+            # query_data：ToolMessage 反馈给 LLM，继续循环
+            if query_actions:
+                lc_msgs.extend(query_actions)
+            else:
+                break  # 无有效工具，跳出
+
+        # 阶段最后: 生成回答
+        yield _sse_event({"phase": "generating", "message": "正在生成回答..."})
+
+        # 注入用户名
+        current_user = parse_jwt_token(request)
+        result['username'] = current_user.username if current_user else '用户'
+
+        # 注入模型名
+        config = configparser.ConfigParser()
+        config.read(os.path.join(settings.BASE_DIR, 'config.ini'), encoding='utf-8')
+        result['model'] = config.get('deepseek', 'model')
+
+        yield _sse_event({"phase": "done", "result": result})
+
+    except Exception as e:
+        import traceback
+        logger = logging.getLogger('skyeye')
+        logger.error(f"chat_completions SSE error: {e}\n{traceback.format_exc()}")
+        yield _sse_event({"phase": "error", "message": str(e)})
+        yield _sse_event({"phase": "done", "result": {
+            "content": f"抱歉，处理请求时出错：{str(e)[:200]}",
+            "finish_reason": "stop",
+        }})
+
+
 def chat_completions(request):
-    """LangGraph + DeepSeek 聊天（单轮）"""
+    """LangGraph + DeepSeek 聊天（SSE 流式）"""
     if request.method == 'OPTIONS':
         resp = HttpResponse()
         resp['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
@@ -2989,102 +3336,16 @@ def chat_completions(request):
         return error('messages 不能为空')
 
     frontend_tools = body.get('tools')
+    chat_mode = body.get('chat_mode', 'chat')
+    context = body.get('context')
 
-    has_system = any(m.get('role') == 'system' for m in raw_messages)
-    if not has_system:
-        raw_messages.insert(0, {'role': 'system', 'content': SYSTEM_PROMPT})
-
-    lc_msgs = _raw_messages_to_lc(raw_messages)
-    llm = _get_llm(tools=frontend_tools)
-
-    def node_chat(state: ChatState) -> dict:
-        response = llm.invoke(state['messages'])
-        return {'messages': [response]}
-
-    graph = StateGraph(ChatState)
-    graph.add_node('chat', node_chat)
-    graph.add_edge(START, 'chat')
-    graph.add_edge('chat', END)
-    compiled = graph.compile()
-
-    result_state = compiled.invoke({'messages': lc_msgs})
-    last_msg = result_state['messages'][-1]
-
-    result = _lc_to_result(last_msg)
-
-    # 后处理 map_action: 地名 → 坐标 + polygon（行政区划）
-    if result.get('tool_calls'):
-        for tc in result['tool_calls']:
-            fn = tc.get('function', {})
-            if fn.get('name') == 'map_action':
-                try:
-                    args = json.loads(fn['arguments']) if isinstance(fn.get('arguments'), str) else fn.get('arguments', {})
-                except (json.JSONDecodeError, TypeError):
-                    args = {}
-                if args.get('location') and not args.get('lat') and not args.get('polygon'):
-                    city = args.get('city', '南京')
-                    # 先试行政区划 API（subdistrict=1 → 有子区域边界）
-                    district = _get_district_amap(args['location'], city=city, subdistrict=1)
-                    if district and district.get('polygon'):
-                        args['polygon'] = district['polygon']
-                        if district.get('center'):
-                            args['lat'] = district['center']['lat']
-                            args['lng'] = district['center']['lng']
-                        # 子区域
-                        if district.get('sub_regions'):
-                            args['sub_regions'] = district['sub_regions']
-                        # 再用地理编码获取完整地址名
-                        geo = _geocode_amap(args['location'], city)
-                        args['name'] = geo.get('address', args['location']) if geo else district.get('name', args['location'])
-                    else:
-                        # 行政区划无 polygon 或非行政区，降级地理编码
-                        geo = _geocode_amap(args['location'], city)
-                        if geo:
-                            args['lat'] = geo['lat']
-                            args['lng'] = geo['lng']
-                            args['name'] = geo.get('address', args['location'])
-                    fn['arguments'] = json.dumps(args, ensure_ascii=False)
-
-            # 后处理 lookup_task: 校验 batch_id 是否存在
-            if fn.get('name') == 'lookup_task':
-                try:
-                    lookup_args = json.loads(fn['arguments']) if isinstance(fn.get('arguments'), str) else fn.get('arguments', {})
-                except (json.JSONDecodeError, TypeError):
-                    lookup_args = {}
-                task_id = lookup_args.get('task_id', '').strip()
-                if task_id:
-                    batch = Batch.objects.filter(batch_id=task_id).first()
-                    if batch:
-                        lookup_args['_lookup_found'] = True
-                        lookup_args['_batch_name'] = batch.batch_name
-                        lookup_args['_status'] = batch.status
-                        lookup_args['_region'] = batch.region or ''
-                    else:
-                        lookup_args['_lookup_found'] = False
-                        lookup_args['_msg'] = f'未查询到任务编号为 {task_id} 的任务'
-                    fn['arguments'] = json.dumps(lookup_args, ensure_ascii=False)
-
-            # 后处理 query_data: 执行数据库查询
-            if fn.get('name') == 'query_data':
-                try:
-                    query_args = json.loads(fn['arguments']) if isinstance(fn.get('arguments'), str) else fn.get('arguments', {})
-                except (json.JSONDecodeError, TypeError):
-                    query_args = {}
-                query_result = _handle_query_data(query_args)
-                query_args.update(query_result)
-                fn['arguments'] = json.dumps(query_args, ensure_ascii=False)
-
-    # 注入用户名
-    current_user = parse_jwt_token(request)
-    result['username'] = current_user.username if current_user else '用户'
-
-    # 注入模型名
-    config = configparser.ConfigParser()
-    config.read(os.path.join(settings.BASE_DIR, 'config.ini'), encoding='utf-8')
-    result['model'] = config.get('deepseek', 'model')
-
-    resp = ok_data(result)
+    response = StreamingHttpResponse(
+        _generate_sse(raw_messages, frontend_tools, request, chat_mode, context),
+        content_type='text/event-stream',
+    )
     origin = request.headers.get('Origin', '*')
-    resp['Access-Control-Allow-Origin'] = origin
-    resp['Access-Control-Allow-Credentials'] = 'false'
-    return resp
+    response['Access-Control-Allow-Origin'] = origin
+    response['Access-Control-Allow-Credentials'] = 'false'
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'
+    return response

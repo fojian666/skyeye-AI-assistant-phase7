@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-wrapper" :class="`theme-${theme}`" :style="wrapperStyle">
+  <div class="chat-wrapper" :class="[`theme-${theme}`, { 'query-mode': chatMode === 'query', 'summary-mode': chatMode === 'summary' }]" :style="wrapperStyle">
     <!-- 悬浮按钮 -->
     <div v-if="!visible" class="chat-fab" @click="open" @mousedown="startDrag" title="AI 助手">
         <span class="fab-emoji">🤖</span>
@@ -15,7 +15,11 @@
             <span class="chat-logo-emoji">&#x1F916;</span>
             <div>
               <strong>金陵阡陌 AI 助手</strong>
-              <small>Powered by DeepSeek</small>
+              <small>
+                <template v-if="chatMode === 'query'">数据查询模式</template>
+                <template v-else-if="chatMode === 'summary'">智能摘要</template>
+                <template v-else>Powered by DeepSeek</template>
+              </small>
             </div>
           </div>
           <div class="chat-header-right">
@@ -64,6 +68,15 @@
                 </div>
                 <div class="msg-content" v-else v-html="renderContent(msg.content)"></div>
               </div>
+              <div v-if="msg.role === 'assistant'" class="msg-actions">
+                <button class="msg-action-btn" @click="copyMessage(msg.content, idx)" :title="copiedMsgIdx === idx ? '已复制' : '复制回答'">
+                  <i :class="copiedMsgIdx === idx ? 'el-icon-check' : 'el-icon-document-copy'"></i>
+                </button>
+                <span v-if="copiedMsgIdx === idx" class="copy-toast">已复制</span>
+                <button v-if="msg._error || msg._interrupted" class="msg-action-btn retry" @click="retry(idx)" title="重试">
+                  <i class="el-icon-refresh"></i>
+                </button>
+              </div>
             </div>
             <div v-if="msg.role === 'assistant' && msg.suggestions && msg.suggestions.length" class="msg-suggestions">
               <button
@@ -83,9 +96,15 @@
               <div class="msg-avatar">
                 <span class="avatar-emoji">&#x1F916;</span>
               </div>
-              <div class="msg-content" :class="{ 'streaming-cursor': streamingText, 'thinking-dots': !streamingText }">
-                <template v-if="streamingText">{{ streamingText }}</template>
-                <span v-else class="dots-container"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+              <div class="msg-content" :class="{ 'streaming-cursor': streamingText }">
+                <span v-if="streamingText" v-html="streamingText"></span>
+                <div v-else class="thinking-status">
+                  <span v-if="phase" class="phase-indicator">
+                    <span class="phase-icon">{{ phaseIcons[phase.phase] || '...' }}</span>
+                    {{ phase.message }}
+                  </span>
+                  <span class="dots-container"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+                </div>
               </div>
             </div>
           </div>
@@ -105,8 +124,17 @@
               @input="autoResize"
             ></textarea>
             <button
+              v-if="streaming"
+              class="chat-stop-btn"
+              @click="stopGeneration"
+              title="停止生成">
+              <span class="stop-icon"></span>
+              <span>停止</span>
+            </button>
+            <button
+              v-else
               class="chat-send-btn"
-              :disabled="!input.trim() || streaming"
+              :disabled="!input.trim()"
               @click="send">
               <i class="el-icon-position"></i>
             </button>
@@ -119,18 +147,18 @@
 
         <!-- 右侧拓展槽 -->
         <div v-show="!docked" class="side-rail" :class="{ visible: sideRailVisible }">
-          <div class="rail-item small spread-top-2"><i class="el-icon-star-off"></i></div>
           <div class="rail-item small spread-top-1"><i class="el-icon-search"></i></div>
-          <div class="rail-item large"><i class="el-icon-plus"></i></div>
+          <div class="rail-item large" @click="toggleChatMode"
+            :title="chatMode === 'query' ? '切换到智能摘要' : chatMode === 'summary' ? '切换到聊天模式' : '切换到数据查询模式'">
+            <i :class="chatMode === 'query' ? 'el-icon-data-line' : chatMode === 'summary' ? 'el-icon-document-checked' : 'el-icon-star-off'"></i>
+          </div>
           <div class="rail-item small spread-bot-1"><i class="el-icon-s-tools"></i></div>
-          <div class="rail-item small spread-bot-2"><i class="el-icon-more"></i></div>
         </div>
       </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
 import router from '@/router'
 import { mapState } from 'vuex';
 import gsap from 'gsap';
@@ -161,8 +189,11 @@ const TOOLS = [
     function: {
       name: 'navigate_page',
       description:
-        '跳转到系统的页面。根据用户意图从下面列表中选择最匹配的路由：\n' +
-        ROUTES.map(r => `  ${r.path} → ${r.title}`).join('\n'),
+        '跳转到系统的指定页面。仅在用户明确表达跳转/打开/前往/进入某个页面的意图时调用。' +
+        '\n当用户询问数据、统计等问题（如"有多少""状态是什么"）时，不要调用此工具。' +
+        '\n根据用户意图从下面列表中选择最匹配的路由：\n' +
+        ROUTES.map(r => `  ${r.path} → ${r.title}`).join('\n') +
+        '\n示例：打开全景检测 → navigate_page\n带我去航线规划 → navigate_page\n报告管理在哪 → navigate_page',
       parameters: {
         type: 'object',
         properties: {
@@ -177,7 +208,9 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'map_action',
-      description: '地图相关操作。用户提到任何地点/区域/行政区时必须调用此工具，不要反问。系统会自动定位并绘制边界。',
+      description: '地图定位操作。仅在用户明确要求打开/查看/定位某个具体地点（如城市名、区名、街道名、地标名）时调用。' +
+        '\n不要将"防尘网""线索""图斑""批次"等业务术语误判为地点。' +
+        '\n示例：带我去南京鼓楼区看看 → map_action\n鼓楼区在哪 → map_action\n打开玄武区 → map_action',
       parameters: {
         type: 'object',
         properties: {
@@ -192,7 +225,10 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'lookup_task',
-      description: '根据用户输入的任务编号（batch_id）查询任务是否存在。编号格式通常类似 LS32020000120260701 或 32011300500120250715。如果任务存在则跳转到任务详情页。',
+      description: '根据用户输入的任务编号（batch_id）查询任务。仅在用户明确提供编号格式的字符串时才调用。' +
+        '\n编号格式通常类似 LS32020000120260701 或 32011300500120250715。如果任务存在则跳转到任务详情页。' +
+        '\n不要将普通数字（如"3个""5条"）误判为任务编号。' +
+        '\n示例：查询 LS32020000120260701 → lookup_task\n帮我查一下 32011300500120250715 → lookup_task',
       parameters: {
         type: 'object',
         properties: {
@@ -206,7 +242,8 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'query_data',
-      description: '查询系统数据，如资源数量、任务状态、航线信息等',
+      description: '查询系统数据。当用户询问任何关于数据量、统计、数量、状态的信息时必须调用此工具，不要反问。' +
+        '\n示例：有多少全景图？ → query_data\n线索数据有多少条？ → query_data\n任务状态是什么？ → query_data',
       parameters: {
         type: 'object',
         properties: {
@@ -237,13 +274,38 @@ export default {
       panelH: 560,
       resizing: false,
       resizeStart: { x: 0, y: 0, w: 0, h: 0 },
-      quickQuestions: [
+      chatQuickQuestions: [
         '带我去南京鼓楼区看看',
-        '带我去航线规划页面',
-        '打开全景检测',
+        '帮我打开航线规划页面',
+        '当前有哪些检测任务？',
+      ],
+      queryQuickQuestions: [
+        '当前页面数据概览',
+        '最近有哪些异常情况？',
+        '按状态分类统计',
+      ],
+      summaryQuickQuestions: [
+        '有哪些高风险项？',
+        '整体完成进度如何？',
+        '下一步建议怎么做？',
       ],
       username: '用户',
       modelName: 'DeepSeek',
+      phase: null,
+      phaseIcons: {
+        understanding: '🔍',
+        geocoding: '🗺️',
+        querying: '📊',
+        looking_up: '🔎',
+        generating: '✍️',
+      },
+      abortController: null,
+      lastUserMessage: '',
+      _stopRequested: false,
+      copiedMsgIdx: -1,
+      chatMode: 'chat',  // 'chat' | 'query' | 'summary'
+      currentContext: null,
+      lastAutoSummaryKey: null,  // 防重复触发
     }
   },
   computed: {
@@ -266,6 +328,15 @@ export default {
       }
       return { right: '32px', bottom: '32px' }
     },
+    activeTools() {
+      if (this.chatMode === 'query' || this.chatMode === 'summary') return TOOLS
+      return TOOLS.filter(t => t.function.name !== 'query_data')
+    },
+    quickQuestions() {
+      if (this.chatMode === 'query') return this.queryQuickQuestions
+      if (this.chatMode === 'summary') return this.summaryQuickQuestions
+      return this.chatQuickQuestions
+    },
   },
   mounted() {
     this._onDragMove = this.onDragMove.bind(this)
@@ -285,6 +356,17 @@ export default {
     document.removeEventListener('mousemove', this._onGlobalMouse)
     document.removeEventListener('mousemove', this._onResizeMove)
     document.removeEventListener('mouseup', this._onResizeEnd)
+  },
+  watch: {
+    // 路由变化：进入新页面且有选中对象 → 自动生成摘要
+    $route: {
+      immediate: true,
+      handler() { this.maybeAutoSummary() },
+    },
+    // 切换到数据查询模式或摘要模式且有选中对象 → 自动生成摘要
+    chatMode(val) {
+      if (val === 'query' || val === 'summary') this.maybeAutoSummary()
+    },
   },
   methods: {
     startDrag(e) {
@@ -308,9 +390,10 @@ export default {
       // 超过 4px 才算拖拽，防止误判
       if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return
       this.hasMoved = true
-      // 用 panelW/panelH 作为参考尺寸
-      const w = this.panelW
-      const h = this.panelH
+      // 面板关闭时用 FAB 实际尺寸，打开时用面板尺寸
+      const fabRect = this.$el.getBoundingClientRect()
+      const w = this.visible ? this.panelW : fabRect.width
+      const h = this.visible ? this.panelH : fabRect.height
       let nx = this.dragStart.elX + (e.clientX - this.dragStart.x)
       let ny = this.dragStart.elY + (e.clientY - this.dragStart.y)
 
@@ -413,21 +496,76 @@ export default {
             this.visible = false
             this.docked = false
             this.dragPos = { x: null, y: null }
-            this.messages = []
           },
         })
       } else {
         this.visible = false
         this.docked = false
         this.dragPos = { x: null, y: null }
-        this.messages = []
       }
+    },
+
+    toggleChatMode() {
+      if (this.chatMode === 'chat') {
+        this.chatMode = 'query'
+      } else if (this.chatMode === 'query') {
+        this.chatMode = 'summary'
+      } else {
+        this.chatMode = 'chat'
+      }
+    },
+
+    collectContext() {
+      const route = this.$route
+      if (!route) return
+      this.currentContext = {
+        page: {
+          path: route.path,
+          name: route.name || '',
+          title: route.meta?.title || document.title || '',
+        },
+        params: { ...route.params },
+        query: { ...route.query },
+      }
+    },
+
+    // 检测是否有选中对象的上下文参数
+    _hasSelection() {
+      this.collectContext()
+      const ctx = this.currentContext
+      if (!ctx) return false
+      const selectKeys = ['selectedId', 'taskId', 'batchId', 'clueId', 'gridId', 'id',
+                          'clue_id', 'batch_id', 'task_id', 'grid_id']
+      const params = { ...ctx.params, ...ctx.query }
+      return selectKeys.some(k => params[k])
+    },
+
+    // 进入页面或切到摘要模式时，自动生成摘要
+    maybeAutoSummary() {
+      if (this.chatMode !== 'summary') return
+      if (this.streaming) return
+      if (!this._hasSelection()) return
+      // 防重复：同一页面+同一选中对象不重复触发
+      const ctx = this.currentContext
+      const key = ctx.page.path + '|' + JSON.stringify({ ...ctx.params, ...ctx.query })
+      if (key === this.lastAutoSummaryKey) return
+      this.lastAutoSummaryKey = key
+      // 打开面板
+      if (!this.visible) this.visible = true
+      // 自动发送摘要请求
+      const summaryPrompt = '帮我生成一份摘要'
+      this.lastUserMessage = summaryPrompt
+      this.messages.push({ role: 'user', content: summaryPrompt })
+      this.streaming = true
+      this.chatLoop()
     },
 
     sendQuick(question) {
       if (this.streaming) return
+      this.lastUserMessage = question
       this.messages.push({ role: 'user', content: question })
       this.streaming = true
+      this.collectContext()
       this.chatLoop()
     },
 
@@ -435,10 +573,12 @@ export default {
       const text = this.input.trim()
       if (!text || this.streaming) return
 
+      this.lastUserMessage = text
       this.messages.push({ role: 'user', content: text })
       this.input = ''
       this.$nextTick(() => this.autoResize())
       this.streaming = true
+      this.collectContext()
 
       await this.chatLoop()
     },
@@ -448,78 +588,152 @@ export default {
           .filter(m => m.role !== 'tool-info' && m.role !== 'tool' && !m.tool_calls)
           .map(m => ({ role: m.role, content: m.content }))
 
+      this.phase = null
+      this.abortController = new AbortController()
+
       try {
-        const { data } = await axios({
+        const apiBase = (window.config && window.config.baseUrl) || 'http://127.0.0.1:8009/'
+        const response = await fetch(`${apiBase}api/system/chat/completions`, {
           method: 'POST',
-          url: 'http://127.0.0.1:8009/api/system/chat/completions',
-          data: { messages: allMessages, tools: TOOLS },
-          withCredentials: false,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: allMessages, tools: this.activeTools, chat_mode: this.chatMode, context: this.currentContext }),
+          signal: this.abortController.signal,
         })
-        const result = data.result || data.data || {}
-        const finishReason = result.finish_reason
 
-        // 提取用户名和模型名
-        if (result.username) this.username = result.username
-        if (result.model) this.modelName = result.model
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}))
+          throw new Error(errData.msg || `HTTP ${response.status}`)
+        }
 
-        // 处理工具调用
-        if (result.tool_calls && finishReason === 'tool_calls') {
-          const assistantMsg = { role: 'assistant', content: '', tool_calls: result.tool_calls }
-          if (result.content) assistantMsg.content = result.content
-          this.messages.push(assistantMsg)
-
-          // 执行每个工具
-          for (const tc of result.tool_calls) {
-            const fn = tc.function
-            const args = JSON.parse(fn.arguments)
-            const toolResult = await this.executeTool(fn.name, args)
-            // 导航类工具执行后直接结束，清空消息历史
-            if (toolResult._navigate) {
-              this.messages = []
-              this.dragPos = { x: null, y: null }
-              let label
-              if (fn.name === 'map_action') {
-                label = args.name || args.location
-              } else if (fn.name === 'lookup_task') {
-                label = `任务 ${toolResult.batch_name || args.task_id}`
-              } else {
-                label = args.reason || args.path
-              }
-              this.messages.push({ role: 'assistant', content: `已为您跳转到 ${label}` })
-              this.streaming = false
-              return
-            }
-            if (toolResult._stop) {
-              // 非导航类 stop：错误消息已由 executeTool 直接推入 messages，直接退出
-              this.streaming = false
-              return
-            }
-            if (toolResult._display) {
-              // 移除 LLM 的"思考中"气泡，直接展示结果
-              this.messages.pop()
-              const followUps = '查看线索数据统计\n图斑有哪些状态？\n还有什么可以帮您的？'
-              await this.typewriter(toolResult.message + '\n|||\n' + followUps)
-              return
-            }
-            this.messages.push({
-              role: 'tool',
-              tool_call_id: tc.id,
-              content: JSON.stringify(toolResult),
-            })
-          }
-          // 继续对话循环（非导航类工具）
-          await this.chatLoop()
+        // 兼容旧后端 JSON 响应（非 SSE）
+        const ct = response.headers.get('content-type') || ''
+        if (!ct.includes('text/event-stream')) {
+          const data = await response.json()
+          const result = data.result || data.data || {}
+          this.phase = null
+          await this._processResult(result)
           return
         }
 
-        // 普通文本回复
-        const content = result.content || ''
-        await this.typewriter(content)
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+
+        while (true) {
+          const { value, done } = await reader.read()
+          if (value) buffer += decoder.decode(value, { stream: true })
+
+          const events = buffer.split('\n\n')
+          buffer = events.pop() || ''
+
+          for (const event of events) {
+            const line = event.trim()
+            if (!line.startsWith('data: ')) continue
+            try {
+              const evt = JSON.parse(line.slice(6))
+              if (evt.phase === 'error') {
+                console.warn('SSE error phase:', evt.message)
+                continue
+              }
+              if (evt.phase === 'done') {
+                reader.cancel()
+                // 给足够时间让最后的 phase 文本可见
+                await new Promise(r => setTimeout(r, 400))
+                this.phase = null
+                await this._processResult(evt.result)
+                return
+              }
+              this.phase = evt
+              // 每个阶段至少显示 200ms
+              await new Promise(r => setTimeout(r, 200))
+            } catch (e) {
+              /* non-JSON event line */
+            }
+          }
+
+          if (done) break
+        }
+        // 流意外结束未收到 done 事件
+        if (this.streaming) {
+          this.phase = null
+          this.messages.push({ role: 'assistant', content: '抱歉，响应被中断，请重试。' })
+          this.streaming = false
+        }
       } catch (err) {
-        const msg = err.response?.data?.msg || err.message
-        this.messages.push({ role: 'assistant', content: `抱歉，请求失败：${msg}` })
+        this.phase = null
+        if (err.name === 'AbortError') {
+          if (this.streamingText) {
+            this.messages.push({ role: 'assistant', content: this.streamingText.replace(/<[^>]*>/g, ''), _interrupted: true })
+          }
+          this.streamingText = ''
+        } else {
+          const msg = err.message
+          this.messages.push({ role: 'assistant', content: `抱歉，请求失败：${msg}`, _error: true })
+        }
         this.streaming = false
       }
+    },
+
+    async _processResult(result) {
+      const finishReason = result.finish_reason
+
+      // 提取用户名和模型名
+      if (result.username) this.username = result.username
+      if (result.model) this.modelName = result.model
+
+      // 处理工具调用
+      if (result.tool_calls && finishReason === 'tool_calls') {
+        const assistantMsg = { role: 'assistant', content: '', tool_calls: result.tool_calls }
+        if (result.content) assistantMsg.content = result.content
+        this.messages.push(assistantMsg)
+
+        // 执行每个工具
+        for (const tc of result.tool_calls) {
+          const fn = tc.function
+          const args = JSON.parse(fn.arguments)
+          const toolResult = await this.executeTool(fn.name, args)
+          // 导航类工具执行后直接结束，清空消息历史
+          if (toolResult._navigate) {
+            this.messages = []
+            this.dragPos = { x: null, y: null }
+            let label
+            if (fn.name === 'map_action') {
+              label = args.name || args.location
+            } else if (fn.name === 'lookup_task') {
+              label = `任务 ${toolResult.batch_name || args.task_id}`
+            } else {
+              label = args.reason || args.path
+            }
+            this.messages.push({ role: 'assistant', content: `已为您跳转到 ${label}` })
+            this.streaming = false
+            return
+          }
+          if (toolResult._stop) {
+            // 非导航类 stop：错误消息已由 executeTool 直接推入 messages，直接退出
+            this.streaming = false
+            return
+          }
+          if (toolResult._display) {
+            // 移除 LLM 的"思考中"气泡，直接展示结果
+            this.messages.pop()
+            const followUps = '查看线索数据统计\n图斑有哪些状态？\n还有什么可以帮您的？'
+            await this.typewriter(toolResult.message + '\n|||\n' + followUps)
+            return
+          }
+          this.messages.push({
+            role: 'tool',
+            tool_call_id: tc.id,
+            content: JSON.stringify(toolResult),
+          })
+        }
+        // 继续对话循环（非导航类工具）
+        await this.chatLoop()
+        return
+      }
+
+      // 普通文本回复
+      const content = result.content || ''
+      await this.typewriter(content)
     },
 
     async executeTool(name, args) {
@@ -596,6 +810,7 @@ export default {
         suggestions = text.substring(idx + 3).split('\n').map(s => s.replace(/^[\d.\-•\s]+/, '').trim()).filter(Boolean).slice(0, 3)
       }
       this.streamingText = ''
+      this._stopRequested = false
       const chars = [...body]
       const renderInline = (raw) => {
         let t = raw
@@ -606,9 +821,17 @@ export default {
           .replace(/`([^`]+)`/g, '<code>$1</code>')
           .replace(/`([^`]*)$/, '')
           .replace(/```\w*\n?([\s\S]*)$/, (_, c) => c ? `<pre><code>${c}</code></pre>` : '')
+          .replace(/数据查询模式/g, '<strong>数据查询模式</strong>')
         return t
       }
       for (let i = 0; i < chars.length; i++) {
+        if (this._stopRequested) {
+          const partial = this.streamingText.replace(/<[^>]*>/g, '')
+          if (partial) this.messages.push({ role: 'assistant', content: partial, _interrupted: true })
+          this.streamingText = ''
+          this.streaming = false
+          return
+        }
         this.streamingText = renderInline(this.streamingText.replace(/<[^>]*>/g, '') + chars[i])
         await new Promise(r => setTimeout(r, 25))
         this.scrollToBottom()
@@ -616,6 +839,50 @@ export default {
       this.messages.push({ role: 'assistant', content: body, suggestions })
       this.streamingText = ''
       this.streaming = false
+    },
+
+    stopGeneration() {
+      this._stopRequested = true
+      if (this.abortController) {
+        this.abortController.abort()
+        this.abortController = null
+      }
+    },
+
+    retry(idx) {
+      // 找到最后一条用户消息位置，移除之后的所有消息
+      let lastUserIdx = -1
+      for (let i = idx - 1; i >= 0; i--) {
+        if (this.messages[i].role === 'user') {
+          lastUserIdx = i
+          break
+        }
+      }
+      if (lastUserIdx >= 0) {
+        this.messages.splice(lastUserIdx + 1)
+      }
+      this.streaming = true
+      this.chatLoop()
+    },
+
+    async copyMessage(text, idx) {
+      if (!text) return
+      try {
+        await navigator.clipboard.writeText(text)
+        this.copiedMsgIdx = idx
+        setTimeout(() => { this.copiedMsgIdx = -1 }, 2000)
+      } catch {
+        const ta = document.createElement('textarea')
+        ta.value = text
+        ta.style.position = 'fixed'
+        ta.style.opacity = '0'
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand('copy')
+        document.body.removeChild(ta)
+        this.copiedMsgIdx = idx
+        setTimeout(() => { this.copiedMsgIdx = -1 }, 2000)
+      }
     },
 
     clearMessages() {
@@ -655,7 +922,10 @@ export default {
       processed = processed.replace(/\n/g, '<br>')
       processed = processed
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/__([^_]+)__/g, '<strong>$1</strong>')
         .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        // 自动加粗特定关键词（兜底）
+        .replace(/数据查询模式/g, '<strong data-mode-hint>数据查询模式</strong>')
       processed = processed.replace(/%%CODEBLOCK_(\d+)%%/g, (_, i) => codeBlocks[+i])
       return processed
     },
@@ -754,8 +1024,8 @@ export default {
   left: 100%;
   margin-left: 4px;
   top: 50%;
-  width: 90px;
-  height: 160px;
+  width: 120px;
+  height: 210px;
   z-index: 9998;
   opacity: 0;
   transform: translate(16px, -50%);
@@ -780,16 +1050,18 @@ export default {
 
   /* 大圆：左中，始终可见 */
   &.large {
-    width: 44px;
-    height: 44px;
-    left: 2px;
+    width: 56px;
+    height: 56px;
+    left: 4px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 20px;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.15));
-    border: 1px solid rgba(59, 130, 246, 0.35);
+    font-size: 24px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(37, 99, 235, 0.25));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(59, 130, 246, 0.45);
     color: rgba(200, 220, 255, 0.9);
-    box-shadow: 0 0 16px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 20px rgba(59, 130, 246, 0.2);
     z-index: 2;
 
     &:hover {
@@ -801,12 +1073,15 @@ export default {
 
   /* 小圆：默认隐藏，hover 时从大圆向外散开成弧 */
   &.small {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.55);
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
     opacity: 0;
     transform: scale(0);
     transition:
@@ -818,19 +1093,19 @@ export default {
       box-shadow 0.25s ease;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.16);
-      border-color: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.28);
+      border-color: rgba(255, 255, 255, 0.4);
       color: #fff;
-      box-shadow: 0 0 14px rgba(100, 180, 255, 0.25);
+      box-shadow: 0 2px 14px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 18px rgba(100, 180, 255, 0.3);
     }
   }
 }
 
 /* 小圆半圆弧位置 */
-.spread-top-2 { left: 36px; top: 6px; }
-.spread-top-1 { left: 56px; top: 42px; }
-.spread-bot-1 { left: 56px; top: 90px; }
-.spread-bot-2 { left: 36px; top: 126px; }
+.spread-top-2 { left: 48px; top: 8px; }
+.spread-top-1 { left: 76px; top: 54px; }
+.spread-bot-1 { left: 76px; top: 120px; }
+.spread-bot-2 { left: 48px; top: 166px; }
 
 /* hover 时小圆散开 — 交错延迟 */
 .side-rail:hover .rail-item.small {
@@ -844,26 +1119,31 @@ export default {
 
 /* 亮色主题适配 */
 .theme-light .rail-item.large {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.45), rgba(59, 130, 246, 0.25));
-  border-color: rgba(37, 99, 235, 0.4);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.5), rgba(59, 130, 246, 0.3));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(37, 99, 235, 0.45);
   color: #fff;
-  box-shadow: 0 0 18px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 22px rgba(37, 99, 235, 0.25);
 
   &:hover {
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.6), rgba(59, 130, 246, 0.4));
-    box-shadow: 0 0 28px rgba(37, 99, 235, 0.4);
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.65), rgba(59, 130, 246, 0.45));
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 32px rgba(37, 99, 235, 0.45);
   }
 }
 .theme-light .rail-item.small {
-  background: rgba(0, 0, 0, 0.1);
-  border-color: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(0, 0, 0, 0.18);
   color: #374151;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 
   &:hover {
-    background: rgba(37, 99, 235, 0.18);
-    border-color: rgba(37, 99, 235, 0.4);
+    background: rgba(37, 99, 235, 0.2);
+    border-color: rgba(37, 99, 235, 0.45);
     color: #1e40af;
-    box-shadow: 0 0 14px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.12), 0 0 18px rgba(37, 99, 235, 0.25);
   }
 }
 
@@ -885,7 +1165,10 @@ export default {
   overflow: hidden;
   transform-origin: bottom right;
   will-change: transform, opacity;
-  transition: height 0.3s ease, border-radius 0.3s ease;
+  transition: height 0.3s ease, border-radius 0.3s ease,
+    border-color 0.35s 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.45s 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.4s ease;
 }
 
 .chat-panel.docked {
@@ -894,6 +1177,86 @@ export default {
   border-radius: 12px 0 0 12px;
   border-right: none;
   margin-top: 48px;
+}
+
+/* 数据查询模式 */
+.chat-wrapper.query-mode .chat-panel {
+  border-color: rgba(239, 68, 68, 0.35);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 100, 80, 0.12) inset,
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 0 32px rgba(239, 68, 68, 0.08);
+  transition: border-color 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.45s 0.05s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: query-glow-in 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes query-glow-in {
+  0%   { box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 100, 80, 0) inset, 0 0 0px rgba(239, 68, 68, 0); }
+  60%  { box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 100, 80, 0.3) inset, 0 0 48px rgba(239, 68, 68, 0.18); }
+  100% { box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 100, 80, 0.12) inset, 0 0 32px rgba(239, 68, 68, 0.08); }
+}
+.chat-wrapper.query-mode .chat-header {
+  background: rgba(239, 68, 68, 0.08);
+  border-bottom-color: rgba(239, 68, 68, 0.12);
+  transition: background 0.3s 0.15s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chat-wrapper.query-mode .chat-header-left small {
+  color: #ef4444 !important;
+  transition: color 0.25s 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chat-wrapper.query-mode .chat-footer {
+  border-top-color: rgba(239, 68, 68, 0.12);
+  transition: border-color 0.3s 0.05s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chat-wrapper.query-mode .chat-input-wrap:focus-within {
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 0 4px rgba(239, 68, 68, 0.12);
+}
+.chat-wrapper.query-mode .chat-send-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  transition: background 0.3s 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  &:hover:not(:disabled) { background: linear-gradient(135deg, #f87171, #ef4444); }
+}
+
+/* 智能摘要模式 — 琥珀/金色 */
+.chat-wrapper.summary-mode .chat-panel {
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(251, 191, 36, 0.12) inset,
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 0 32px rgba(245, 158, 11, 0.08);
+  transition: border-color 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.45s 0.05s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: summary-glow-in 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes summary-glow-in {
+  0%   { box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(251, 191, 36, 0) inset, 0 0 0px rgba(245, 158, 11, 0); }
+  60%  { box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(251, 191, 36, 0.3) inset, 0 0 48px rgba(245, 158, 11, 0.18); }
+  100% { box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(251, 191, 36, 0.12) inset, 0 0 32px rgba(245, 158, 11, 0.08); }
+}
+.chat-wrapper.summary-mode .chat-header {
+  background: rgba(245, 158, 11, 0.08);
+  border-bottom-color: rgba(245, 158, 11, 0.12);
+  transition: background 0.3s 0.15s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chat-wrapper.summary-mode .chat-header-left small {
+  color: #f59e0b !important;
+  transition: color 0.25s 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chat-wrapper.summary-mode .chat-footer {
+  border-top-color: rgba(245, 158, 11, 0.12);
+  transition: border-color 0.3s 0.05s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chat-wrapper.summary-mode .chat-input-wrap:focus-within {
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 0 4px rgba(245, 158, 11, 0.12);
+}
+.chat-wrapper.summary-mode .chat-send-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  transition: background 0.3s 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  &:hover:not(:disabled) { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
 }
 
 /* 头部 — 毛玻璃顶栏 */
@@ -905,6 +1268,7 @@ export default {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.03);
   user-select: none;
+  transition: background 0.3s 0.1s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:active {
     cursor: grabbing;
@@ -924,6 +1288,7 @@ export default {
     display: block;
     font-size: 14px;
     color: var(--text-primary, #fff);
+    transition: color 0.25s 0.05s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   small {
@@ -1201,11 +1566,13 @@ export default {
   50% { opacity: 0; }
 }
 
-/* 三点弹跳 — 思考中动画 */
-.thinking-dots {
-  min-height: 24px;
+/* 思考状态容器 */
+.thinking-status {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 24px;
 }
 .dots-container {
   display: inline-flex;
@@ -1223,6 +1590,25 @@ export default {
 .dots-container .dot:nth-child(1) { animation-delay: 0s; }
 .dots-container .dot:nth-child(2) { animation-delay: 0.2s; }
 .dots-container .dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* 阶段指示器 */
+.phase-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  font-size: 13px;
+  color: var(--brand-accent, #00f3ff);
+  animation: phase-fade-in 0.3s ease-out;
+}
+.phase-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+@keyframes phase-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 @keyframes dot-bounce {
   0%, 80%, 100% { transform: translateY(0); opacity: 0.3; }
@@ -1284,6 +1670,7 @@ export default {
   padding: 14px 18px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.3s 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .chat-input-wrap {
@@ -1355,6 +1742,7 @@ export default {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: #fff;
   font-size: 15px;
+  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1375,6 +1763,100 @@ export default {
     opacity: 0.3;
     cursor: not-allowed;
   }
+}
+
+.chat-stop-btn {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.12);
+  color: rgba(248, 113, 113, 0.9);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+
+  .stop-icon {
+    width: 10px;
+    height: 10px;
+    background: currentColor;
+    border-radius: 2px;
+    flex-shrink: 0;
+    animation: stop-pulse 1.5s ease-in-out infinite;
+  }
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.22);
+    border-color: rgba(239, 68, 68, 0.55);
+    color: #fca5a5;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+@keyframes stop-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* 消息操作按钮 */
+.msg-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: 42px;
+  margin-top: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.chat-msg:hover .msg-actions {
+  opacity: 1;
+}
+.msg-action-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  &.retry {
+    color: rgba(251, 191, 36, 0.7);
+    &:hover {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+    }
+  }
+}
+
+.copy-toast {
+  font-size: 11px;
+  color: #34d399;
+  white-space: nowrap;
+  line-height: 26px;
+  animation: toast-in 0.25s ease-out;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-4px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 /* 拖拽缩放把手 */
@@ -1539,11 +2021,43 @@ export default {
 .theme-light .chat-send-btn {
   background: linear-gradient(135deg, #2563eb, #3b82f6);
 }
+.theme-light .chat-stop-btn {
+  border-color: rgba(220, 38, 38, 0.3);
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+  &:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(220, 38, 38, 0.5);
+    color: #b91c1c;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.12);
+  }
+}
+.theme-light .msg-action-btn {
+  background: rgba(0, 0, 0, 0.06);
+  color: #94a3b8;
+  &:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #475569;
+  }
+  &.retry {
+    color: #d97706;
+    &:hover {
+      background: rgba(245, 158, 11, 0.12);
+      color: #b45309;
+    }
+  }
+}
+.theme-light .copy-toast {
+  color: #059669;
+}
 .theme-light .streaming-cursor::after {
   color: #2563eb;
 }
 .theme-light .dots-container .dot {
   background: #2563eb;
+}
+.theme-light .phase-indicator {
+  color: #2563eb;
 }
 
 /* 亮色主题脉冲呼吸光环 */

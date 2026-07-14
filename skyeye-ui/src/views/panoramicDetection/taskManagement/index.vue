@@ -66,7 +66,8 @@
             max-height="100%"
             height="100%"
             width="100%"
-            @selection-change="handleSelectionChange">
+            @selection-change="handleSelectionChange"
+            @row-click="handleRowClick">
             <el-table-column type="selection" width="50"></el-table-column>
             <el-table-column prop="batch_name" label="任务名称" align="center" width="160"></el-table-column>
             <el-table-column prop="batch_id" label="任务编号" sortable align="center" width="160"></el-table-column>
@@ -611,6 +612,9 @@ export default {
     //获取选中的值
     handleSelectionChange(val) {
       this.selectitems = val.map((item) => item.batch_id);
+    },
+    handleRowClick(row) {
+      this.$router.replace({ query: { ...this.$route.query, selectedId: row.batch_id } })
     },
     //批量删除
     async batchDelete() {

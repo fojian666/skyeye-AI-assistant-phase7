@@ -922,6 +922,22 @@ export default {
       this.map.flyTo([lat, lng], zoom, { duration: 1.5 })
     },
 
+    flyToRegion(lat, lng, polygon) {
+      if (!this.map) return
+      if (polygon && polygon.length > 0) {
+        // 用 polygon 构建 bounds，自适应缩放确保一次看到所有轮廓
+        const rings = polygon.map(ring => ring.map(p => [p.lat, p.lng]))
+        const tempLayer = L.polygon(rings)
+        const bounds = tempLayer.getBounds()
+        tempLayer.remove()
+        const mapMax = this.map.getMaxZoom()
+        this.map.flyToBounds(bounds, { padding: [30, 30], maxZoom: mapMax, duration: 1.5 })
+      } else {
+        // 无 polygon 回退到点定位
+        this.map.flyTo([lat, lng], 16, { duration: 1.5 })
+      }
+    },
+
     drawRegion(polygon, name, lat, lng, subRegions) {
       if (!this.map) return
       // 清除上一个区域

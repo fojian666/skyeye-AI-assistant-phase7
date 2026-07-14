@@ -2,8 +2,7 @@
 
 ## 项目概述
 
-金陵阡陌（SkyEye）是一个基于低空遥感和无人机技术的智能巡检平台，集成了 **GIS 地图（2D/3D）**、**全景图像分析**、**AI 目标检测**、**航线规划**、**图斑变化检测**、**资源管理** 等核心功能。  
-平台通过 **DeepSeek 大模型** 提供 AI 智能助手，支持自然语言驱动地图导航、区域圈定、页面跳转等操作。
+金陵阡陌（SkyEye）是一个基于低空遥感与无人机技术的智能巡检平台，集成了 **GIS 地图（2D/3D）**、**全景图像分析**、**AI 目标检测**、**航线规划**、**图斑变化检测** 等核心功能。平台通过 **DeepSeek 大模型** 提供 AI 智能助手，支持自然语言驱动地图定位、区域圈定、页面跳转和数据查询。
 
 ---
 
@@ -12,17 +11,17 @@
 | 层级 | 技术 | 说明 |
 |------|------|------|
 | 前端框架 | Vue 2 + Element UI | SPA 应用 |
-| 前端构建 | Vue CLI + Webpack | — |
 | 2D 地图 | Leaflet | 开源轻量 GIS |
 | 3D 地图 | Cesium | 三维地球引擎 |
 | 全景图 | Pannellum | 浏览器全景渲染 |
-| 动画库 | GSAP | 高性能 JS 动画 |
+| 动画库 | GSAP | 弹窗/拖拽动画 |
 | 图表 | ECharts | 数据可视化 |
 | 后端框架 | Django | Python Web 框架 |
 | 大模型 | DeepSeek (LangChain + LangGraph) | AI 对话与工具调用 |
+| 流式输出 | SSE (Server-Sent Events) | real-time 阶段反馈 |
 | 地理编码 | 高德地图 API | 地名 → 坐标 / 行政区边界 |
 | 实时通信 | MQTT + WebSocket | 无人机遥测数据 |
-| 数据库 | PostgreSQL | 从 config.ini 读取连接信息 |
+| 数据库 | PostgreSQL | config.ini 配置连接 |
 
 ---
 
@@ -30,12 +29,12 @@
 
 ```
 skyeye/
-├── README.md                     # 本文档
-├── .gitignore                    # 忽略 config.ini / *.sql / node_modules 等
-├── skyeye/                       # Python/Django 后端
+├── README.md
+├── .gitignore
+├── skyeye/                       # Django 后端
 │   ├── apps/
-│   │   ├── system/               # 系统管理（用户/菜单/角色）+ AI Chat API
-│   │   │   ├── views.py          # ★ chat_completions / geocode / district
+│   │   ├── system/               # 系统管理 + AI Chat API
+│   │   │   ├── views.py          # ★ chat_completions（SSE 流式）+ geocode + district
 │   │   │   ├── urls.py           # API 路由
 │   │   │   ├── models.py
 │   │   │   └── serialirzers.py
@@ -43,30 +42,29 @@ skyeye/
 │   │   ├── experience/           # 体验模块
 │   │   └── interpretation/       # AI 解译分析
 │   ├── utils_tools/
-│   │   └── district_cache.py     # ★ 行政区划边界缓存（内存 + JSON）
+│   │   └── district_cache.py     # 行政区划边界缓存（内存 + JSON）
 │   ├── district_cache.json       # 江苏省 13 市 95 区县多边形缓存
 │   └── config.ini                # API Key 配置（gitignore）
 │
-├── skyeye-ui/                    # Vue 前端
-│   ├── src/
-│   │   ├── components/
-│   │   │   └── chat/
-│   │   │       └── ChatModel.vue # ★ AI 助手悬浮窗组件
-│   │   ├── views/
-│   │   │   ├── dataManagement/oneMap/       # 一张图（2D/3D）
-│   │   │   ├── routePlanning/              # 航线规划
-│   │   │   ├── panoramicDetection/         # 全景检测
-│   │   │   ├── intelligentMonitoring/      # 智能监测
-│   │   │   ├── pattern-verifiy/            # 图斑核实
-│   │   │   └── ...                         # 其他 20+ 模块
-│   │   ├── router/index.js    # 路由配置
-│   │   ├── store/             # Vuex 状态管理
-│   │   ├── layout/            # 布局（Header/侧栏/主题切换）
-│   │   ├── api/               # 接口封装
-│   │   └── utils/             # 工具函数
-│   └── public/
-│       ├── static/Cesium/     # Cesium 3D 引擎
-│       └── theme/             # 亮色/暗色主题 CSS
+└── skyeye-ui/                    # Vue 前端
+    ├── src/
+    │   ├── components/chat/
+    │   │   └── ChatModel.vue     # ★ AI 助手悬浮窗（SSE 流式 + 停止/重试/复制）
+    │   ├── views/
+    │   │   ├── dataManagement/oneMap/       # 一张图（2D/3D）
+    │   │   ├── routePlanning/              # 航线规划
+    │   │   ├── panoramicDetection/         # 全景检测
+    │   │   ├── intelligentMonitoring/      # 智能监测
+    │   │   └── pattern-verifiy/            # 图斑核实
+    │   ├── router/index.js
+    │   ├── store/                 # Vuex
+    │   ├── layout/                # 布局（Header / 侧栏 / 主题切换）
+    │   ├── api/                   # 接口封装
+    │   └── utils/                 # 工具函数
+    └── public/
+        ├── config/config.js      # ★ 运行时配置（baseUrl / 全景图 / 地图服务等）
+        ├── static/Cesium/        # Cesium 3D 引擎
+        └── theme/                # 亮色/暗色主题 CSS
 ```
 
 ---
@@ -75,83 +73,59 @@ skyeye/
 
 ### 入口
 
-右下角悬浮 **胶囊形按钮**（🤖 AI 助手），点击弹性弹出毛玻璃聊天面板。
+右下角悬浮胶囊按钮（🤖 AI 助手），点击弹性弹出毛玻璃聊天面板。
 
 ### 核心链路
 
 ```
-用户输入 → DeepSeek 大模型 → Tool Call → 后端执行 → 前端响应事件
+用户输入 → DeepSeek 大模型 → Tool Call → 后端 SSE 流式返回 → 前端逐阶段展示
 ```
+
+流式阶段：`🔍 理解问题 → 🗺️ 地理编码 → 📊 查询数据 → 🔎 查找任务 → ✍️ 生成回答`
 
 ### 工具列表
 
-| 工具名 | 功能 | 调用条件 |
+| 工具 | 功能 | 触发条件 |
 |------|------|------|
-| `navigate_page` | 跳转系统页面 | 用户要求跳转 |
-| `map_action` | 地图定位 + 区域边界绘制 | 用户提及任何地点/区域 |
-| `query_data` | 查询系统数据 | 用户询问数据 |
+| `navigate_page` | 跳转系统页面 | 用户要求打开/前往/进入某个页面 |
+| `map_action` | 地图定位 + 区域边界绘制 | 用户提及任何地点/区域/行政区 |
+| `query_data` | 查询系统数据（数量/状态/统计） | 用户询问数据量、统计、状态 |
+| `lookup_task` | 按任务编号查询并跳转 | 用户提供 batch_id 格式编号 |
 
-### 路由映射（17 条）
-
-| 页面 | 实际路径 |
-|------|------|
-| 项目管理 | `/task-mgmt/verify-clue` |
-| 一张图 | `/data-management/one-map` |
-| 影像管理 | `/data-management/table` |
-| 全景规划 | `/route-planning/panoramicpoint-planning` |
-| 算法规划 | `/route-planning/algorithm-planning` |
-| 人工选点 | `/route-planning/manual-planning` |
-| 地图总览 | `/panoramic-detection/map-view` |
-| 范围管理 | `/panoramic-detection/grid-management` |
-| 批次管理 | `/panoramic-detection/task-management` |
-| 全景检测 | `/panoramic-detection/main-detection` |
-| 不检测区域 | `/panoramic-detection/frame-area` |
-| 全景变化 | `/panoramic-detection/panorama-change-detection` |
-| 场景管理 | `/panoramic-detection/scene` |
-| 线索总览 | `/panoramic-detection/clue-view` |
-| 临时批次 | `/panoramic-detection/main-detection-temp` |
-| 报告管理 | `/panoramic-detection/report` |
-| 任务管理 | `/pattern-verifiy/task_management` |
-
-### 地图导航
-
-- 后端调高德 `geocode` API → 地名 → 经纬度 + 完整地址名
-- 前端 `navigate-map` 事件 → 2D Map `flyTo()` / 3D Map `camera.flyTo()`
-- 平滑飞行动画
-
-### 区域圈定（子区域彩色边界）
-
-- 后端调高德 `config/district` API → 地名 → polygon 边界坐标
-- **子区域圈定**：输入"南京市"自动获取鼓楼区、秦淮区等 11 个区的独立边界，各分配不同颜色
-- 前端 `draw-region` 事件：
-  - 3D（Cesium）：主区域白色半透明底，子区域各色填充 + 描边
-  - 2D（Leaflet）：子区域 hover 显示名称 tooltip
-- 同步执行 `navigate-map`，定位到区域中心
-- 再次触发自动清除上一轮的图层
-
-### 行政区划缓存
-
-- 预加载 **江苏省 13 市 95 区县**的多边形边界，存入 `district_cache.json`
-- 模块级内存缓存：首次加载后常驻内存，后续查询零磁盘 IO、零 API 调用
-- 支持管理命令 `python manage.py preload_districts` 刷新缓存
-
-### 追问建议
-
-每段 AI 回复正文后附 3 个用户可能追问的问题，以 `|||` 分隔。
-
-### 面板组件特性
+### 面板交互
 
 | 特性 | 说明 |
 |------|------|
+| 流式输出 | SSE 实时显示处理阶段，打字机逐字渲染 Markdown |
+| 停止生成 | 红色胶囊按钮，支持中止请求和打字输出 |
+| 重试 | 出错/中断后一键重发最后一条消息 |
+| 复制回答 | hover 显示复制按钮，点击后"已复制"提示 |
+| 保留会话 | 关闭窗口不丢失历史，手动清空通过删除按钮 |
+| 拖拽 | FAB / 面板头部均可拖拽，边界碰撞检测 |
+| 缩放 | 右下角拖拽把手，宽 320~700px，高 400~85vh |
+| 吸附 | 点 → 吸附为全高右栏，← 恢复浮动 |
 | 毛玻璃 | `backdrop-filter: blur(24px)` 半透明面板 |
-| GSAP 动画 | 打开弹性弹出 `back.out(1.7)` |
-| 拖拽 | fab / 面板头部均可拖拽，边界碰撞检测 |
-| 自由缩放 | 右下角拖拽把手，宽 320~700px，高 400~85vh |
-| 右侧吸附 | 点 `→` 吸附为全高右边栏，`←` 恢复浮动 |
-| 侧栏大圆 | 靠近面板边缘浮现大圆，hover 展开小圆（`←` 吸附 / `✕` 关闭） |
-| 角色名称 | 每条消息上方显示用户名和模型名 |
-| 主题适配 | 亮色/暗色自动适配，`html[data-theme]` 选择器 |
-| 关闭 | 即时消失，无残留黑条 |
+| GSAP 动画 | 打开 `back.out(1.7)` 弹性弹出 |
+| 主题适配 | 亮色/暗色自动适配 |
+
+### 地图导航
+
+- 后端调高德 `geocode` API → 地名 → 经纬度 + 完整地址
+- 前端 `navigate-map` 事件 → 地图 `flyTo()` 平滑飞行动画
+- 自动缩放适配区域边界，确保完整显示
+
+### 区域圈定
+
+- 后端调高德 `config/district` API → polygon 边界坐标
+- 输入"南京市"自动获取 11 个区的独立边界，各分配不同颜色
+- 前端 `draw-region` 事件：主区域半透明底，子区域彩色填充 + 描边
+- 再次触发自动清除上一轮图层
+
+### 行政区划缓存
+
+- 预加载江苏省 13 市 95 区县的多边形边界 → `district_cache.json`
+- 模块级内存缓存，首次加载后常驻，后续零磁盘 IO、零 API 调用
+- 管理命令：`python manage.py preload_districts`
 
 ---
 
@@ -175,7 +149,7 @@ python manage.py runserver 0.0.0.0:8000
 
 ### 配置
 
-编辑 `skyeye/config.ini`：
+编辑 `skyeye/config.ini`（已 gitignore）：
 
 ```ini
 [deepseek]
@@ -187,35 +161,29 @@ model = deepseek-chat
 api_key = your_amap_key
 ```
 
-> `config.ini` 已加入 `.gitignore`，不会提交到仓库。
+### 运行时配置（前端）
+
+部署时修改 `skyeye-ui/public/config/config.js` 中的 `baseUrl` 等字段即可切换 API 地址，无需重新构建。
 
 ---
 
 ## 未提交内容（.gitignore 排除清单）
 
-以下文件和目录**不会**出现在仓库中，clone 后需自行创建或生成：
-
 | 类别 | 文件/目录 | 说明 |
 |------|----------|------|
-| 密钥配置 | `skyeye/config.ini` | DeepSeek API Key、高德 API Key、数据库连接信息 |
-| Python 缓存 | `__pycache__/` `*.pyc` `*.pyo` | Python 字节码缓存 |
-| Python 包信息 | `*.egg-info/` `.eggs/` | 包安装元数据 |
-| 测试文件 | `test*.py` `*_test.py` `tests/` | Python 单元测试 |
-| 测试文件 | `*.spec.js` `*.test.js` `__tests__/` | 前端单测文件 |
-| 测试文件 | `*.spec.ts` `*.test.ts` | TypeScript 测试文件 |
+| 密钥 | `skyeye/config.ini` | DeepSeek / 高德 API Key / 数据库连接 |
 | 依赖 | `node_modules/` | npm 包（`npm install` 安装） |
-| 构建产物 | `dist/` `/build/` | 前端打包输出 |
-| SQL 文件 | `*.sql` | 数据库脚本 |
-| 影像/视频 | `*.tif` `*.mp4` | 影像和视频文件 |
-| 多媒体 | `*.swf` `*.air` `*.ipa` `*.apk` | Flash/移动应用包 |
-| Shapefile | `skyeye/static/shp/` | 地理矢量数据 |
-| 运行时产物 | `skyeye/static/route_jobs/` | 航线规划缓存 |
-| 运行时产物 | `skyeye/static/route_plan/` | 航线规划结果 |
-| 运行时产物 | `skyeye/static/layers/` | 图层缓存 |
-| 日志 | `*.log` `logs/` `dev-server.log` | 运行日志 |
+| 构建产物 | `dist/` `build/` | 前端打包输出 |
+| Python 缓存 | `__pycache__/` `*.pyc` `*.pyo` `*.egg-info/` | 字节码 / 包元数据 |
+| 测试文件 | `test*.py` `*_test.py` `tests/` `*.spec.js` `*.test.js` `*.spec.ts` `*.test.ts` `__tests__/` | 单元测试 |
+| SQL | `*.sql` | 数据库脚本 |
+| 影像/视频 | `*.tif` `*.mp4` | 影像视频文件 |
 | 模型权重 | `*.bin` `*.pth` `*.th` | 二进制模型文件 |
-| IDE 配置 | `.idea/` `.vscode/` `*.suo` `*.sln` | 编辑器个人配置 |
-| 系统文件 | `.DS_Store` `Thumbs.db` | 操作系统生成文件 |
+| 多媒体 | `*.swf` `*.air` `*.ipa` `*.apk` | Flash / 移动应用包 |
+| 运行时产物 | `skyeye/static/shp/` `skyeye/static/route_jobs/` `skyeye/static/route_plan/` `skyeye/static/layers/` | 地理数据 / 航线缓存 / 图层 |
+| 日志 | `*.log` `logs/` `dev-server.log` | 运行日志 |
+| IDE | `.idea/` `.vscode/` `*.suo` `*.sln` | 编辑器个人配置 |
+| 系统 | `.DS_Store` `Thumbs.db` | OS 生成文件 |
 
 ---
 

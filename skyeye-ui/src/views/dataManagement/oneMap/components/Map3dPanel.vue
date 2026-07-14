@@ -851,6 +851,32 @@ export default {
       });
     },
 
+    flyToRegion3D(lat, lng, polygon) {
+      if (!this.viewer || !this.Cesium) return
+      const Cesium = this.Cesium
+      if (polygon && polygon.length > 0) {
+        // 用 polygon 计算 Rectangle，Cesium 自动适配缩放
+        const coords = polygon.flat()
+        const lngs = coords.map(p => p.lng)
+        const lats = coords.map(p => p.lat)
+        const rectangle = Cesium.Rectangle.fromDegrees(
+          Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)
+        )
+        this.viewer.camera.flyTo({
+          destination: rectangle,
+          orientation: {
+            heading: Cesium.Math.toRadians(0),
+            pitch: Cesium.Math.toRadians(-90),
+            roll: 0
+          },
+          duration: 1.5
+        })
+      } else {
+        // 无 polygon 回退到点定位
+        this.flyTo3D(lat, lng, 16)
+      }
+    },
+
     drawRegion(polygon, name, lat, lng, subRegions) {
       if (!this.viewer || !this.Cesium) return
       const Cesium = this.Cesium
