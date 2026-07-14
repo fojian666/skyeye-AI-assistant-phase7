@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-wrapper" :class="[`theme-${theme}`, { 'query-mode': chatMode === 'query', 'summary-mode': chatMode === 'summary' }]" :style="wrapperStyle">
+  <div class="chat-wrapper" :class="[`theme-${theme}`, { 'query-mode': chatMode === 'query', 'summary-mode': chatMode === 'summary', 'reduce-motion': reduceMotion }]" :style="wrapperStyle">
     <!-- 悬浮按钮 -->
     <div v-if="!visible" class="chat-fab" @click="open" @mousedown="startDrag" title="AI 助手">
         <span class="fab-emoji">🤖</span>
@@ -23,6 +23,9 @@
             </div>
           </div>
           <div class="chat-header-right">
+            <button class="chat-btn-icon" :title="reduceMotion ? '启用动态效果' : '减少动态效果'" @click="reduceMotion = !reduceMotion">
+              <i :class="reduceMotion ? 'el-icon-video-play' : 'el-icon-video-pause'"></i>
+            </button>
             <button class="chat-btn-icon" :title="docked ? '取消吸附' : '吸附到右侧'" @click="docked = !docked">
               <i :class="docked ? 'el-icon-d-arrow-left' : 'el-icon-d-arrow-right'"></i>
             </button>
@@ -135,7 +138,8 @@
               v-else
               class="chat-send-btn"
               :disabled="!input.trim()"
-              @click="send">
+              @click="send"
+              title="发送">
               <i class="el-icon-position"></i>
             </button>
           </div>
@@ -147,12 +151,12 @@
 
         <!-- 右侧拓展槽 -->
         <div v-show="!docked" class="side-rail" :class="{ visible: sideRailVisible }">
-          <div class="rail-item small spread-top-1"><i class="el-icon-search"></i></div>
+          <div class="rail-item small spread-top-1" title="搜索定位"><i class="el-icon-search"></i></div>
           <div class="rail-item large" @click="toggleChatMode"
             :title="chatMode === 'query' ? '切换到智能摘要' : chatMode === 'summary' ? '切换到聊天模式' : '切换到数据查询模式'">
             <i :class="chatMode === 'query' ? 'el-icon-data-line' : chatMode === 'summary' ? 'el-icon-document-checked' : 'el-icon-star-off'"></i>
           </div>
-          <div class="rail-item small spread-bot-1"><i class="el-icon-s-tools"></i></div>
+          <div class="rail-item small spread-bot-1" title="系统设置"><i class="el-icon-s-tools"></i></div>
         </div>
       </div>
   </div>
@@ -306,6 +310,7 @@ export default {
       chatMode: 'chat',  // 'chat' | 'query' | 'summary'
       currentContext: null,
       lastAutoSummaryKey: null,  // 防重复触发
+      reduceMotion: false,       // 减少动态效果
     }
   },
   computed: {
@@ -522,7 +527,7 @@ export default {
         page: {
           path: route.path,
           name: route.name || '',
-          title: route.meta?.title || document.title || '',
+          title: (route.matched[route.matched.length - 1]?.meta?.title) || route.meta?.title || document.title || '',
         },
         params: { ...route.params },
         query: { ...route.query },
@@ -644,8 +649,8 @@ export default {
                 return
               }
               this.phase = evt
-              // 每个阶段至少显示 200ms
-              await new Promise(r => setTimeout(r, 200))
+              // 每个阶段至少显示一段时间
+              await new Promise(r => setTimeout(r, this.reduceMotion ? 50 : 200))
             } catch (e) {
               /* non-JSON event line */
             }
@@ -833,7 +838,7 @@ export default {
           return
         }
         this.streamingText = renderInline(this.streamingText.replace(/<[^>]*>/g, '') + chars[i])
-        await new Promise(r => setTimeout(r, 25))
+        await new Promise(r => setTimeout(r, this.reduceMotion ? 5 : 25))
         this.scrollToBottom()
       }
       this.messages.push({ role: 'assistant', content: body, suggestions })
@@ -2086,5 +2091,48 @@ export default {
     box-shadow: 0 0 24px rgba(37, 99, 235, 0.25), 0 0 60px rgba(37, 99, 235, 0.12);
     opacity: 1;
   }
+}
+
+/* —— 减少动态效果 —— */
+.reduce-motion .chat-panel.thinking-glow {
+  animation: none;
+  border-color: rgba(0, 243, 255, 0.15);
+}
+.reduce-motion .chat-panel.thinking-glow::after {
+  animation: none;
+  box-shadow: none;
+  opacity: 0;
+}
+.reduce-motion .streaming-cursor::after {
+  animation: none;
+  opacity: 0;
+}
+.reduce-motion .dots-container .dot {
+  animation: none;
+  opacity: 0.5;
+}
+.reduce-motion .phase-text {
+  animation: none;
+  opacity: 1;
+}
+/* glow-in 动画加速 */
+.reduce-motion .query-mode .chat-panel {
+  animation: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.reduce-motion .summary-mode .chat-panel {
+  animation: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+/* footer/header 过渡加速 */
+.reduce-motion .chat-footer,
+.reduce-motion .chat-header,
+.reduce-motion .chat-header-right .chat-btn-icon {
+  transition-duration: 0.1s !important;
+  transition-delay: 0s !important;
+}
+.reduce-motion .query-send-btn,
+.reduce-motion .quick-item {
+  transition-duration: 0.1s !important;
 }
 </style>
