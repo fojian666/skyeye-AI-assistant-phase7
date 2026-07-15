@@ -1,10 +1,17 @@
 <template>
   <div class="settings-root">
-    <!-- 背景光晕 -->
-    <div class="bg-aurora a-1" aria-hidden="true"></div>
-    <div class="bg-aurora a-2" aria-hidden="true"></div>
+      <!-- Canvas: 动态极光 + 粒子连接网 -->
+      <canvas ref="auroraCanvas" class="aurora-canvas" aria-hidden="true"></canvas>
+
+      <!-- 噪点纹理叠加层 -->
+      <div class="noise-overlay" aria-hidden="true"></div>
 
     <main class="settings-main">
+      <!-- 返回按钮 -->
+      <button class="back-btn" @click="$router.back()" aria-label="返回">
+        <span class="back-arrow">&#8592;</span>
+      </button>
+
       <!-- 头部：打字机标题 -->
       <header ref="headerEl" class="page-header">
         <span class="eyebrow">
@@ -33,7 +40,10 @@
               <p class="pod-desc">控制 AI 回复的创造性与精确度</p>
 
               <div class="field-group">
-                <label class="field-label">模型选择</label>
+                <label class="field-label">
+                  模型选择
+                  <span class="field-help" data-tip="DeepSeek-V3 适合日常对话与快速问答；R1 适合复杂分析（图斑变化、报告生成），响应稍慢但推理更深入">?</span>
+                </label>
                 <div class="select-wrap">
                   <select v-model="model" class="field-select">
                     <option value="deepseek-chat">DeepSeek-V3 (通用对话)</option>
@@ -45,7 +55,10 @@
 
               <div class="field-group">
                 <div class="field-label-row">
-                  <label class="field-label">Temperature</label>
+                  <label class="field-label">
+                    Temperature
+                    <span class="field-help" data-tip="控制回复的随机性：0 = 确定性精确，2 = 最大创造性。巡检数据分析建议 0.3-0.7，创意生成建议 0.7-1.2">?</span>
+                  </label>
                   <span
                     class="field-val temp-val"
                     :class="tempClass"
@@ -69,7 +82,10 @@
 
               <div class="field-group">
                 <div class="field-label-row">
-                  <label class="field-label">最大输出长度</label>
+                  <label class="field-label">
+                    最大输出长度
+                    <span class="field-help" data-tip="控制单次回复的最大 Token 数。512 = 简短摘要，4096 = 标准分析，8192 = 详尽报告（响应时间相应增加）">?</span>
+                  </label>
                   <span class="field-val">{{ maxTokens.toLocaleString() }}</span>
                 </div>
                 <input
@@ -127,7 +143,10 @@
               <div class="field-group">
                 <div class="toggle-row" @click="reduceMotion = !reduceMotion">
                   <div>
-                    <label class="field-label toggle-label">减少动态效果</label>
+                    <label class="field-label toggle-label">
+                      减少动态效果
+                      <span class="field-help" data-tip="关闭入场动画与背景动态效果，适合低性能设备或偏好静态界面的用户">?</span>
+                    </label>
                     <span class="toggle-hint">{{ reduceMotion ? '已启用' : '已关闭' }}</span>
                   </div>
                   <button
@@ -163,6 +182,7 @@
                     class="mode-chip"
                     :class="{ active: defaultMode === m.value }"
                     :data-mode="m.value"
+                    :title="m.tip"
                     @click="defaultMode = m.value"
                   >
                     <span class="chip-icon">{{ m.icon }}</span>
@@ -241,7 +261,19 @@
           </div>
         </div>
       </div>
+      <!-- 操作行 -->
+      <div class="actions-bar">
+        <button class="btn-reset" @click="restoreDefaults">
+          <span class="btn-reset-icon">&#x21BA;</span>
+          恢复默认
+        </button>
+      </div>
     </main>
+
+    <!-- 保存确认 Toast -->
+    <transition name="toast">
+      <div v-if="toastVisible" class="save-toast">{{ toastMessage }}</div>
+    </transition>
   </div>
 </template>
 
@@ -261,9 +293,9 @@ export default {
       defaultMode: saved.defaultMode || 'chat',
       autoSummary: saved.autoSummary ?? false,
       modes: [
-        { value: 'chat',   icon: '\u{1F4AC}', label: '自由对话' },
-        { value: 'query',  icon: '\u{1F4CA}', label: '数据查询' },
-        { value: 'summary',icon: '\u{1F4CB}', label: '智能摘要' },
+        { value: 'chat',    icon: '\u{1F4AC}', label: '自由对话', tip: '通用 AI 对话，适合日常问答与讨论' },
+        { value: 'query',   icon: '\u{1F4CA}', label: '数据查询',  tip: '结构化数据检索与分析，适合图斑查询、统计报表' },
+        { value: 'summary', icon: '\u{1F4CB}', label: '智能摘要',  tip: '对当前选中要素自动生成综合摘要报告' },
       ],
       shortcuts: [
         { label: '唤起助手',    keys: isMac() ? ['⌘', 'K'] : ['Ctrl', 'K'] },
@@ -276,6 +308,10 @@ export default {
       typedTitle: '',
       typedSubtitle: '',
       typingLine: '', // 'eyebrow' | 'title' | 'subtitle' | 'done'
+      // Toast
+      toastVisible: false,
+      toastMessage: '设置已保存',
+      _toastTimer: null,
     }
   },
 
@@ -295,13 +331,25 @@ export default {
 
   mounted() {
     this._startTypewriter();
+    this._initAuroraCanvas();
+  },
+
+  beforeDestroy() {
+    this._destroyAurora();
   },
 
   watch: {
     model:             { handler: 'savePrefs', deep: false },
     temperature:       { handler: 'savePrefs', deep: false },
     maxTokens:         { handler: 'savePrefs', deep: false },
-    reduceMotion:      { handler: 'savePrefs', deep: false },
+    reduceMotion(v) {
+      this.savePrefs();
+      if (v) {
+        this._destroyAurora();
+      } else {
+        this._initAuroraCanvas();
+      }
+    },
     defaultMode:       { handler: 'savePrefs', deep: false },
     autoSummary:       { handler: 'savePrefs', deep: false },
   },
@@ -360,6 +408,146 @@ export default {
       });
     },
 
+    // ==================== Canvas: 动态极光 + 粒子连接网 ====================
+
+    _initAuroraCanvas() {
+      const canvas = this.$refs.auroraCanvas;
+      if (!canvas) return;
+      this._auroraCtx = canvas.getContext('2d');
+      this._auroraRaf = null;
+
+      // Blob 定义：{ cx, cy, r, color: [r,g,b], speedX, speedY, phase }
+      this._blobs = [
+        { cx: 0.75, cy: 0.15, r: 0.38, color: [99, 102, 241],  speedX: 0.00008, speedY: 0.00006, phase: 0 },
+        { cx: 0.20, cy: 0.72, r: 0.32, color: [6, 182, 212],   speedX: 0.00006, speedY: -0.00007, phase: 2.1 },
+        { cx: 0.88, cy: 0.60, r: 0.28, color: [139, 92, 246], speedX: -0.00007, speedY: 0.00005, phase: 4.3 },
+      ];
+
+      // 粒子定义
+      this._particles = [];
+      const PARTICLE_COUNT = 30;
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        this._particles.push({
+          x: Math.random(),
+          y: Math.random(),
+          vx: (Math.random() - 0.5) * 0.0003,
+          vy: (Math.random() - 0.5) * 0.0003,
+          r: 1.0 + Math.random() * 1.5,
+        });
+      }
+
+      this._onAuroraResize = this._resizeAurora.bind(this);
+      window.addEventListener('resize', this._onAuroraResize);
+      // 用 nextTick 确保 DOM 布局完成后再取尺寸
+      this.$nextTick(() => {
+        this._resizeAurora();
+        this._tickAurora();
+      });
+    },
+
+    _resizeAurora() {
+      const canvas = this.$refs.auroraCanvas;
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+      this._auroraW = rect.width;
+      this._auroraH = rect.height;
+      this._auroraDpr = dpr;
+    },
+
+    _tickAurora() {
+      const canvas = this.$refs.auroraCanvas;
+      const ctx = this._auroraCtx;
+      if (!canvas || !ctx) return;
+
+      const W = this._auroraW;
+      const H = this._auroraH;
+      const dpr = this._auroraDpr;
+      const t = performance.now() * 0.001; // seconds
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // ---- 绘制极光 blobs ----
+      const isLight = this.theme === 'light';
+      for (const blob of this._blobs) {
+        const bx = blob.cx * W + Math.sin(t * blob.speedX * 60 + blob.phase) * W * 0.08;
+        const by = blob.cy * H + Math.cos(t * blob.speedY * 60 + blob.phase * 1.3) * H * 0.07;
+        const br = blob.r * Math.max(W, H);
+
+        const grad = ctx.createRadialGradient(bx, by, 0, bx, by, br);
+        const [rr, gg, bb] = blob.color;
+        const alpha = isLight ? 0.06 : 0.12;
+        grad.addColorStop(0, `rgba(${rr},${gg},${bb},${alpha})`);
+        grad.addColorStop(0.5, `rgba(${rr},${gg},${bb},${alpha * 0.4})`);
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+        ctx.restore();
+      }
+
+      // ---- 绘制粒子 ----
+      const CONNECT_DIST = 120;
+      for (let i = 0; i < this._particles.length; i++) {
+        const p = this._particles[i];
+        // 更新位置
+        p.x += p.vx;
+        p.y += p.vy;
+        // 回弹边界
+        if (p.x < 0 || p.x > 1) p.vx *= -1;
+        if (p.y < 0 || p.y > 1) p.vy *= -1;
+        // 绘制粒子
+        const px = p.x * W;
+        const py = p.y * H;
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.beginPath();
+        ctx.arc(px, py, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = isLight ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.12)';
+        ctx.fill();
+        ctx.restore();
+
+        // 绘制连线
+        for (let j = i + 1; j < this._particles.length; j++) {
+          const q = this._particles[j];
+          const dx = (q.x - p.x) * W;
+          const dy = (q.y - p.y) * H;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < CONNECT_DIST) {
+            const lineAlpha = (1 - dist / CONNECT_DIST) * (isLight ? 0.08 : 0.06);
+            ctx.save();
+            ctx.scale(dpr, dpr);
+            ctx.beginPath();
+            ctx.moveTo(p.x * W, p.y * H);
+            ctx.lineTo(q.x * W, q.y * H);
+            ctx.strokeStyle = isLight
+              ? `rgba(99,102,241,${lineAlpha})`
+              : `rgba(255,255,255,${lineAlpha})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+      }
+
+      this._auroraRaf = requestAnimationFrame(() => this._tickAurora());
+    },
+
+    _destroyAurora() {
+      if (this._auroraRaf) cancelAnimationFrame(this._auroraRaf);
+      window.removeEventListener('resize', this._onAuroraResize);
+      this._auroraRaf = null;
+      this._auroraCtx = null;
+      this._blobs = [];
+      this._particles = [];
+    },
+
     // ==================== 偏好持久化 ====================
 
     _prefKey() {
@@ -384,6 +572,35 @@ export default {
         autoSummary: this.autoSummary,
       };
       localStorage.setItem(this._prefKey(), JSON.stringify(prefs));
+      this._showToast('设置已保存');
+    },
+
+    _showToast(msg) {
+      clearTimeout(this._toastTimer);
+      this.toastMessage = msg;
+      this.toastVisible = true;
+      this._toastTimer = setTimeout(() => {
+        this.toastVisible = false;
+      }, 1800);
+    },
+
+    restoreDefaults() {
+      const DEFAULTS = {
+        model: 'deepseek-chat',
+        temperature: 0.7,
+        maxTokens: 4096,
+        reduceMotion: false,
+        defaultMode: 'chat',
+        autoSummary: false,
+      };
+      this.model = DEFAULTS.model;
+      this.temperature = DEFAULTS.temperature;
+      this.maxTokens = DEFAULTS.maxTokens;
+      this.reduceMotion = DEFAULTS.reduceMotion;
+      this.defaultMode = DEFAULTS.defaultMode;
+      this.autoSummary = DEFAULTS.autoSummary;
+      this.savePrefs();
+      this._showToast('已恢复默认设置');
     },
   },
 };
@@ -416,37 +633,82 @@ function isMac() {
   }
 }
 
-/* 极光光晕 */
-.bg-aurora {
+/* ========================= 噪点纹理 (background-image, 避免合成层导致光标异常) ========================= */
+.noise-overlay {
   position: fixed;
+  inset: 0;
+  z-index: 1;
   pointer-events: none;
-  z-index: 0;
-  border-radius: 50%;
-  filter: blur(140px);
-  opacity: 0.15;
-  transition: opacity 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
 
-  &.a-1 {
-    width: 620px;
-    height: 620px;
-    top: -180px;
-    right: -120px;
-    background: radial-gradient(circle, rgba(99, 102, 241, 0.7) 0%, transparent 70%);
+/* ========================= 返回按钮 ========================= */
+.back-btn {
+  position: absolute;
+  top: 28px;
+  left: -56px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.8);
+    transform: translateX(-2px);
   }
-  &.a-2 {
-    width: 500px;
-    height: 500px;
-    bottom: -100px;
-    left: -80px;
-    background: radial-gradient(circle, rgba(6, 182, 212, 0.5) 0%, transparent 70%);
-    opacity: 0.1;
+
+  &:active {
+    transform: scale(0.95);
   }
+}
+
+.back-arrow {
+  font-size: 20px;
+  line-height: 1;
+}
+
+[data-theme="light"] .back-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.3);
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.12);
+    color: rgba(0, 0, 0, 0.55);
+  }
+}
+
+/* Canvas: 动态极光 + 粒子 */
+.aurora-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* ========================= 主容器 ========================= */
 .settings-main {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   max-width: 880px;
   margin: 0 auto;
   padding: 72px 32px 96px;
@@ -497,6 +759,83 @@ function isMac() {
   }
 }
 
+/* ========================= 操作行 ========================= */
+.actions-bar {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+.btn-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  &:active {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.btn-reset-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* ========================= Save Toast ========================= */
+.save-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  padding: 10px 22px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  backdrop-filter: blur(12px);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Toast transition */
+.toast-enter-active {
+  transition:
+    opacity 0.25s cubic-bezier(0.32, 0.72, 0, 1),
+    transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.toast-leave-active {
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.toast-enter,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+}
+
 /* ========================= 卡片 Pod ========================= */
 .card-pod {
   /* 外壳 — 铝合金托盘 */
@@ -524,9 +863,7 @@ function isMac() {
   .pod-core {
     padding: 28px 28px 32px;
     border-radius: 21px;
-    background: rgba(10, 16, 30, 0.65);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background: rgba(10, 16, 30, 0.55);
     border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
   }
@@ -573,13 +910,101 @@ function isMac() {
 }
 
 .field-label {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 12px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.55);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 8px;
+}
+
+/* 帮助提示 ? 徽标 */
+.field-help {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1;
+  cursor: help;
+  text-transform: none;
+  letter-spacing: 0;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.35);
+    color: rgba(165, 180, 252, 0.9);
+  }
+
+  /* 自定义 tooltip 气泡 */
+  &::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 10px);
+    transform: translateX(-50%) translateY(4px);
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.55;
+    white-space: normal;
+    width: 260px;
+    max-width: 80vw;
+    text-align: left;
+    letter-spacing: 0;
+    text-transform: none;
+    pointer-events: none;
+    opacity: 0;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+    z-index: 100;
+  }
+
+  /* 气泡三角箭头 */
+  &::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 4px);
+    transform: translateX(-50%) translateY(4px);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid rgba(15, 23, 42, 0.95);
+    opacity: 0;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  &:hover::after,
+  &:hover::before {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .field-label-row {
@@ -954,8 +1379,26 @@ function isMac() {
   transition: background 0.5s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-[data-theme="light"] .bg-aurora {
-  opacity: 0.08;
+[data-theme="light"] .field-help {
+  background: rgba(99, 102, 241, 0.06);
+  border-color: rgba(99, 102, 241, 0.12);
+  color: rgba(99, 102, 241, 0.35);
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.3);
+    color: rgba(99, 102, 241, 0.75);
+  }
+
+  &::after {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: rgba(99, 102, 241, 0.2);
+    color: #1e293b;
+  }
+
+  &::before {
+    border-top-color: rgba(255, 255, 255, 0.96);
+  }
 }
 
 [data-theme="light"] .page-header {
@@ -976,9 +1419,7 @@ function isMac() {
   }
 
   .pod-core {
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background: rgba(255, 255, 255, 0.5);
     border-color: rgba(0, 0, 0, 0.05);
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.8);
   }
@@ -1041,6 +1482,24 @@ function isMac() {
 }
 
 [data-theme="light"] .select-chevron { color: #94a3b8; }
+
+[data-theme="light"] .btn-reset {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.25);
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: rgba(0, 0, 0, 0.5);
+  }
+}
+
+[data-theme="light"] .save-toast {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(99, 102, 241, 0.15);
+  color: #1e293b;
+}
 
 /* ========================= 可视化动画 ========================= */
 

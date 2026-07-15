@@ -40,7 +40,7 @@
         </div>
 
         <!-- 消息列表 -->
-        <div class="chat-body" ref="chatBody" role="log" aria-live="polite" aria-label="对话内容">
+        <div class="chat-body" ref="chatBody" role="log" aria-live="polite" aria-label="对话内容" @scroll="onChatScroll">
           <div v-if="messages.length === 0" class="chat-empty">
             <span class="empty-emoji">&#x1F916;</span>
             <p>你好！我是金陵阡陌 AI 助手</p>
@@ -114,6 +114,17 @@
           </div>
         </div>
 
+        <!-- 回到底部按钮 -->
+        <button
+          v-show="showScrollBtn"
+          class="scroll-bottom-btn"
+          @click="scrollToBottom(true)"
+          title="回到底部"
+          aria-label="滚动到最新消息"
+        >
+          <i class="el-icon-bottom"></i>
+        </button>
+
         <!-- 输入区 -->
         <div class="chat-footer">
           <div class="chat-input-wrap">
@@ -153,7 +164,7 @@
         </div>
         </div>
 
-        <!-- 右侧拓展槽 -->
+        <!-- 左侧拓展槽 -->
         <div v-show="!docked" class="side-rail" :class="{ visible: sideRailVisible, 'show-hint': !railHintShown }">
           <div class="rail-item small spread-top-1" title="搜索定位"><i class="el-icon-search"></i></div>
           <div class="rail-item large" @click="toggleChatMode"
@@ -316,6 +327,8 @@ export default {
       lastAutoSummaryKey: null,  // 防重复触发
       reduceMotion: false,       // 减少动态效果
       railHintShown: false,     // side-rail 发现性提示（首次打开展示一次）
+      showScrollBtn: false,     // "回到底部"浮动按钮
+      _userScrolledUp: false,   // 用户手动上翻后暂停自动滚动
       model: 'deepseek-chat',   // 模型选择（从设置页同步）
       temperature: 0.7,          // Temperature 参数
       maxTokens: 4096,           // 最大输出 token
@@ -445,7 +458,7 @@ export default {
       this.resizing = false
     },
     onGlobalMouse(e) {
-      // 面板打开时，鼠标靠近面板右侧边缘浮现拓展槽
+      // 面板打开时，鼠标靠近面板左侧边缘浮现拓展槽
       if (!this.visible || this.docked) {
         this.sideRailVisible = false
         return
@@ -453,11 +466,11 @@ export default {
       const panel = this.$refs.panel
       if (!panel) { this.sideRailVisible = false; return }
       const rect = panel.getBoundingClientRect()
-      // 鼠标在面板右侧 100px 范围内触发
-      const nearRight = e.clientX > rect.right && e.clientX < rect.right + 100
+      // 鼠标在面板左侧 100px 范围内触发
+      const nearLeft = e.clientX > rect.left - 100 && e.clientX < rect.left
       // 鼠标垂直方向也要在面板范围内
       const inVert = e.clientY > rect.top && e.clientY < rect.bottom
-      this.sideRailVisible = nearRight && inVert
+      this.sideRailVisible = nearLeft && inVert
     },
     onKeydown(e) {
       // Esc 关闭面板
@@ -522,7 +535,7 @@ export default {
           })
         }
         this.$refs.inputArea?.focus()
-        this.scrollToBottom()
+        this.scrollToBottom(true)
       })
     },
 
@@ -638,9 +651,12 @@ export default {
       if (this.streaming) return
       this.lastUserMessage = question
       this.messages.push({ role: 'user', content: question })
+      this._userScrolledUp = false
+      this.showScrollBtn = false
       this.streaming = true
       this.collectContext()
       this.chatLoop()
+      this.scrollToBottom(true)
     },
 
     insertNewline(e) {
@@ -662,8 +678,11 @@ export default {
       this.messages.push({ role: 'user', content: text })
       this.input = ''
       this.$nextTick(() => this.autoResize())
+      this._userScrolledUp = false
+      this.showScrollBtn = false
       this.streaming = true
       this.collectContext()
+      this.scrollToBottom(true)
 
       await this.chatLoop()
     },
@@ -991,11 +1010,26 @@ export default {
       }).catch(() => {})
     },
 
-    scrollToBottom() {
+    scrollToBottom(force = false) {
       this.$nextTick(() => {
         const el = this.$refs.chatBody
-        if (el) el.scrollTop = el.scrollHeight
+        if (!el) return
+        // 用户手动上翻且有历史消息时，不自动滚动（除非 force）
+        if (!force && this._userScrolledUp && this.messages.length > 0) return
+        el.scrollTo({ top: el.scrollHeight, behavior: force ? 'smooth' : 'instant' })
+        if (force) {
+          this._userScrolledUp = false
+          this.showScrollBtn = false
+        }
       })
+    },
+
+    onChatScroll() {
+      const el = this.$refs.chatBody
+      if (!el) return
+      const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+      this._userScrolledUp = distFromBottom > 60
+      this.showScrollBtn = distFromBottom > el.clientHeight * 0.5
     },
 
     autoResize() {
@@ -1121,17 +1155,17 @@ export default {
   }
 }
 
-/* ======================== 右侧拓展槽 — 透明半圆弧 ======================== */
+/* ======================== 左侧拓展槽 — 透明半圆弧 ======================== */
 .side-rail {
   position: absolute;
-  left: 100%;
-  margin-left: 4px;
+  right: 100%;
+  margin-right: 4px;
   top: 50%;
   width: 120px;
   height: 210px;
   z-index: 1010;  /* z: 侧栏层 */
   opacity: 0;
-  transform: translate(16px, -50%);
+  transform: translate(-16px, -50%);
   pointer-events: none;
   transition: opacity 0.35s cubic-bezier(0.32, 0.72, 0, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 
@@ -1173,11 +1207,11 @@ export default {
   cursor: pointer;
   transition: all 0.35s cubic-bezier(0.32, 0.72, 0, 1);
 
-  /* 大圆：左中，始终可见 */
+  /* 大圆：右中，始终可见 */
   &.large {
     width: 56px;
     height: 56px;
-    left: 4px;
+    right: 4px;
     top: 50%;
     transform: translateY(-50%);
     font-size: 24px;
@@ -1224,10 +1258,10 @@ export default {
 }
 
 /* 小圆半圆弧位置 */
-.spread-top-2 { left: 48px; top: 8px; }
-.spread-top-1 { left: 76px; top: 54px; }
-.spread-bot-1 { left: 76px; top: 120px; }
-.spread-bot-2 { left: 48px; top: 166px; }
+.spread-top-2 { left: 36px; top: 8px; }
+.spread-top-1 { left: 8px; top: 54px; }
+.spread-bot-1 { left: 8px; top: 120px; }
+.spread-bot-2 { left: 36px; top: 166px; }
 
 /* hover 时小圆散开 — 交错延迟 */
 .side-rail:hover .rail-item.small {
@@ -1485,6 +1519,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  scroll-behavior: smooth;
 
   &::-webkit-scrollbar { width: 5px; }
   &::-webkit-scrollbar-thumb {
@@ -1549,6 +1584,56 @@ export default {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
     }
+  }
+}
+
+/* 回到底部按钮 */
+.scroll-bottom-btn {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  animation: scroll-btn-in 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    transform: translateX(-50%) translateY(-2px);
+  }
+}
+
+@keyframes scroll-btn-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.theme-light .scroll-bottom-btn {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #64748b;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  &:hover {
+    background: #fff;
+    border-color: rgba(37, 99, 235, 0.3);
+    color: #2563eb;
   }
 }
 
