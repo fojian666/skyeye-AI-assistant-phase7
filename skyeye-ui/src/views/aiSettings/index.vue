@@ -309,7 +309,7 @@ export default {
         { value: 'summary', iconSvg: '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>', label: '智能摘要',  tip: '对当前选中要素自动生成综合摘要报告' },
       ],
       shortcuts: [
-        { label: '唤起助手',    keys: isMac() ? ['⌘', 'K'] : ['Ctrl', 'K'] },
+        { label: '唤起助手',    keys: this._isMac() ? ['⌘', 'K'] : ['Ctrl', 'K'] },
         { label: '关闭面板',    keys: ['Esc'] },
         { label: '发送消息',    keys: ['Enter'] },
         { label: '消息中换行',  keys: ['Shift', 'Enter'] },
@@ -319,11 +319,14 @@ export default {
       typedTitle: '',
       typedSubtitle: '',
       typingLine: '', // 'eyebrow' | 'title' | 'subtitle' | 'done'
+      _typewriterCancelled: false,
       // Toast
       toastVisible: false,
       toastMessage: '设置已保存',
       _toastTimer: null,
+      _saveTimer: null,        // savePrefs 防抖定时器
       _storageError: false,     // localStorage 读写异常标志
+      _themeWasLight: false,    // 追踪主题切换，重启 WebGL
     }
   },
 
@@ -342,15 +345,29 @@ export default {
   },
 
   mounted() {
+    this._themeWasLight = this.theme === 'light';
     this._startTypewriter();
     this._initAuroraCanvas();
   },
 
   beforeDestroy() {
+    this._typewriterCancelled = true;
+    clearTimeout(this._toastTimer);
+    clearTimeout(this._saveTimer);
     this._destroyAurora();
   },
 
   watch: {
+    theme(val) {
+      if (val === 'dark' && this._themeWasLight) {
+        this._themeWasLight = false;
+        if (!this.reduceMotion) this._initAuroraCanvas();
+      }
+      if (val === 'light') {
+        this._themeWasLight = true;
+        this._destroyAurora();
+      }
+    },
     model:             { handler: 'savePrefs', deep: false },
     temperature:       { handler: 'savePrefs', deep: false },
     maxTokens:         { handler: 'savePrefs', deep: false },
@@ -367,6 +384,10 @@ export default {
   },
 
   methods: {
+    _isMac() {
+      return /Mac|iPod|iPhone|iPad/.test(navigator.platform || '');
+    },
+
     toggleTheme() {
       const next = this.theme === 'light' ? 'dark' : 'light';
       this.$store.commit('changeTheme', next);
@@ -411,6 +432,7 @@ export default {
     _typeChars(text, targetProp, delay, onDone) {
       let i = 0;
       const tick = () => {
+        if (this._typewriterCancelled) return;
         if (i <= text.length) {
           this[targetProp] = text.slice(0, i);
           i++;
@@ -498,10 +520,11 @@ export default {
       const u = this._glUniforms;
       if (!gl || !prog || !u || !canvas) return;
 
-      // 浅色模式不绘制 WebGL，保持纯 CSS 背景
+      // 浅色模式不绘制 WebGL，停止 rAF 循环（主题 watcher 会在切回深色时重启）
       if (this.theme === 'light') {
         gl.clear(gl.COLOR_BUFFER_BIT);
-        this._glRaf = requestAnimationFrame(() => this._tickAurora());
+        cancelAnimationFrame(this._glRaf);
+        this._glRaf = null;
         return;
       }
 
@@ -577,7 +600,9 @@ export default {
 
     _loadPrefs() {
       try {
-        return JSON.parse(localStorage.getItem(this._prefKey())) || {};
+        const prefs = JSON.parse(localStorage.getItem(this._prefKey())) || {};
+        this._storageError = false;
+        return prefs;
       } catch (e) {
         console.warn('[aiSettings] localStorage 读取失败', e);
         this._storageError = true;
@@ -586,21 +611,25 @@ export default {
     },
 
     savePrefs() {
-      const prefs = {
-        model: this.model,
-        temperature: this.temperature,
-        maxTokens: this.maxTokens,
-        reduceMotion: this.reduceMotion,
-        defaultMode: this.defaultMode,
-        autoSummary: this.autoSummary,
-      };
-      try {
-        localStorage.setItem(this._prefKey(), JSON.stringify(prefs));
-      } catch (e) {
-        console.warn('[aiSettings] localStorage 写入失败', e);
-        this._storageError = true;
-      }
-      this._showToast(this._storageError ? '写入存储失败，请检查浏览器空间' : '设置已保存');
+      clearTimeout(this._saveTimer);
+      this._saveTimer = setTimeout(() => {
+        const prefs = {
+          model: this.model,
+          temperature: this.temperature,
+          maxTokens: this.maxTokens,
+          reduceMotion: this.reduceMotion,
+          defaultMode: this.defaultMode,
+          autoSummary: this.autoSummary,
+        };
+        try {
+          localStorage.setItem(this._prefKey(), JSON.stringify(prefs));
+          this._storageError = false;
+        } catch (e) {
+          console.warn('[aiSettings] localStorage 写入失败', e);
+          this._storageError = true;
+        }
+        this._showToast(this._storageError ? '写入存储失败，请检查浏览器空间' : '设置已保存');
+      }, 300);
     },
 
     _showToast(msg) {
@@ -632,10 +661,6 @@ export default {
     },
   },
 };
-
-function isMac() {
-  return /Mac|iPod|iPhone|iPad/.test(navigator.platform || '');
-}
 
 // ==================== GLSL Shaders (WebGL Ether 背景) ====================
 
@@ -874,10 +899,9 @@ void main(){
     background: rgba(99, 102, 241, 0.12);
     border: 1px solid rgba(99, 102, 241, 0.2);
     color: rgba(165, 180, 252, 0.9);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
     margin-bottom: 18px;
   }
 

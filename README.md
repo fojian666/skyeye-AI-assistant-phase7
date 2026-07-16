@@ -1,10 +1,10 @@
 # 金陵阡陌（SkyEye）— 低空遥感智能巡检平台
 
-> **Phase 5** — 视觉增强与交互优化 · 环境动画 · Tooltip 体系 · 保存确认 · 智能滚动
+> **Phase 5** — Liquid Glass 视觉升级 · AI 设置闭环 · 导航意图推理 · 无障碍全面覆盖
 
 ## 项目概述
 
-金陵阡陌（SkyEye）是一个基于低空遥感与无人机技术的智能巡检平台，集成了 **GIS 地图（2D/3D）**、**全景图像分析**、**AI 目标检测**、**航线规划**、**图斑变化检测** 等核心功能。平台通过 **DeepSeek 大模型** 提供 AI 智能助手，支持自然语言驱动地图定位、区域圈定、页面跳转和数据查询。
+金陵阡陌（SkyEye）是一个基于低空遥感与无人机技术的智能巡检平台，集成了 **GIS 地图（2D/3D）**、**全景图像分析**、**AI 目标检测**、**航线规划**、**图斑变化检测** 等核心功能。平台通过 **DeepSeek 大模型** 提供 AI 智能助手，支持自然语言驱动地图定位、区域圈定、页面跳转（含 AI 设置页）、任务查询和数据检索。
 
 ---
 
@@ -16,8 +16,9 @@
 | 2D 地图 | Leaflet | 开源轻量 GIS |
 | 3D 地图 | Cesium | 三维地球引擎 |
 | 全景图 | Pannellum | 浏览器全景渲染 |
-| 动画库 | GSAP | 弹窗/拖拽动画 |
+| 动效 | GSAP + WebGL Shader + CSS Animation | 面板动画 / 极光背景 / 呼吸光斑 |
 | 图表 | ECharts | 数据可视化 |
+| 设计 Token | CSS 自定义属性 (cyber-tokens) | `--app-accent` / 六级圆角 / 等宽字体栈 |
 | 后端框架 | Django | Python Web 框架 |
 | 大模型 | DeepSeek (LangChain + LangGraph) | AI 对话与工具调用 |
 | 流式输出 | SSE (Server-Sent Events) | real-time 阶段反馈 |
@@ -67,6 +68,7 @@ skyeye/
 │       └── verify_license.py         # 许可证验证
 │
 └── skyeye-ui/                         # Vue 前端
+    ├── README.md                      # 前端详细文档（Phase 5 更新）
     ├── src/
     │   ├── App.vue                    # 根组件
     │   ├── main.js                    # 入口
@@ -76,14 +78,14 @@ skyeye/
     │   │   ├── user.js                # 用户状态
     │   │   └── filter.js              # 筛选器状态
     │   ├── layout/                    # 布局框架
-    │   │   ├── index.vue              # 主布局（Header + 侧栏 + 内容区）
+    │   │   ├── index.vue              # 主布局（Header + 侧栏 + 内容区 + ChatModel）
     │   │   └── components/
     │   │       ├── Header.vue         # 顶部导航
     │   │       ├── ChangePassword.vue # 修改密码
     │   │       ├── UserManagement.vue # 用户管理
     │   │       └── 404.vue            # 404 页面
     │   ├── components/                # 公共组件
-    │   │   ├── chat/ChatModel.vue     # ★ AI 助手悬浮窗
+    │   │   ├── chat/ChatModel.vue     # ★ AI 助手悬浮窗（Liquid Glass 双层玻璃 + 导航闭环）
     │   │   ├── panoramaViewer/        # 全景查看器
     │   │   ├── sceneLayer/            # 场景图层管理器
     │   │   ├── smallMap/              # 小地图
@@ -102,7 +104,7 @@ skyeye/
     │   │   ├── MovingMarker.js        # 移动标记
     │   │   └── ...                    # 流播放器/矢量样式/地图加载等
     │   ├── views/
-    │   │   ├── aiSettings/            # ★ AI 助手设置页
+    │   │   ├── aiSettings/            # ★ AI 助手设置页（Liquid Glass + WebGL 极光 + 呼吸光斑）
     │   │   ├── home/                  # 首页
     │   │   ├── login/                 # 登录
     │   │   ├── dashboard/             # 仪表盘
@@ -125,7 +127,7 @@ skyeye/
     │   │   ├── panoramaView/          # 全景查看
     │   │   └── mapScreenshot/         # 地图截图
     │   ├── css/                       # 全局样式
-    │   │   └── theme/                 # 亮/暗主题（CSS 变量 + 全局 Token）
+    │   │   └── theme/                 # 亮/暗主题（CSS 变量 + 设计 Token）
     │   ├── assets/                    # 静态资源（图标/图片/标记图标）
     │   ├── plugins/                   # 插件初始化（Element UI / Leaflet）
     │   ├── js/                        # 第三方 JS（ECharts / Leaflet 扩展）
@@ -146,11 +148,11 @@ skyeye/
 
 ### 三种模式
 
-| 模式 | 图标 | 功能 | 视觉 |
-|------|------|------|------|
-| **聊天模式** | 💬 | 自由对话，通用问答 | 蓝色系 |
-| **数据查询模式** | 📊 | 检索系统线索、图斑、批次等数据 | 红色系 |
-| **智能摘要模式** | 📄 | 当前页面数据分析 | 金色系 |
+| 模式 | 功能 | 视觉 |
+|------|------|------|
+| **聊天模式** | 自由对话，通用问答 | 蓝色系 |
+| **数据查询模式** | 检索系统线索、图斑、批次等数据 | 红色系 |
+| **智能摘要模式** | 当前页面数据分析 | 金色系 |
 
 点击侧边栏大圆按钮循环切换，切换时有 toast 提示当前模式及用途。模式色统一应用到面板边框 + 头部 + 底部 + 侧边栏按钮。
 
@@ -166,7 +168,7 @@ skyeye/
 
 | 工具 | 功能 | 触发条件 |
 |------|------|------|
-| `navigate_page` | 跳转系统页面 | 用户要求打开/前往/进入某个页面 |
+| `navigate_page` | 跳转系统页面（含 AI 设置页） | 用户要求打开/前往/进入某个页面 |
 | `map_action` | 地图定位 + 区域边界绘制 | 用户提及任何地点/区域/行政区 |
 | `query_data` | 查询系统数据（数量/状态/统计/列表/明细） | 用户询问数据量、统计、状态、列表 |
 | `lookup_task` | 按任务编号查询并跳转 | 用户提供 batch_id 格式编号 |
@@ -176,54 +178,47 @@ skyeye/
 | 特性 | 说明 |
 |------|------|
 | 流式输出 | SSE 实时显示处理阶段，打字机逐字渲染 Markdown |
-| 减少动效 | 头部按钮切换，关闭呼吸光晕/hue-rotate，跳过打字机直接渲染全文 |
+| 减少动效 | 头部按钮切换，关闭呼吸光晕/WebGL，跳过打字机直接渲染全文 |
 | 停止生成 | 红色胶囊按钮，支持中止请求和打字输出 |
 | 重试 | 出错/中断后一键重发最后一条消息 |
 | 复制回答 | hover 显示复制按钮，点击后"已复制"提示 |
 | 清空对话 | 确认弹窗防误操作，不可撤销 |
 | 保留会话 | 关闭窗口不丢失历史 |
 | 拖拽 | FAB / 面板头部均可拖拽，边界碰撞检测 |
-| 缩放 | 右下角拖拽把手，宽 320–700px，高 400–85vh |
-| 吸附 | 点 → 吸附为全高右栏，← 恢复浮动 |
-| Double-Bezel | 外层托盘壳 + 内核同心圆角，硬件质感 |
-| 侧边栏 | 右侧 hover 展开：搜索定位 / 模式切换 / 系统设置 |
+| 缩放 | 右下角拖拽把手，宽 320–520px，高 400–85vh |
+| 吸附 | 点 → 吸附为全高右栏 400px，← 恢复浮动 |
+| Double-Bezel | 外层托盘壳 (panel-shell) + 内核 (chat-panel) 同心圆角，硬件质感 |
+| 侧边栏 | 左侧 hover 展开：搜索定位 / 模式切换 / 系统设置 |
 | 快速提问 | 欢迎页常用问题卡片一键发送 |
 | 主题适配 | 亮色/暗色自动适配 |
-| 无障碍 | ARIA 属性全覆盖，placeholder 对比度 WCAG AA ≥4.5:1 |
+| 无障碍 | focus-visible 键盘导航、aria-label 全覆盖、prefers-reduced-motion 系统级兜底 |
 
-### AI 设置页（Phase 4 新增）
+### AI 设置页
 
-路由 `/ai-settings`，从 AI 助手面板侧边栏 ⚙ 图标进入。
+路由 `/ai-settings`，从 AI 助手面板头部 ⚙ 按钮或 LLM 意图推理（"打开设置"）进入，返回自动恢复聊天面板（sessionStorage 闭环）。
 
 | 设置项 | 说明 |
 |--------|------|
 | 模型选择 | DeepSeek-V3 (通用) / DeepSeek-R1 (推理) |
-| Temperature | 0 ~ 2.0，精确 ↔ 创造 |
+| Temperature | 0 ~ 2.0，精确 ↔ 创造，四段色温映射 |
 | 最大输出长度 | 512 ~ 8192 tokens，预览条可视化 |
 | 深色主题 | 亮色/暗色主题切换 |
-| 减少动态效果 | 关闭微交互动画 |
+| 减少动态效果 | 关闭 CSS 光斑 + WebGL + 打字机动画 |
 | 默认模式 | 自由对话 / 数据查询 / 智能摘要 |
 | 自动摘要 | 进入页面时自动触发摘要 |
 
-**设计系统**：Ethereal Glass (玻璃拟态) + Asymmetrical Bento Grid + Double-Bezel 卡片
-
-**入场动画**：打字机逐字打出标题（眉题 → 标题 → 副标题），闪烁光标跟随；5 张卡片从不同方向幕布式滑入，交错延迟展开
-
-**微交互**：Temperature 数值呼吸色温、Token 预览条渐变填充、模式芯片图标动画、键帽悬浮按压、版本号辉光脉冲
+**数据流**：设置页 ↔ localStorage (`skyeye_ai_settings`) ↔ ChatModel ↔ 后端 `chat_completions` API
 
 ### Phase 5 视觉增强
 
 | 效果 | 技术 | 说明 |
 |------|------|------|
-| 动态极光 | WebGL Ether Shader (光线步进) | 3D 有机流体雕塑，GPU 并行渲染，鼠标位置影响光晕，暗色主题专用 |
-| 噪点纹理 | SVG data URI background-image | 透明度 0.025，磨砂玻璃物理质感 |
-| 自定义 Tooltip | CSS `attr(data-tip)` + `::after` 气泡 | 模型/温度/Token/reduceMotion 4 项，暗/亮双主题适配 |
-| 保存确认 Toast | Vue `<transition>` | 修改即生效 + "设置已保存"提示 + "已恢复默认设置"反馈 |
-| 恢复默认 | 按钮 | 一键恢复所有设置项为出厂值 |
-| 返回按钮 | 毛玻璃 `←` | 左上角，`$router.back()` 返回上一页 |
-| 智能滚动 | ChatModel | 打字机输出时平滑跟随，手动上翻自动停止 + "回到底部"按钮 |
-
-**数据流**：设置页 ↔ localStorage (`skyeye_ai_settings`) ↔ ChatModel ↔ 后端 `chat_completions` API（model / temperature / max_tokens）
+| 动态极光 | WebGL Ether Shader | GPU 并行渲染，暗色主题专用 |
+| 呼吸光斑 | CSS `@keyframes pulse` × 3 | 蓝/紫/粉交错 4s 周期，blur(80px) |
+| 噪点纹理 | CSS `background-image` SVG data URI | 透明度 0.025，磨砂质感 |
+| Liquid Glass | Double-Bezel + backdrop-filter blur | panel-shell(20px) + chat-panel(40px) / pod-shell(12px) + pod-core(40px) |
+| 自定义 Tooltip | CSS `attr(data-tip)` + `::after` 气泡 | 防裁剪、防出界右对齐 |
+| 智能滚动 | `_userScrolledUp` 检测 | 打字机跟随，手动上翻停止 + 回到底部按钮 |
 
 ### 地图导航
 

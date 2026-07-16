@@ -143,6 +143,7 @@
               :disabled="streaming"
               rows="1"
               aria-label="输入消息"
+              maxlength="4000"
               @keydown.enter.exact.prevent="send"
               @keydown.enter.shift.prevent="insertNewline"
               @input="autoResize"
@@ -220,6 +221,10 @@ const TOOLS = [
       description:
         '跳转到系统的指定页面。仅在用户明确表达跳转/打开/前往/进入某个页面的意图时调用。' +
         '\n当用户询问数据、统计等问题（如"有多少""状态是什么"）时，不要调用此工具。' +
+        '\n【禁止调用场景】以下措辞的核心意图是查询数据，不是跳转页面：' +
+        '\n  - "数据概览""数据概况""查看数据""统计汇总" → 应使用 query_data' +
+        '\n  - "当前页面"开头 → 应使用 query_data' +
+        '\n  - 即使用户说"打开""查看"，如果后面是数据相关词汇（概览、统计、汇总、列表、明细），不调用此工具。' +
         '\n根据用户意图从下面列表中选择最匹配的路由：\n' +
         ROUTES.map(r => `  ${r.path} → ${r.title}`).join('\n') +
         '\n示例：打开全景检测 → navigate_page\n带我去航线规划 → navigate_page\n报告管理在哪 → navigate_page',
@@ -238,7 +243,11 @@ const TOOLS = [
     function: {
       name: 'map_action',
       description: '地图定位操作。仅在用户明确要求打开/查看/定位某个具体地点（如城市名、区名、街道名、地标名）时调用。' +
-        '\n不要将"防尘网""线索""图斑""批次"等业务术语误判为地点。' +
+        '\n【禁止调用场景】以下不是地点，不要调用此工具：' +
+        '\n  - "防尘网""线索""图斑""批次""全景图""网格""任务"等业务术语' +
+        '\n  - "数据概览""统计""汇总""有多少""状态"等数据查询词汇 → 应使用 query_data' +
+        '\n  - "一张图""全景检测""航线规划"等页面名称 → 应使用 navigate_page' +
+        '\n  - 即使用户说"打开""查看"，后面跟的不是具体地名，也不调用。' +
         '\n示例：带我去南京鼓楼区看看 → map_action\n鼓楼区在哪 → map_action\n打开玄武区 → map_action',
       parameters: {
         type: 'object',
@@ -256,7 +265,11 @@ const TOOLS = [
       name: 'lookup_task',
       description: '根据用户输入的任务编号（batch_id）查询任务。仅在用户明确提供编号格式的字符串时才调用。' +
         '\n编号格式通常类似 LS32020000120260701 或 32011300500120250715。如果任务存在则跳转到任务详情页。' +
-        '\n不要将普通数字（如"3个""5条"）误判为任务编号。' +
+        '\n【禁止调用场景】以下不是任务编号，不要调用：' +
+        '\n  - 普通数字（如"3个""5条""10个批次"）— 这是统计数量，应使用 query_data' +
+        '\n  - 地名（如"鼓楼区""玄武区"）— 应使用 map_action' +
+        '\n  - 页面名称（如"一张图""全景检测"）— 应使用 navigate_page' +
+        '\n  - 任务名称/描述（如"唐山市巡查任务""上周的检测"）— 没有编号就不调用' +
         '\n示例：查询 LS32020000120260701 → lookup_task\n帮我查一下 32011300500120250715 → lookup_task',
       parameters: {
         type: 'object',
@@ -272,6 +285,11 @@ const TOOLS = [
     function: {
       name: 'query_data',
       description: '查询系统数据。当用户询问任何关于数据量、统计、数量、状态的信息时必须调用此工具，不要反问。' +
+        '\n【禁止调用场景】以下意图不是数据查询，不要调用：' +
+        '\n  - "打开""跳转""前往" + 具体页面名 → 应使用 navigate_page' +
+        '\n  - "定位""在哪""带我去" + 具体地名 → 应使用 map_action' +
+        '\n  - 明确的 20 位任务编号（如 LS32020000120260701）→ 应使用 lookup_task' +
+        '\n  - "你好""你是谁""你能做什么"等闲聊 → 直接回复，不调用任何工具' +
         '\n示例：有多少全景图？ → query_data\n线索数据有多少条？ → query_data\n任务状态是什么？ → query_data',
       parameters: {
         type: 'object',
@@ -340,6 +358,12 @@ export default {
       showScrollBtn: false,     // "回到底部"浮动按钮
       _userScrolledUp: false,   // 用户手动上翻后暂停自动滚动
       _storageError: false,     // localStorage 读写异常标志
+      _typewriterCancelled: false, // 组件销毁时取消打字机
+      _mapDispatchTimer: null,     // map_action 延迟 dispatch 定时器
+      _copyTimer: null,             // 复制成功提示恢复定时器
+      _animLockTimer: null,         // 并发动画锁定时器
+      _animating: false,            // 并发动画锁（模式切换/dock/开合）
+      _sending: false,              // 并发发送锁（send/sendQuick）
       model: 'deepseek-chat',   // 模型选择（从设置页同步）
       temperature: 0.7,          // Temperature 参数
       maxTokens: 4096,           // 最大输出 token
@@ -391,6 +415,20 @@ export default {
     document.addEventListener('keydown', this._onKeydown)
   },
   beforeDestroy() {
+    // 中止正在进行的流式请求
+    this._typewriterCancelled = true;
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+    }
+    // 终止 GSAP 动画，防止 onComplete 回调在已销毁组件上执行
+    gsap.killTweensOf(this.$refs.panel);
+    const shell = this.$refs.panel?.parentElement;
+    if (shell) gsap.killTweensOf(shell);
+    // 清理栅栏定时器
+    clearTimeout(this._mapDispatchTimer);
+    clearTimeout(this._copyTimer);
+    clearTimeout(this._animLockTimer);
     document.removeEventListener('mousemove', this._onDragMove)
     document.removeEventListener('mouseup', this._onDragEnd)
     document.removeEventListener('mousemove', this._onGlobalMouse)
@@ -399,6 +437,10 @@ export default {
     document.removeEventListener('keydown', this._onKeydown)
   },
   watch: {
+    // streaming 结束时释放发送锁
+    streaming(val) {
+      if (!val) this._sending = false;
+    },
     // 路由变化：进入新页面且有选中对象 → 自动生成摘要
     $route: {
       immediate: true,
@@ -509,6 +551,15 @@ export default {
       }
     },
 
+    /** 并发动画锁：duration 毫秒内阻止重复操作。返回 true 表示已锁（应跳过） */
+    _lockAnim(durationMs) {
+      if (this._animating) return true;
+      this._animating = true;
+      clearTimeout(this._animLockTimer);
+      this._animLockTimer = setTimeout(() => { this._animating = false; }, durationMs);
+      return false;
+    },
+
     open() {
       // 拖拽后不触发点击打开
       if (this.hasMoved) return
@@ -611,6 +662,7 @@ export default {
     },
 
     toggleChatMode() {
+      if (this._lockAnim(400)) return;
       const map = { chat: 'query', query: 'summary', summary: 'chat' }
       this.chatMode = map[this.chatMode]
       const labels = { chat: '聊天模式 — 自由对话', query: '数据查询模式 — 检索系统数据', summary: '智能摘要 — 页面数据分析' }
@@ -618,6 +670,7 @@ export default {
     },
 
     openSettings() {
+      if (this._lockAnim(500)) return;
       sessionStorage.setItem('skyeye_from_chat', '1')
       this.closeChat()
       router.push('/ai-settings').catch(() => {})
@@ -627,6 +680,7 @@ export default {
     _loadSettings() {
       try {
         const prefs = JSON.parse(localStorage.getItem('skyeye_ai_settings')) || {}
+        this._storageError = false
         if (prefs.model) this.model = prefs.model
         if (prefs.temperature !== undefined && prefs.temperature !== null) this.temperature = prefs.temperature
         if (prefs.maxTokens !== undefined && prefs.maxTokens !== null) this.maxTokens = prefs.maxTokens
@@ -645,6 +699,7 @@ export default {
         const prefs = JSON.parse(localStorage.getItem('skyeye_ai_settings')) || {}
         prefs[key] = val
         localStorage.setItem('skyeye_ai_settings', JSON.stringify(prefs))
+        this._storageError = false
       } catch (e) {
         console.warn('[ChatModel] localStorage 回写失败', e)
         this._storageError = true
@@ -697,7 +752,8 @@ export default {
     },
 
     sendQuick(question) {
-      if (this.streaming) return
+      if (this.streaming || this._sending) return
+      this._sending = true
       this.lastUserMessage = question
       this.messages.push({ role: 'user', content: question })
       this._userScrolledUp = false
@@ -734,8 +790,9 @@ export default {
 
     async send() {
       const text = this.input.trim()
-      if (!text || this.streaming) return
+      if (!text || this.streaming || this._sending) return
 
+      this._sending = true
       this.lastUserMessage = text
       this.messages.push({ role: 'user', content: text })
       this.input = ''
@@ -756,6 +813,8 @@ export default {
 
       this.phase = null
       this.abortController = new AbortController()
+      // 60s 请求超时（防止后端挂起永久阻塞）
+      const timeoutId = setTimeout(() => this.abortController.abort(), 60000)
 
       try {
         const apiBase = (window.config && window.config.baseUrl) || 'http://127.0.0.1:8009/'
@@ -765,6 +824,8 @@ export default {
           body: JSON.stringify({ messages: allMessages, tools: this.activeTools, chat_mode: this.chatMode, context: this.currentContext, model: this.model, temperature: this.temperature, max_tokens: this.maxTokens }),
           signal: this.abortController.signal,
         })
+
+        clearTimeout(timeoutId)
 
         if (!response.ok) {
           const errData = await response.json().catch(() => ({}))
@@ -826,6 +887,7 @@ export default {
           this.streaming = false
         }
       } catch (err) {
+        clearTimeout(timeoutId)
         this.phase = null
         if (err.name === 'AbortError') {
           if (this.streamingText) {
@@ -856,7 +918,16 @@ export default {
         // 执行每个工具
         for (const tc of result.tool_calls) {
           const fn = tc.function
-          const args = JSON.parse(fn.arguments)
+          let args
+          try {
+            args = JSON.parse(fn.arguments)
+          } catch (e) {
+            console.warn('[ChatModel] tool_call arguments JSON 解析失败', fn.arguments)
+            this.messages.pop() // 移除空 assistant 消息
+            this.messages.push({ role: 'assistant', content: '工具调用参数解析失败，请重试', _error: true })
+            this.streaming = false
+            return
+          }
           const toolResult = await this.executeTool(fn.name, args)
           // 导航类工具执行后折叠面板，保留对话历史供后续追问
           if (toolResult._navigate) {
@@ -935,7 +1006,7 @@ export default {
         }
         if (this.$route.path !== '/data-management/one-map') {
           router.push('/data-management/one-map')
-          setTimeout(dispatch, 1500)
+          this._mapDispatchTimer = setTimeout(dispatch, 1500)
         } else {
           dispatch()
         }
@@ -1003,7 +1074,7 @@ export default {
         return
       }
       for (let i = 0; i < chars.length; i++) {
-        if (this._stopRequested) {
+        if (this._stopRequested || this._typewriterCancelled) {
           const partial = this.streamingText.replace(/<[^>]*>/g, '')
           if (partial) this.messages.push({ role: 'assistant', content: partial, _interrupted: true })
           this.streamingText = ''
@@ -1020,6 +1091,7 @@ export default {
     },
 
     stopGeneration() {
+      if (this._lockAnim(200)) return;
       this._stopRequested = true
       if (this.abortController) {
         this.abortController.abort()
@@ -1048,7 +1120,8 @@ export default {
       try {
         await navigator.clipboard.writeText(text)
         this.copiedMsgIdx = idx
-        setTimeout(() => { this.copiedMsgIdx = -1 }, 2000)
+        clearTimeout(this._copyTimer)
+        this._copyTimer = setTimeout(() => { this.copiedMsgIdx = -1 }, 2000)
       } catch {
         const ta = document.createElement('textarea')
         ta.value = text
@@ -1059,12 +1132,13 @@ export default {
         document.execCommand('copy')
         document.body.removeChild(ta)
         this.copiedMsgIdx = idx
-        setTimeout(() => { this.copiedMsgIdx = -1 }, 2000)
+        clearTimeout(this._copyTimer)
+        this._copyTimer = setTimeout(() => { this.copiedMsgIdx = -1 }, 2000)
       }
     },
 
     clearMessages() {
-      if (this.messages.length === 0) return
+      if (this.messages.length === 0 || this._lockAnim(300)) return
       this.$confirm('确定要清空所有对话记录吗？此操作不可撤销。', '清空对话', {
         confirmButtonText: '清空',
         cancelButtonText: '取消',
@@ -1477,6 +1551,19 @@ export default {
   transition: background 0.3s 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   &:hover:not(:disabled) { background: linear-gradient(135deg, #f87171, #ef4444); }
 }
+.chat-wrapper.query-mode .chat-msg.user .msg-content {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+  transition: background 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chat-wrapper.query-mode .chat-msg.user .msg-avatar {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  transition: background 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chat-wrapper.query-mode .chat-msg.user .msg-name {
+  color: #f87171;
+  transition: color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
 /* 智能摘要模式 — 琥珀/金色 */
 .chat-wrapper.summary-mode .chat-panel {
@@ -1507,6 +1594,19 @@ export default {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   transition: background 0.3s 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   &:hover:not(:disabled) { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+}
+.chat-wrapper.summary-mode .chat-msg.user .msg-content {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+  transition: background 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chat-wrapper.summary-mode .chat-msg.user .msg-avatar {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  transition: background 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chat-wrapper.summary-mode .chat-msg.user .msg-name {
+  color: #fbbf24;
+  transition: color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* —— 侧边栏模式色 —— */
@@ -2355,6 +2455,31 @@ export default {
 .theme-light .chat-msg .msg-content :deep(strong) {
   color: #2563eb;
 }
+
+/* 亮色主题 — 查询模式用户气泡 */
+.chat-wrapper.theme-light.query-mode .chat-msg.user .msg-content {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+}
+.chat-wrapper.theme-light.query-mode .chat-msg.user .msg-avatar {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+.chat-wrapper.theme-light.query-mode .chat-msg.user .msg-name {
+  color: #dc2626;
+}
+
+/* 亮色主题 — 摘要模式用户气泡 */
+.chat-wrapper.theme-light.summary-mode .chat-msg.user .msg-content {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25);
+}
+.chat-wrapper.theme-light.summary-mode .chat-msg.user .msg-avatar {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+}
+.chat-wrapper.theme-light.summary-mode .chat-msg.user .msg-name {
+  color: #b45309;
+}
+
 .theme-light .chat-footer {
   border-top-color: rgba(0, 0, 0, 0.05);
 }
