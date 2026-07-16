@@ -47,12 +47,7 @@
                 <div class="se-filter-form">
                     <el-form :inline="true" size="medium" :model="filterInfo" ref="filterInfo">
                         <el-form-item label="项目编号">
-                            <el-input
-                                v-model="filterInfo.task_id"
-                                placeholder="请输入项目编号"
-                                size="mini"
-                                class="custom-elinput-height"
-                                clearable />
+                            <el-input v-model="filterInfo.task_id" placeholder="请输入项目编号" size="mini" class="custom-elinput-height" clearable />
                         </el-form-item>
                         <el-form-item label="项目状态">
                             <el-select v-model="filterInfo.status" placeholder="请选择项目状态" size="mini" class="custom-elinput-height" clearable>
@@ -103,8 +98,8 @@
                         <el-table-column prop="createPerson" label="创建用户" align="center" width="140"></el-table-column>
                         <el-table-column prop="collectTime" label="采集时间" align="center" width="200"></el-table-column>
                         <el-table-column prop="createTime" label="创建时间" align="center" width="200"></el-table-column>
-                        <el-table-column label="操作" align="center" width="160" fixed="right" >
-                            <template slot-scope="scope" >
+                        <el-table-column label="操作" align="center" width="160" fixed="right">
+                            <template slot-scope="scope">
                                 <el-button type="text" size="mini" class="blue" @click="handleDataView(scope.row)"> 查看 </el-button>
                                 <el-button type="text" size="mini" class="blue" @click="handleDataUpload(scope.row)"> 上传 </el-button>
                             </template>

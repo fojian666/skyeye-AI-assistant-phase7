@@ -74,7 +74,6 @@ export default {
     cursor: pointer;
 }
 
-
 .title-bg-tab {
     height: 46px;
     background-image: url('@/assets/images/navigation-bar/title-bg-tab.png');

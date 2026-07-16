@@ -4,11 +4,11 @@
         <canvas id="overlay" ref="canvas"></canvas>
         <div class="show_jiaodu">
             <div class="gongju_left">
-                <span>{{formattedShotTime}}</span>
+                <span>{{ formattedShotTime }}</span>
             </div>
         </div>
         <div class="select-gd">
-            <el-collapse >
+            <el-collapse>
                 <el-collapse-item title="业务图层" name="allLayers">
                     <div v-for="(item, index) in allLayers" :key="item.id" class="gd-item">
                         <el-checkbox v-model="item.check">{{ item.name }}</el-checkbox>
@@ -21,17 +21,14 @@
 
 <script>
 import screenfull from 'screenfull';
-import {
-    getBufferLayerApi,
-    getPointBufferLayerApi,
-} from '@/api/commonApi';
-import {sphericalToScreen,isPointInView,updateZoomButtonsState} from '@/utils/panoramaTools';
+import { getBufferLayerApi, getPointBufferLayerApi } from '@/api/commonApi';
+import { sphericalToScreen, isPointInView, updateZoomButtonsState } from '@/utils/panoramaTools';
 export default {
     name: 'verifypannelViewLeft',
     //接收父组件传递的数据
     props: {
         currentObj: Object,
-        leftAngleParams: Object,
+        leftAngleParams: Object
     },
     data() {
         return {
@@ -42,14 +39,14 @@ export default {
             viewer: undefined,
             //是否全屏
             isScreenFull: false,
-            currentPitch: localStorage.getItem("initPitch"),
-            currentYaw:  this.normalizeYaw(localStorage.getItem("initYaw")),
+            currentPitch: localStorage.getItem('initPitch'),
+            currentYaw: this.normalizeYaw(localStorage.getItem('initYaw')),
             currentHfov: localStorage.getItem('initHfov'),
             ctx: null,
             canvas: null,
-            minHfov:10,
-            maxHfov:120,
-            allLayers:[]
+            minHfov: 10,
+            maxHfov: 120,
+            allLayers: []
         };
     },
     beforeDestroy() {
@@ -84,7 +81,7 @@ export default {
             if (this.currentObj.imageId) {
                 this.yawDegree = this.currentObj.yawDegree;
                 if (!this.currentObj.tileResolution) {
-                    const jpgUrl =  '/panoramaUrl/static/temp/' + this.currentObj.imageName;
+                    const jpgUrl = '/panoramaUrl/static/temp/' + this.currentObj.imageName;
                     this.viewer = pannellum.viewer('panoramaContainer', {
                         type: 'equirectangular', // 使用单张全景图模式
                         autoLoad: true,
@@ -108,17 +105,17 @@ export default {
                         autoLoad: true,
                         hfov: this.currentHfov, // 初始的水平视场角
                         minHfov: this.minHfov, // 最小水平视场角
-                        pitch:this.currentPitch,
-                        yaw:this.currentYaw,
-                        maxHfov:this.maxHfov, // 最大水平视场角
+                        pitch: this.currentPitch,
+                        yaw: this.currentYaw,
+                        maxHfov: this.maxHfov, // 最大水平视场角
                         multiRes: {
                             basePath: '/panoramaUrl/static/layers/' + this.currentObj.batchId + '/' + this.currentObj.imageId,
                             path: '/%l/%s%y_%x',
                             fallbackPath: '/fallback/%s',
                             extension: 'png',
-                            tileResolution: this.currentObj.tileResolution? this.currentObj.tileResolution : 512,
-                            maxLevel: this.currentObj.maxLevel ? this.currentObj.maxLevel:5,
-                            cubeResolution: this.currentObj.cubeResolution?this.currentObj.cubeResolution : 4576
+                            tileResolution: this.currentObj.tileResolution ? this.currentObj.tileResolution : 512,
+                            maxLevel: this.currentObj.maxLevel ? this.currentObj.maxLevel : 5,
+                            cubeResolution: this.currentObj.cubeResolution ? this.currentObj.cubeResolution : 4576
                         },
                         // "compass": true,// 添加指南针
                         // 其他全景图配置...
@@ -139,21 +136,21 @@ export default {
                 });
                 this.viewer.on('rendercanvas', (event) => {
                     this.getCurrentAngleParm();
-                    updateZoomButtonsState(this.viewer,this.minHfov,this.maxHfov)
+                    updateZoomButtonsState(this.viewer, this.minHfov, this.maxHfov);
                     if (this.ctx) {
                         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-                        this.allLayers.forEach((child)=>{
-                            if(child.check){
-                                this.drawGdPolygons()
+                        this.allLayers.forEach((child) => {
+                            if (child.check) {
+                                this.drawGdPolygons();
                             }
-                        })
+                        });
                     }
                 });
                 this.canvas = this.$refs.canvas;
                 this.canvas.width = this.viewer.getContainer().clientWidth;
                 this.canvas.height = this.viewer.getContainer().clientHeight;
                 this.ctx = this.canvas.getContext('2d');
-                this.getBufferGD()
+                this.getBufferGD();
             }
             // 监听窗口大小改变，screenfull.isFullscreen的值为是否全屏，若是则true，反之false
             window.onresize = () => {
@@ -168,12 +165,12 @@ export default {
 
         handleMouseDown(event) {},
         async drawGdPolygons() {
-            for (let i = 0; i < this.allLayers.length; i++){
-                const child = this.allLayers[i]
-                if( child.check ){
+            for (let i = 0; i < this.allLayers.length; i++) {
+                const child = this.allLayers[i];
+                if (child.check) {
                     // 1. 若正在请求，等待后跳过
                     if (child.isLoading) {
-                        await new Promise(resolve => {
+                        await new Promise((resolve) => {
                             const timer = setInterval(() => {
                                 if (!child.isLoading) {
                                     clearInterval(timer);
@@ -189,14 +186,14 @@ export default {
                             const res = await this.getLayerBuffer(child);
                             child.gdPolygons = res.points; // 3. 赋值后清除标记
                         } catch (error) {
-                            console.error("请求失败：", error);
+                            console.error('请求失败：', error);
                         } finally {
                             child.isLoading = false;
                         }
                     }
                     child.gdPolygons.forEach((item) => {
                         const color = child.color;
-                        const points = item.points
+                        const points = item.points;
                         const screenPoints = [];
                         const isInViews = [];
                         points.forEach((coord) => {
@@ -227,382 +224,378 @@ export default {
             }
         },
         //获取全部需叠加在全景图层
-        async getBufferGD(){
-            let layerRes = await getBufferLayerApi()
-            if(layerRes.code === 0){
+        async getBufferGD() {
+            let layerRes = await getBufferLayerApi();
+            if (layerRes.code === 0) {
                 let tempLayers = layerRes.data;
-                for(let i = 0; i < tempLayers.length;i++){
-                    let child = tempLayers[i]
+                for (let i = 0; i < tempLayers.length; i++) {
+                    let child = tempLayers[i];
                     child.check = false;
-                    child.color= window.config.colorList[i] || '#09c9ea'
+                    child.color = window.config.colorList[i] || '#09c9ea';
                 }
                 this.allLayers = tempLayers;
-
-            }else{
+            } else {
                 this.$message.error(layerRes.msg);
             }
         },
-        getLayerBuffer( param ){
+        getLayerBuffer(param) {
             let op = {
                 panorama_image_id: this.currentObj.imageId,
                 resource_id: param.id
-            }
-            return getPointBufferLayerApi(op).then((res) => {
-                if (res.code === 0) {
-                    const gdPolygons = res.data.map((item) => ({ points: item }));
-                    return { points: gdPolygons, id: param.id }; // 直接 return 结果
-                } else {
-                    return { points: [], id: param.id }; // 错误时也 return 结果
-                }
-            }).catch((error) => {
-                // 捕获异常，返回兜底结果
-                return { points: [], id: param.id };
-            });
-        },
-
+            };
+            return getPointBufferLayerApi(op)
+                .then((res) => {
+                    if (res.code === 0) {
+                        const gdPolygons = res.data.map((item) => ({ points: item }));
+                        return { points: gdPolygons, id: param.id }; // 直接 return 结果
+                    } else {
+                        return { points: [], id: param.id }; // 错误时也 return 结果
+                    }
+                })
+                .catch((error) => {
+                    // 捕获异常，返回兜底结果
+                    return { points: [], id: param.id };
+                });
+        }
     },
     async mounted() {
         this.handleViewerChange();
     },
     computed: {
-
         formattedShotTime() {
-            const timeMatch = this.currentObj?.imageName?.match(/(\d{4})(\d{2})(\d{2})\d{6}/)
-            return timeMatch ? `${timeMatch[1]}-${timeMatch[2]}-${timeMatch[3]}` : '未知日期'
+            const timeMatch = this.currentObj?.imageName?.match(/(\d{4})(\d{2})(\d{2})\d{6}/);
+            return timeMatch ? `${timeMatch[1]}-${timeMatch[2]}-${timeMatch[3]}` : '未知日期';
         }
-
     },
     watch: {
         allLayers: {
             handler(newVal) {
                 const allLayersList = [];
                 newVal.forEach((item) => {
-                    allLayersList.push({'name': item.name, 'check': item.check});
-                })
+                    allLayersList.push({ name: item.name, check: item.check });
+                });
                 this.$emit('updateAllLayersCheck', allLayersList);
             },
-            deep: true,
-
+            deep: true
         }
     }
 };
 </script>
 
 <style scoped>
-    @import '@/css/pannellum.css';
+@import '@/css/pannellum.css';
 
-    ::v-deep .transparent-dialog .el-dialog__headerbtn .el-icon-close:hover {
-        background-color: transparent;
-    }
+::v-deep .transparent-dialog .el-dialog__headerbtn .el-icon-close:hover {
+    background-color: transparent;
+}
 
-    ::v-deep .transparent-dialog .el-dialog {
-        background-color: rgba(0, 0, 0, 0.6); /* 半透明背景 */
-        box-shadow: none; /* 可选，移除阴影 */
-        z-index: 999;
-        color: #fff;
-    }
+::v-deep .transparent-dialog .el-dialog {
+    background-color: rgba(0, 0, 0, 0.6); /* 半透明背景 */
+    box-shadow: none; /* 可选，移除阴影 */
+    z-index: 999;
+    color: #fff;
+}
 
-    ::v-deep .el-dialog {
-        background-color: rgba(0, 0, 0, 0.4); /* 半透明背景 */
-        box-shadow: none; /* 可选，移除阴影 */
-        z-index: 999;
-        color: #fff;
-        position: absolute;
-        right: 50px;
-        width: 300px;
-    }
+::v-deep .el-dialog {
+    background-color: rgba(0, 0, 0, 0.4); /* 半透明背景 */
+    box-shadow: none; /* 可选，移除阴影 */
+    z-index: 999;
+    color: #fff;
+    position: absolute;
+    right: 50px;
+    width: 300px;
+}
 
-    ::v-deep .el-dialog__body {
-        height: 500px;
-        overflow-y: auto;
-    }
+::v-deep .el-dialog__body {
+    height: 500px;
+    overflow-y: auto;
+}
 
-    ::v-deep .el-table,
-    ::v-deep.el-table tr,
-    ::v-deep .el-table th,
-    ::v-deep.el-table th.el-table__cell {
-        background-color: rgba(0, 0, 0, 0.1); /* 半透明背景 */
-        box-shadow: none; /* 可选，移除阴影 */
-        z-index: 999;
-        color: #fff;
-    }
+::v-deep .el-table,
+::v-deep.el-table tr,
+::v-deep .el-table th,
+::v-deep.el-table th.el-table__cell {
+    background-color: rgba(0, 0, 0, 0.1); /* 半透明背景 */
+    box-shadow: none; /* 可选，移除阴影 */
+    z-index: 999;
+    color: #fff;
+}
 
-    ::v-deep .el-table__body tr:hover > td {
-        background-color: rgba(0, 0, 0, 0.6) !important;
-    }
+::v-deep .el-table__body tr:hover > td {
+    background-color: rgba(0, 0, 0, 0.6) !important;
+}
 
-    ::v-deep .el-dialog__header {
-        text-align: center;
-        font-weight: 700;
-        border-bottom: 1px solid #fff;
-    }
+::v-deep .el-dialog__header {
+    text-align: center;
+    font-weight: 700;
+    border-bottom: 1px solid #fff;
+}
 
-    ::v-deep .el-dialog__title {
-        color: #fff;
-        font-size: 16px;
-    }
+::v-deep .el-dialog__title {
+    color: #fff;
+    font-size: 16px;
+}
 
-    ::v-deep .gt-od-list-data .el-dialog__body {
-        padding: 10px; /* 根据需要调整内边距 */
-        color: #fff;
-    }
+::v-deep .gt-od-list-data .el-dialog__body {
+    padding: 10px; /* 根据需要调整内边距 */
+    color: #fff;
+}
 
-    ::v-deep .label-dialog .el-dialog {
-        position: absolute;
-        bottom: 4%;
-        width: 400px;
-        left: 50%;
-        margin-left: -200px;
-        background-color: rgba(0, 0, 0, 0.6); /* 半透明背景 */
-        box-shadow: none; /* 可选，移除阴影 */
-        z-index: 999;
-        color: #fff;
-    }
+::v-deep .label-dialog .el-dialog {
+    position: absolute;
+    bottom: 4%;
+    width: 400px;
+    left: 50%;
+    margin-left: -200px;
+    background-color: rgba(0, 0, 0, 0.6); /* 半透明背景 */
+    box-shadow: none; /* 可选，移除阴影 */
+    z-index: 999;
+    color: #fff;
+}
 
-    ::v-deep .gt-toolbar-right {
-        position: absolute;
-        right: 10px;
-        bottom: 20px;
-        width: 40px;
-        z-index: 99999;
-        background-color: rgba(0, 0, 0, 0.5);
-        border-radius: 10px;
-        margin-bottom: -10px;
-    }
+::v-deep .gt-toolbar-right {
+    position: absolute;
+    right: 10px;
+    bottom: 20px;
+    width: 40px;
+    z-index: 99999;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    margin-bottom: -10px;
+}
 
-    ::v-deep .gt-toolbar-right div {
-        width: 40px;
-        height: 40px;
-        cursor: pointer;
-        text-align: center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+::v-deep .gt-toolbar-right div {
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-    ::v-deep .gt-toolbar-right .gt-alarms-list img {
-        width: 24px;
-        height: 24px;
-    }
+::v-deep .gt-toolbar-right .gt-alarms-list img {
+    width: 24px;
+    height: 24px;
+}
 
-    ::v-deep .transparent-dialog .el-dialog__header,
-    .label-dialog .el-dialog__header {
-        text-align: center;
-        font-weight: 700;
-        border-bottom: 1px solid #fff;
-    }
+::v-deep .transparent-dialog .el-dialog__header,
+.label-dialog .el-dialog__header {
+    text-align: center;
+    font-weight: 700;
+    border-bottom: 1px solid #fff;
+}
 
-    ::v-deep .transparent-dialog .el-dialog__title,
-    .label-dialog .el-dialog__title {
-        color: #fff;
-        font-size: 16px;
-    }
+::v-deep .transparent-dialog .el-dialog__title,
+.label-dialog .el-dialog__title {
+    color: #fff;
+    font-size: 16px;
+}
 
-    ::v-deep .transparent-dialog .el-dialog__body {
-        padding: 10px; /* 根据需要调整内边距 */
-        color: #fff;
-    }
+::v-deep .transparent-dialog .el-dialog__body {
+    padding: 10px; /* 根据需要调整内边距 */
+    color: #fff;
+}
 
-    ::v-deep .label-dialog .el-form-item__label {
-        color: #fff;
-        width: 80px;
-    }
+::v-deep .label-dialog .el-form-item__label {
+    color: #fff;
+    width: 80px;
+}
 
-    ::v-deep .pannellum-layer {
-        z-index: 9999;
-        position: fixed;
-        right: 3%;
-        top: 3%;
-    }
+::v-deep .pannellum-layer {
+    z-index: 9999;
+    position: fixed;
+    right: 3%;
+    top: 3%;
+}
 
-    ::v-deep .el-radio .el-radio__input .el-radio__inner {
-        border-radius: 2px;
-    }
+::v-deep .el-radio .el-radio__input .el-radio__inner {
+    border-radius: 2px;
+}
 
-    ::v-deep .custom-hotspot {
-        width: 25px;
-        height: 40px;
-        background-image: url('@/assets/images/marker-icon-blue.png');
-        background-size: 100% 100%;
-        position: absolute;
-        transform: translate(-50%, -50%);
-        z-index: 999;
-    }
+::v-deep .custom-hotspot {
+    width: 25px;
+    height: 40px;
+    background-image: url('@/assets/images/marker-icon-blue.png');
+    background-size: 100% 100%;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 999;
+}
 
-    ::v-deep .custom-hotspot2 {
-        width: 25px;
-        height: 40px;
-        background-image: url('@/assets/images/marker-icon-red.png');
-        background-size: 100% 100%;
-        position: absolute;
-        transform: translate(-50%, -50%);
-        z-index: 999;
-    }
+::v-deep .custom-hotspot2 {
+    width: 25px;
+    height: 40px;
+    background-image: url('@/assets/images/marker-icon-red.png');
+    background-size: 100% 100%;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 999;
+}
 
-    ::v-deep .el-radio .el-radio__input.is-checked .el-radio__inner::after {
-        box-sizing: content-box;
-        content: '';
-        transition: transform 0.15s ease-in 0.05s;
-        transform-origin: center;
-        transform: rotate(-45deg) scaleY(1);
-        width: 6px;
-        height: 3px;
-        border: 2px solid white;
-        border-top: transparent;
-        border-right: transparent;
-        text-align: center;
-        display: block;
-        position: absolute;
-        top: 18%;
-        left: 18%;
-        vertical-align: middle;
-        border-radius: 0;
-        background: none;
-    }
+::v-deep .el-radio .el-radio__input.is-checked .el-radio__inner::after {
+    box-sizing: content-box;
+    content: '';
+    transition: transform 0.15s ease-in 0.05s;
+    transform-origin: center;
+    transform: rotate(-45deg) scaleY(1);
+    width: 6px;
+    height: 3px;
+    border: 2px solid white;
+    border-top: transparent;
+    border-right: transparent;
+    text-align: center;
+    display: block;
+    position: absolute;
+    top: 18%;
+    left: 18%;
+    vertical-align: middle;
+    border-radius: 0;
+    background: none;
+}
 
-    ::v-deep .gt-img-desc {
-        width: 100%;
-        text-overflow: clip;
-        overflow: hidden;
-        height: 20px;
-        line-height: 20px;
-        white-space: nowrap;
-        text-align: center;
-        font-size: 10px;
-        color: #fff;
-        text-shadow: 3px 3px 3px #000;
-    }
+::v-deep .gt-img-desc {
+    width: 100%;
+    text-overflow: clip;
+    overflow: hidden;
+    height: 20px;
+    line-height: 20px;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 10px;
+    color: #fff;
+    text-shadow: 3px 3px 3px #000;
+}
 
-    ::v-deep div.pnlm-tooltip span {
-        visibility: visible;
-        width: 100px;
-    }
+::v-deep div.pnlm-tooltip span {
+    visibility: visible;
+    width: 100px;
+}
 
-    ::v-deep .map-container {
-        position: absolute;
-        bottom: 0; /* 距离底部10px */
-        left: 0; /* 距离左侧10px */
-        width: 400px; /* 设定宽度 */
-        height: 300px; /* 设定高度 */
-        z-index: 9999999;
-        border: 1px solid #fff;
-    }
+::v-deep .map-container {
+    position: absolute;
+    bottom: 0; /* 距离底部10px */
+    left: 0; /* 距离左侧10px */
+    width: 400px; /* 设定宽度 */
+    height: 300px; /* 设定高度 */
+    z-index: 9999999;
+    border: 1px solid #fff;
+}
 
-    ::v-deep .leaflet-control-attribution {
-        display: none !important;
-    }
+::v-deep .leaflet-control-attribution {
+    display: none !important;
+}
 
-    .layer-checkbox {
-        margin-right: 8px;
-    }
-    ::v-deep .el-collapse-item__content {
-        font-size: 13px;
-        color: #303133;
-        line-height: 1.769230769230769;
-        margin-left: 5px;
-    }
-    ::v-deep .el-collapse-item__header {
-        display: flex;
-        align-items: center;
-        height: 36px;
-        line-height: 36px;
-        background-color: #fff;
-        color: #303133;
-        cursor: pointer;
-        border-bottom: 1px solid #ebeef5;
-        font-size: 13px;
-        font-weight: 500;
-        transition: border-bottom-color 0.3s;
-        outline: 0;
-        margin-left: 10px;
-    }
-    .show_jiaodu {
-        width: 100%;
-        height: 30px;
-        z-index: 9999999;
-        position: absolute;
-        display: flex; /* 使用flex布局 */
-        justify-content: space-between;
-        color: black;
-    }
-    .gongju_left {
-        width: 45%;
-        height: 100%;
-        overflow-wrap: break-word; /* 允许在单词内换行 */
-        word-break: break-word; /* 允许在单词内换行 */
-        margin-left: 10px;
-        justify-content: left; /* 水平居中 */
-        font-size: 20px;
-    }
-    .gongju_main {
-        width: 30%;
-        height: 100%;
-        justify-content: space-between;
-    }
-    .gongju_right {
-        width: 45%;
-        height: 100%;
-        justify-content: right; /* 水平居中 */
-        margin-right: 10px;
-    }
-    .gongju_main,
-    .gongju_left,
-    .gongju_right {
-        display: flex; /* 启用 flexbox */
-        align-items: center; /* 垂直居中 */
-        overflow-wrap: break-word; /* 允许在单词内换行 */
-    }
-    ::v-deep .el-form-item--small .el-form-item__content,
-    .el-form-item--small .el-form-item__label {
-        line-height: 32px;
-        width: 205px;
-    }
-    .btn-uploading {
-        text-align: center;
-    }
-    #overlay {
-        z-index: 1000;
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none; /* 确保不会干扰Pannellum的交互 */
-    }
-    .select-gd{
-        z-index: 9999999;
-        position: absolute;
-        font-size: 0.9rem;
-        color: black;
-        line-height: 32px;
-        top: 40px;
-        left: 10px;
-        height: 32px;
-
-    }
-    ::v-deep .el-collapse-item__header {
-        display: flex;
-        align-items: center;
-        height: 32px;
-        line-height: 32px;
-        color: #303133;
-        cursor: pointer;
-        font-size: 0.9rem;
-        font-weight: 500;
-        transition: border-bottom-color .3s;
-        outline: 0;
-        border-bottom:none;
-        background-color: rgb(218 213 213 / 38%);
-        margin-left: 0px;
-        padding:0 10px
-    }
-    ::v-deep .el-collapse {
-        border-top: none;
-        border-bottom: none;
-    }
-    ::v-deep .el-collapse-item__wrap {
-        border-bottom: none;
-        background-color: rgb(218 213 213 / 38%);
-        padding: 10px
-    }
+.layer-checkbox {
+    margin-right: 8px;
+}
+::v-deep .el-collapse-item__content {
+    font-size: 13px;
+    color: #303133;
+    line-height: 1.769230769230769;
+    margin-left: 5px;
+}
+::v-deep .el-collapse-item__header {
+    display: flex;
+    align-items: center;
+    height: 36px;
+    line-height: 36px;
+    background-color: #fff;
+    color: #303133;
+    cursor: pointer;
+    border-bottom: 1px solid #ebeef5;
+    font-size: 13px;
+    font-weight: 500;
+    transition: border-bottom-color 0.3s;
+    outline: 0;
+    margin-left: 10px;
+}
+.show_jiaodu {
+    width: 100%;
+    height: 30px;
+    z-index: 9999999;
+    position: absolute;
+    display: flex; /* 使用flex布局 */
+    justify-content: space-between;
+    color: black;
+}
+.gongju_left {
+    width: 45%;
+    height: 100%;
+    overflow-wrap: break-word; /* 允许在单词内换行 */
+    word-break: break-word; /* 允许在单词内换行 */
+    margin-left: 10px;
+    justify-content: left; /* 水平居中 */
+    font-size: 20px;
+}
+.gongju_main {
+    width: 30%;
+    height: 100%;
+    justify-content: space-between;
+}
+.gongju_right {
+    width: 45%;
+    height: 100%;
+    justify-content: right; /* 水平居中 */
+    margin-right: 10px;
+}
+.gongju_main,
+.gongju_left,
+.gongju_right {
+    display: flex; /* 启用 flexbox */
+    align-items: center; /* 垂直居中 */
+    overflow-wrap: break-word; /* 允许在单词内换行 */
+}
+::v-deep .el-form-item--small .el-form-item__content,
+.el-form-item--small .el-form-item__label {
+    line-height: 32px;
+    width: 205px;
+}
+.btn-uploading {
+    text-align: center;
+}
+#overlay {
+    z-index: 1000;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* 确保不会干扰Pannellum的交互 */
+}
+.select-gd {
+    z-index: 9999999;
+    position: absolute;
+    font-size: 0.9rem;
+    color: black;
+    line-height: 32px;
+    top: 40px;
+    left: 10px;
+    height: 32px;
+}
+::v-deep .el-collapse-item__header {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    line-height: 32px;
+    color: #303133;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: border-bottom-color 0.3s;
+    outline: 0;
+    border-bottom: none;
+    background-color: rgb(218 213 213 / 38%);
+    margin-left: 0px;
+    padding: 0 10px;
+}
+::v-deep .el-collapse {
+    border-top: none;
+    border-bottom: none;
+}
+::v-deep .el-collapse-item__wrap {
+    border-bottom: none;
+    background-color: rgb(218 213 213 / 38%);
+    padding: 10px;
+}
 </style>

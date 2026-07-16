@@ -22,7 +22,11 @@
                     <div class="number">
                         <span>批次编号：</span>
                         <el-select v-model="selectNumber" style="width: 220px">
-                            <el-option v-for="number in batchNumbersOptions" :key="number.batch_id" :label="number.batch_id" :value="number.batch_id"></el-option>
+                            <el-option
+                                v-for="number in batchNumbersOptions"
+                                :key="number.batch_id"
+                                :label="number.batch_id"
+                                :value="number.batch_id"></el-option>
                         </el-select>
                     </div>
                     <div class="street">
@@ -98,7 +102,7 @@
                 <div class="ttable">
                     <el-table :data="projects" border @selection-change="handleSelectionChange" max-height="100%" height="100%">
                         <el-table-column type="selection" width="50" align="center"></el-table-column>
-<!--                        <el-table-column prop="id" label="上传编号" width="80" align="center"></el-table-column>-->
+                        <!--                        <el-table-column prop="id" label="上传编号" width="80" align="center"></el-table-column>-->
                         <el-table-column type="index" label="序号"></el-table-column>
                         <el-table-column prop="batch_id" label="批次编号" align="center"></el-table-column>
                         <el-table-column prop="grid_id" label="网格编号" align="center"></el-table-column>
@@ -117,33 +121,26 @@
                         <el-table-column label="操作" width="100px" align="center">
                             <template slot-scope="scope">
                                 <ul class="action-list">
-                                    <li class="action-item"
-                                        @click="handleView(scope.row)">
-                                        查看
-                                    </li>
+                                    <li class="action-item" @click="handleView(scope.row)">查看</li>
 
                                     <!-- 当 status 为其他值时显示另一个按钮（例如"编辑"） -->
-                                    <li class="action-item1"
-                                        @click="handleDownload(scope.row)"
-                                        v-if="scope.row.status === 0">
-                                        信息反馈
-                                    </li>
+                                    <li class="action-item1" @click="handleDownload(scope.row)" v-if="scope.row.status === 0">信息反馈</li>
                                 </ul>
                             </template>
                         </el-table-column>
                     </el-table>
                 </div>
-                    <el-pagination
-                        background
-                        small
-                        layout="total, sizes,  prev, pager, next, jumper"
-                        v-model="currentPage"
-                        class="pagination"
-                        :total="total"
-                        :page-size="pageSize"
-                        @size-change="handleSizeChange"
-                        @current-change="handleCurrentChange">
-                    </el-pagination>
+                <el-pagination
+                    background
+                    small
+                    layout="total, sizes,  prev, pager, next, jumper"
+                    v-model="currentPage"
+                    class="pagination"
+                    :total="total"
+                    :page-size="pageSize"
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange">
+                </el-pagination>
             </div>
         </div>
     </div>
@@ -188,12 +185,12 @@ export default {
             projects: [],
             headers: { Authorization: 'Bearer ' + sessionStorage.getItem('token') || 'unknown' },
             gridRelatedOptions: [],
-            selectStreetOptions:[],
+            selectStreetOptions: [],
             currentStreetOptions: [],
-            currentBatch:{
-                "count": 0,
-                "batch_id": "",
-                "batch_name": ""
+            currentBatch: {
+                count: 0,
+                batch_id: '',
+                batch_name: ''
             }
         };
     },
@@ -232,7 +229,7 @@ export default {
                 pageIndex: this.currentPage,
                 gridId: this.gridselect,
                 batchId: this.batchselect,
-                batchType:0
+                batchType: 0
             };
             const res = await getUploadBatchData(para);
             if (res.code !== 0) {
@@ -250,7 +247,7 @@ export default {
         // },
         getUploadFile(response, file, fileList) {
             if (response.code === 0) {
-                this.uploadFileName =response.unzip_path;
+                this.uploadFileName = response.unzip_path;
                 this.$message.success(response.msg);
             } else {
                 this.$refs.upload.handleRemove(file);
@@ -307,28 +304,27 @@ export default {
             }
         },
         resetForm() {
-            if(this.$route.query.batch_id !== undefined){
+            if (this.$route.query.batch_id !== undefined) {
                 // this.$message.warning("当前批次下无法重置表单，请清除路由批次名称即可获取全部批次状况!!!")
-                const query = { ...this.$route.query }
-                delete query.batch_id
-                this.currentBatch.batch_name = ''
-                this.currentBatch.count = 0
+                const query = { ...this.$route.query };
+                delete query.batch_id;
+                this.currentBatch.batch_name = '';
+                this.currentBatch.count = 0;
                 this.selectNumber = '';
                 this.fileList = [];
                 this.uploadFileName = '';
-                this.selectStreet = ''
+                this.selectStreet = '';
                 this.$router.replace({ query }).then(() => {
                     // 可选：路由更新后重新加载数据
-                    this.handleGetInitMessage()
-                })
-            }else{
+                    this.handleGetInitMessage();
+                });
+            } else {
                 //重置检测表单
                 this.selectNumber = '';
                 this.fileList = [];
                 this.uploadFileName = '';
-                this.selectStreet = ''
+                this.selectStreet = '';
             }
-
         },
         async downloadUrl() {
             //全景点kml下载
@@ -339,8 +335,8 @@ export default {
                     const url = window.URL.createObjectURL(new Blob([response]));
                     const link = document.createElement('a');
                     link.href = url;
-                    link.setAttribute('download', this.grid_name + '.kml'); // 假设文件路径的最后一部分是文件名    
-                    document.body.appendChild(link); 
+                    link.setAttribute('download', this.grid_name + '.kml'); // 假设文件路径的最后一部分是文件名
+                    document.body.appendChild(link);
                     link.click();
 
                     // 清理
@@ -428,23 +424,24 @@ export default {
                 }
             }
         },
-        async handleGetInitMessage(){
+        async handleGetInitMessage() {
             const res = await getMainDetectionApi();
             if (res.code === 0) {
-                this.gridRelatedOptions = res.data
-                if (this.selectNumber != '' && this.selectNumber != undefined){ //说明点击待办跳转过来的
-                    this.gridRelatedOptions.forEach((item)=>{
-                        item.batch_list.forEach((batch)=>{
-                            if (batch.batch_id == this.selectNumber){
-                                this.selectStreet = item.street
-                                this.currentBatch = batch
+                this.gridRelatedOptions = res.data;
+                if (this.selectNumber != '' && this.selectNumber != undefined) {
+                    //说明点击待办跳转过来的
+                    this.gridRelatedOptions.forEach((item) => {
+                        item.batch_list.forEach((batch) => {
+                            if (batch.batch_id == this.selectNumber) {
+                                this.selectStreet = item.street;
+                                this.currentBatch = batch;
                             }
-                        })
-                    })
-                }else {
-                    this.gridRelatedOptions.forEach((item)=>{
-                        this.selectStreetOptions.push({value:item.street,label:item.street})
-                    })
+                        });
+                    });
+                } else {
+                    this.gridRelatedOptions.forEach((item) => {
+                        this.selectStreetOptions.push({ value: item.street, label: item.street });
+                    });
                 }
             } else {
                 //this.$message.warning(res.msg);
@@ -479,7 +476,7 @@ export default {
                 } else {
                     return '请选择批次名称';
                 }
-            }else{
+            } else {
                 return this.currentBatch.batch_name;
             }
         },
@@ -491,16 +488,15 @@ export default {
                 } else {
                     return '全景点数据';
                 }
-            }else{
+            } else {
                 return this.currentBatch.count;
             }
-        },
-
+        }
     },
     created() {
         this.getTableData();
     },
-    watch:{
+    watch: {
         selectStreet(newValue, oldValue) {
             if (newValue != '') {
                 this.selectNumber = '';
@@ -509,16 +505,16 @@ export default {
                 this.currentStreetOptions = this.gridRelatedOptions.filter((item) => item.street === newValue);
                 this.kml_path = this.currentStreetOptions[0].kml_path;
                 this.grid_name = this.currentStreetOptions[0].grid_name;
-                if(this.selectStreet != '' && this.$route.query.batch_id == undefined){
+                if (this.selectStreet != '' && this.$route.query.batch_id == undefined) {
                     let batch_obj = this.currentStreetOptions.filter((item) => item.street === this.selectStreet)[0];
                     if (batch_obj) {
                         const NumbersOptions = [];
                         batch_obj.batch_list.forEach((item) => {
-                            NumbersOptions.push({batch_id: item.batch_id,count: item.count, batch_name: item.batch_name});
-                        })
+                            NumbersOptions.push({ batch_id: item.batch_id, count: item.count, batch_name: item.batch_name });
+                        });
                         this.batchNumbersOptions = NumbersOptions;
                     }
-                }else{
+                } else {
                     this.selectNumber = this.$route.query.batch_id;
                 }
             }
@@ -528,7 +524,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-
 .left-form {
     padding: 10px;
 }
@@ -593,7 +588,7 @@ export default {
     margin-right: 10px;
     margin-top: 10px;
     height: calc(100% - 100px);
-  background: #00092d !important;
+    background: #00092d !important;
 }
 
 .action-list {
@@ -606,7 +601,7 @@ export default {
 
 .action-item {
     cursor: pointer; /* 鼠标悬停时显示指针样式 */
-    color: #409EFF; /* 设置文字颜色为蓝色 */
+    color: #409eff; /* 设置文字颜色为蓝色 */
     padding: 5px; /* 添加一些内边距 */
 }
 
@@ -614,13 +609,13 @@ export default {
     color: white;
 }
 .action-item1 {
-  cursor: pointer; /* 鼠标悬停时显示指针样式 */
-  color: #ccc; /* 设置文字颜色为蓝色 */
-  padding: 5px; /* 添加一些内边距 */
+    cursor: pointer; /* 鼠标悬停时显示指针样式 */
+    color: #ccc; /* 设置文字颜色为蓝色 */
+    padding: 5px; /* 添加一些内边距 */
 }
 
 .action-item1:hover {
-  color: white;
+    color: white;
 }
 .down {
     width: 200px;

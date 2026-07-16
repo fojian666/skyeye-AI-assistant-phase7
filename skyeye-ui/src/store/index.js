@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import user from './user';
-import {findNodeWithPath, traverseList} from '@/utils/utils';
-import {getSysMenuListApi} from "@/api/commonApi";
+import { findNodeWithPath, traverseList } from '@/utils/utils';
+import { getSysMenuListApi } from '@/api/commonApi';
 import filterModule from './filter';
 Vue.use(Vuex);
 
@@ -19,7 +19,7 @@ export default new Vuex.Store({
         secondMenuList: [],
         currentMenuList: [],
         showHeader: true, //是否显示导航
-        theme: localStorage.getItem('ui-theme') || 'dark',
+        theme: localStorage.getItem('ui-theme') || 'dark'
     },
     getters: {},
     mutations: {
@@ -29,7 +29,7 @@ export default new Vuex.Store({
             localStorage.setItem('ui-theme', theme);
         },
         //切换显示头部导航栏
-        toggleShowHeaderBar(state, flag){
+        toggleShowHeaderBar(state, flag) {
             state.showHeader = flag;
         },
         initParentNode(state, list) {
@@ -70,10 +70,7 @@ export default new Vuex.Store({
             state.menuList.forEach((item, index) => {
                 if (url.split('/')[1] === item.url.split('/')[1]) {
                     state.currentMenuList = state.secondMenuList[index].children;
-                    localStorage.setItem(
-                        'menu',
-                        JSON.stringify(state.secondMenuList[index])
-                    );
+                    localStorage.setItem('menu', JSON.stringify(state.secondMenuList[index]));
                     Vue.set(item, 'active', true);
                 } else {
                     Vue.set(item, 'active', false);
@@ -118,9 +115,7 @@ export default new Vuex.Store({
     },
     modules: {
         user,
-        filter: filterModule,
+        filter: filterModule
     },
-    plugins: [
-
-    ],
+    plugins: []
 });

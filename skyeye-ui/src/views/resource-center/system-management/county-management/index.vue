@@ -11,23 +11,14 @@
             <!-- 搜索与新增区域 -->
             <el-form :inline="true" class="add">
                 <el-form-item label-width="0">
-                    <el-input
-                        placeholder="请输入区划名称/代码"
-                        clearable
-                        v-model="queryInfo.query"
-                        @clear="getRegionList"
-                        style="width: 260px"
-                    >
-
+                    <el-input placeholder="请输入区划名称/代码" clearable v-model="queryInfo.query" @clear="getRegionList" style="width: 260px">
                     </el-input>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" @click="handleSearchData">搜索</el-button>
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" @click="addDialogVisible = true">
-                        <i class="iconfont icon-geoai-add-user"></i>新增区划
-                    </el-button>
+                    <el-button type="primary" @click="addDialogVisible = true"> <i class="iconfont icon-geoai-add-user"></i>新增区划 </el-button>
                 </el-form-item>
             </el-form>
             <!-- 区划列表表格 -->
@@ -227,7 +218,7 @@ export default {
         this.getRegionList();
     },
     methods: {
-        handleSearchData(){
+        handleSearchData() {
             this.queryInfo.page = 1;
             this.getRegionList();
         },

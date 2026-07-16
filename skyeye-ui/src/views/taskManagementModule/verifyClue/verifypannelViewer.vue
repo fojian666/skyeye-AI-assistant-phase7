@@ -47,12 +47,7 @@
 
 <script>
 import screenfull from 'screenfull';
-import {
-    getOneQuanjingPointClueInfoApi,
-    queryCluesDataApi,
-    getBufferLayerApi,
-    getEnumOptionApi
-} from '@/api/commonApi';
+import { getOneQuanjingPointClueInfoApi, queryCluesDataApi, getBufferLayerApi, getEnumOptionApi } from '@/api/commonApi';
 import smallMap from '@/views/taskManagementModule/components/smallMap/index.vue';
 import { calculateTotalArea, calculateTotalDistance, imageToLatLon, latLonToYawPitch } from '@/utils/utils';
 import { sphericalToScreen, isPointInView, updateZoomButtonsState } from '@/utils/panoramaTools';
@@ -643,8 +638,6 @@ export default {
         refresh() {
             this.fetchData(this.currentTask.imageId);
         },
-
-
 
         //绘制目标多边形
         drawTargetPolygons() {

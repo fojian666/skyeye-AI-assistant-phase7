@@ -40,25 +40,25 @@ import 'element-ui/lib/theme-chalk/index.css';
 import { Message, MessageBox } from 'element-ui';
 //定义一个新的Message方法，多传入一个offset参数
 const $message = (options) => {
-  return Message({
-    ...options,
-    offset: 100
-  });
+    return Message({
+        ...options,
+        offset: 100
+    });
 };
 
 //重写方法,将offset写入options
 ['success', 'warning', 'info', 'error'].forEach((type) => {
-  $message[type] = (options) => {
-    if (typeof options === 'string') {
-      options = {
-        message: options,
-        offset: 100
-      };
-      options.type = type;
-    }
+    $message[type] = (options) => {
+        if (typeof options === 'string') {
+            options = {
+                message: options,
+                offset: 100
+            };
+            options.type = type;
+        }
 
-    return Message(options);
-  };
+        return Message(options);
+    };
 });
 Vue.use(panZoom);
 Vue.use(Antd);
@@ -70,12 +70,9 @@ Vue.prototype.$map = { _leaflet_id: -1 };
 
 import VueLazyLoad from 'vue-lazyload';
 Vue.use(VueLazyLoad, {
-  preLoad: 1,
-  attempt: 2
+    preLoad: 1,
+    attempt: 2
 });
-
-
-
 
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import VueVirtualScroller from 'vue-virtual-scroller';
@@ -97,7 +94,7 @@ import VueTreeList from 'vue-tree-list';
 Vue.use(VueTreeList);
 
 new Vue({
-  router,
-  store,
-  render: (h) => h(App)
+    router,
+    store,
+    render: (h) => h(App)
 }).$mount('#app');

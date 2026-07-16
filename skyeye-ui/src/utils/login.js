@@ -1,4 +1,4 @@
-import request from "@/api/request";
+import request from '@/api/request';
 
 /**
  * 重定向到登录页面
@@ -26,7 +26,7 @@ export const refreshToken = function (refreshToken, clientId) {
     const params = {
         rst: refreshToken,
         clientId: clientId
-    }
+    };
     return request({
         url: '/scp-account/oauth/refreshToken',
         method: 'post',

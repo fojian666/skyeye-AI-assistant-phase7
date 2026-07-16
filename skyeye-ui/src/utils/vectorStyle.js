@@ -13,10 +13,7 @@ function parseVectorStyle(node) {
 
     const color = colorRaw ? normalizeHexColor(colorRaw) || DEFAULTS.color : DEFAULTS.color;
     const weight = weightRaw != null && !Number.isNaN(Number(weightRaw)) ? Number(weightRaw) : DEFAULTS.weight;
-    const opacity =
-        opacityRaw != null && !Number.isNaN(Number(opacityRaw))
-            ? Math.min(1, Math.max(0, Number(opacityRaw)))
-            : DEFAULTS.opacity;
+    const opacity = opacityRaw != null && !Number.isNaN(Number(opacityRaw)) ? Math.min(1, Math.max(0, Number(opacityRaw))) : DEFAULTS.opacity;
 
     return { color, weight, opacity };
 }

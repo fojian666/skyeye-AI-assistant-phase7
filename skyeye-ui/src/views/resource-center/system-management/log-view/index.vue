@@ -32,7 +32,7 @@
                 <!--<el-table-column prop="id" label="编号" align="center"></el-table-column> -->
                 <el-table-column prop="principal" label="操作账号" align="center" width="160"></el-table-column>
                 <el-table-column prop="principal" label="姓名" align="center" width="160"></el-table-column>
-                <el-table-column prop="name" label="请求地址" align="center" ></el-table-column>
+                <el-table-column prop="name" label="请求地址" align="center"></el-table-column>
                 <el-table-column prop="index" label="服务名称" align="center" width="300"></el-table-column>
                 <el-table-column prop="timestamp_millis" label="操作时间" align="center" width="200"></el-table-column>
                 <el-table-column prop="event" label="事件" align="center" width="200">
@@ -67,8 +67,7 @@ import { getLogDataApi } from '@/api/commonApi';
 
 export default {
     name: 'LogView',
-    components: {
-    },
+    components: {},
     data() {
         return {
             options: [

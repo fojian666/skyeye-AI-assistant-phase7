@@ -7,11 +7,7 @@
         </div>
         <div class="gt-breadcrumb-cnt">
             <el-tabs v-model="serviceSelectedTab" class="service-tabs" @tab-click="handleServiceTabClick">
-                <el-tab-pane
-                    v-for="item in serviceList"
-                    :key="item.id"
-                    :label="item.name"
-                    :name="item.id" />
+                <el-tab-pane v-for="item in serviceList" :key="item.id" :label="item.name" :name="item.id" />
             </el-tabs>
             <el-form :model="form" ref="ruleForm" label-width="100px">
                 <el-row :gutter="20">
@@ -103,7 +99,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 </template>
 
@@ -310,7 +305,6 @@ export default {
 </script>
 
 <style scoped>
-
 .content-box {
     margin: 0;
     padding: 0;
@@ -451,7 +445,6 @@ ul li {
     top: 10px;
     right: 0;
 }
-
 
 .reset {
     margin-left: 10px;

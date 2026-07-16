@@ -9,8 +9,7 @@ function isUnauthorizedCode(code) {
 function canAutoLoginOnCurrentRoute() {
     const route = router.currentRoute;
     if (!route || !route.matched) return false;
-    return route.matched.some((record) => record.meta.autoLogin)
-        && window.config?.overviewAutoLogin?.enabled !== false;
+    return route.matched.some((record) => record.meta.autoLogin) && window.config?.overviewAutoLogin?.enabled !== false;
 }
 
 function handleUnauthorized(data) {
@@ -40,8 +39,7 @@ axiosInstance.interceptors.request.use(
         if (tokens) {
             config.headers.Authorization = `Bearer ${tokens}`;
         }
-        config.headers['Content-Type'] =
-            config.headers['Content-Type'] || 'application/json';
+        config.headers['Content-Type'] = config.headers['Content-Type'] || 'application/json';
         return config;
     },
     (error) => Promise.reject(error)
@@ -66,9 +64,7 @@ axiosInstance.interceptors.response.use(
             return handleUnauthorized(data);
         }
 
-        const msg = (data && (data.msg || data.message))
-            || err.message
-            || '请求失败，请稍后重试';
+        const msg = (data && (data.msg || data.message)) || err.message || '请求失败，请稍后重试';
         Message.error(msg);
         return Promise.reject(err);
     }

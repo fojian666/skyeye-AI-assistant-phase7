@@ -1,10 +1,5 @@
 // 生成扇形的曲面参数方程，用于 series-surface.parametricEquation
-export const getParametricEquation = (startRatio,
-                                      endRatio,
-                                      isSelected,
-                                      isHovered,
-                                      k,
-                                      h) => {
+export const getParametricEquation = (startRatio, endRatio, isSelected, isHovered, k, h) => {
     // 计算
     let midRatio = (startRatio + endRatio) / 2;
 
@@ -14,7 +9,7 @@ export const getParametricEquation = (startRatio,
 
     isSelected = false;
     // 通过扇形内径/外径的值，换算出辅助参数 k（默认值 1/3）
-    k = typeof k !== "undefined" ? k : 1 / 3;
+    k = typeof k !== 'undefined' ? k : 1 / 3;
 
     // 计算选中效果分别在 x 轴、y 轴方向上的位移（未选中，则位移均为 0）
     let offsetX = isSelected ? Math.sin(midRadian) * 0.1 : 0;
@@ -28,43 +23,31 @@ export const getParametricEquation = (startRatio,
         u: {
             min: -Math.PI,
             max: Math.PI * 3,
-            step: Math.PI / 32,
+            step: Math.PI / 32
         },
 
         v: {
             min: 0,
             max: Math.PI * 2,
-            step: Math.PI / 20,
+            step: Math.PI / 20
         },
 
         x: function (u, v) {
             if (u < startRadian) {
-                return (
-                    offsetX +
-                    Math.cos(startRadian) * (1 + Math.cos(v) * k) * hoverRate
-                );
+                return offsetX + Math.cos(startRadian) * (1 + Math.cos(v) * k) * hoverRate;
             }
             if (u > endRadian) {
-                return (
-                    offsetX +
-                    Math.cos(endRadian) * (1 + Math.cos(v) * k) * hoverRate
-                );
+                return offsetX + Math.cos(endRadian) * (1 + Math.cos(v) * k) * hoverRate;
             }
             return offsetX + Math.cos(u) * (1 + Math.cos(v) * k) * hoverRate;
         },
 
         y: function (u, v) {
             if (u < startRadian) {
-                return (
-                    offsetY +
-                    Math.sin(startRadian) * (1 + Math.cos(v) * k) * hoverRate
-                );
+                return offsetY + Math.sin(startRadian) * (1 + Math.cos(v) * k) * hoverRate;
             }
             if (u > endRadian) {
-                return (
-                    offsetY +
-                    Math.sin(endRadian) * (1 + Math.cos(v) * k) * hoverRate
-                );
+                return offsetY + Math.sin(endRadian) * (1 + Math.cos(v) * k) * hoverRate;
             }
             return offsetY + Math.sin(u) * (1 + Math.cos(v) * k) * hoverRate;
         },
@@ -77,9 +60,9 @@ export const getParametricEquation = (startRatio,
                 return Math.sin(u) * h * 0.1;
             }
             return Math.sin(v) > 0 ? 1 * h * 0.1 : -1;
-        },
+        }
     };
-}
+};
 
 // 生成模拟 3D 饼图的配置项
 export const getPie3D = (pieData, internalDiameterRatio) => {
@@ -88,42 +71,32 @@ export const getPie3D = (pieData, internalDiameterRatio) => {
     let startValue = 0;
     let endValue = 0;
     let legendData = [];
-    let k =
-        typeof internalDiameterRatio !== "undefined"
-            ? (1 - internalDiameterRatio) / (1 + internalDiameterRatio)
-            : 1 / 3;
+    let k = typeof internalDiameterRatio !== 'undefined' ? (1 - internalDiameterRatio) / (1 + internalDiameterRatio) : 1 / 3;
 
     // 为每一个饼图数据，生成一个 series-surface 配置
     for (let i = 0; i < pieData.length; i++) {
         sumValue += pieData[i].value;
 
         let seriesItem = {
-            name:
-                typeof pieData[i].name === "undefined"
-                    ? `series${i}`
-                    : pieData[i].name,
-            type: "surface",
+            name: typeof pieData[i].name === 'undefined' ? `series${i}` : pieData[i].name,
+            type: 'surface',
             parametric: true,
             wireframe: {
-                show: false,
+                show: false
             },
             pieData: pieData[i],
             pieStatus: {
                 selected: false,
                 hovered: false,
-                k: 1 / 10,
-            },
+                k: 1 / 10
+            }
         };
 
-        if (typeof pieData[i].itemStyle != "undefined") {
+        if (typeof pieData[i].itemStyle != 'undefined') {
             let itemStyle = {};
 
-            typeof pieData[i].itemStyle.color != "undefined"
-                ? (itemStyle.color = pieData[i].itemStyle.color)
-                : null;
-            typeof pieData[i].itemStyle.opacity != "undefined"
-                ? (itemStyle.opacity = pieData[i].itemStyle.opacity)
-                : null;
+            typeof pieData[i].itemStyle.color != 'undefined' ? (itemStyle.color = pieData[i].itemStyle.color) : null;
+            typeof pieData[i].itemStyle.opacity != 'undefined' ? (itemStyle.opacity = pieData[i].itemStyle.opacity) : null;
 
             seriesItem.itemStyle = itemStyle;
         }
@@ -150,4 +123,4 @@ export const getPie3D = (pieData, internalDiameterRatio) => {
         legendData.push(series[i].name);
     }
     return series;
-}
+};

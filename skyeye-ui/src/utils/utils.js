@@ -79,12 +79,7 @@ function offMeasureMapEvents(map) {
 
 // 画点；decimalPlaces 可选，指定经纬度弹窗保留小数位数
 export function drawPoint(map, decimalPlaces) {
-    const decimals =
-        typeof decimalPlaces === 'number'
-            ? decimalPlaces
-            : window.config.projectCity === 'tangshan'
-              ? 6
-              : 2;
+    const decimals = typeof decimalPlaces === 'number' ? decimalPlaces : window.config.projectCity === 'tangshan' ? 6 : 2;
     var DRAWING = false; //是否正在绘制
     map.getContainer().style.cursor = 'crosshair';
     map.on('click', (e) => {
@@ -620,10 +615,10 @@ export function drawPolygon(map, shapeOptions, onFinish) {
 
     // 1. 鼠标按下：添加顶点
     map.on('mousedown', (e) => {
-        if (e.originalEvent.button !== 0) return;  //右键处理的不放进去
+        if (e.originalEvent.button !== 0) return; //右键处理的不放进去
         DRAWING = true;
         // const point = { lat: e.latlng.lat, lng: e.latlng.lng }; // 格式化坐标
-        const point = [e.latlng.lat,e.latlng.lng]; // 格式化坐标
+        const point = [e.latlng.lat, e.latlng.lng]; // 格式化坐标
         DRAWPOLYGONPOINTS.push(point); // 收集顶点
         DRAWPOLYGON.addLatLng(e.latlng); // 添加到最终多边形
     });
@@ -641,7 +636,7 @@ export function drawPolygon(map, shapeOptions, onFinish) {
         if (DRAWPOLYGONPOINTS.length >= 1) {
             const lastPoint = DRAWPOLYGONPOINTS[DRAWPOLYGONPOINTS.length - 1];
             const tempLatLngs = [
-                ...DRAWPOLYGONPOINTS.map(p => L.latLng(p[0], p[1])), // 已选顶点
+                ...DRAWPOLYGONPOINTS.map((p) => L.latLng(p[0], p[1])), // 已选顶点
                 e.latlng // 当前鼠标位置（临时顶点）
             ];
             // 创建临时多边形并添加到地图
@@ -664,9 +659,7 @@ export function drawPolygon(map, shapeOptions, onFinish) {
         }
 
         // 收集最终顶点（包含右击结束时的点）
-        const finalPoints = [
-            ...DRAWPOLYGONPOINTS,
-        ];
+        const finalPoints = [...DRAWPOLYGONPOINTS];
 
         // 保存最终多边形到图层列表
         // polygonBarDRAWLAYERS.push(DRAWPOLYGON);
@@ -682,11 +675,11 @@ export function drawPolygon(map, shapeOptions, onFinish) {
 
         // 关键：通过回调返回最终顶点列表
         if (typeof onFinish === 'function') {
-            const tempfinalPoints = finalPoints.map(item => {
-                return L.latLng(item[0], item[1])
-            })
+            const tempfinalPoints = finalPoints.map((item) => {
+                return L.latLng(item[0], item[1]);
+            });
             const allArea = calculateTotalArea(tempfinalPoints);
-            onFinish(finalPoints,DRAWPOLYGON,(allArea / 666.6667).toFixed(2));
+            onFinish(finalPoints, DRAWPOLYGON, (allArea / 666.6667).toFixed(2));
         }
     });
 }
@@ -709,7 +702,7 @@ export function judgeInnerOrutside() {
     const hostWithPort = urlObj.host;
     var outside = 0;
     if (hostWithPort === window.config.outerIp) {
-        outside = 1
+        outside = 1;
     }
     return outside;
 }
@@ -721,8 +714,8 @@ export function judgeInnerOrutsideAndIserver() {
     var outside = 0;
     var iserverAdress = window.config.iserverAdress;
     if (hostWithPort === window.config.outerIp) {
-        outside = 1
-        iserverAdress = window.config.outerIserverAdress
+        outside = 1;
+        iserverAdress = window.config.outerIserverAdress;
     }
     return iserverAdress;
 }
@@ -734,8 +727,8 @@ export function judgeInnerOrutsideAndgridSampleUrl() {
     var outside = 0;
     var gridSampleUrl = window.config.gridSampleUrl;
     if (hostWithPort === window.config.outerIp) {
-        outside = 1
-        gridSampleUrl = window.config.outerGridSampleUrl
+        outside = 1;
+        gridSampleUrl = window.config.outerGridSampleUrl;
     }
     return gridSampleUrl;
 }
@@ -747,8 +740,8 @@ export function judgeInnerOrutsideAndPointSampleUrl() {
     var outside = 0;
     var pointSampleUrl = window.config.pointSampleUrl;
     if (hostWithPort === window.config.outerIp) {
-        outside = 1
-        pointSampleUrl = window.config.outerPointSampleUrl
+        outside = 1;
+        pointSampleUrl = window.config.outerPointSampleUrl;
     }
     return pointSampleUrl;
 }

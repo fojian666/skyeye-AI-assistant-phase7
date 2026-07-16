@@ -60,24 +60,22 @@ export function isPointInView(viewer, pitch, yaw, canvas) {
     return true;
 }
 
-export function updateZoomButtonsState(viewer,minHfovValue,maxHfovValue){
+export function updateZoomButtonsState(viewer, minHfovValue, maxHfovValue) {
     const currentHfov = viewer.getHfov(); // 获取当前水平视场角
     const minHfov = minHfovValue; // 最小水平视场角
     const maxHfov = maxHfovValue; // 最大水平视场角
-    const container = viewer.getContainer
-        ? viewer.getContainer()
-        : document.getElementById('panoramaContainer');
+    const container = viewer.getContainer ? viewer.getContainer() : document.getElementById('panoramaContainer');
     if (!container) return;
     const zoomInBtn = container.querySelector('.pnlm-zoom-in');
     const zoomOutBtn = container.querySelector('.pnlm-zoom-out');
     // 处理“放大”按钮：达到最大视场角时，添加禁用样式和行为限制
     if (zoomInBtn) {
-        const isDisabled  = currentHfov <= minHfov;
-        zoomInBtn.classList.toggle('disabled', isDisabled );
+        const isDisabled = currentHfov <= minHfov;
+        zoomInBtn.classList.toggle('disabled', isDisabled);
     }
     // 处理“缩小”按钮：达到最小视场角时，添加禁用样式和行为限制
     if (zoomOutBtn) {
-        const isDisabled  = currentHfov >= maxHfov;
-        zoomOutBtn.classList.toggle('disabled', isDisabled );
+        const isDisabled = currentHfov >= maxHfov;
+        zoomOutBtn.classList.toggle('disabled', isDisabled);
     }
 }

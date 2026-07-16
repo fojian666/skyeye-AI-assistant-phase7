@@ -127,7 +127,7 @@ export default {
             form: {
                 sceneIds: [],
                 batchId: '',
-                division:'',
+                division: '',
                 addPerson: localStorage.getItem('username')
             }, //上传表单
             filterInfo: {
@@ -139,10 +139,10 @@ export default {
             reportData: [], //报告数据
             dataCount: 0, //数据的总数
             baseUrl: process.env.VUE_APP_API_URL, //请求地址
-            rules : {
-                sceneIds: [{required: true, message: '请选择场景名称', trigger: 'blur'}],
-                batchId: [{required: true, message: '请选择批次编号', trigger: 'blur'}],
-                division: [{required: true, message: '请选择报告划分', trigger: 'blur'}],
+            rules: {
+                sceneIds: [{ required: true, message: '请选择场景名称', trigger: 'blur' }],
+                batchId: [{ required: true, message: '请选择批次编号', trigger: 'blur' }],
+                division: [{ required: true, message: '请选择报告划分', trigger: 'blur' }]
             }
         };
     },
@@ -199,7 +199,7 @@ export default {
         submitForm(formName) {
             this.$refs[formName].validate((valid) => {
                 if (valid) {
-                    this.addReport()
+                    this.addReport();
                 } else {
                     console.log('error submit!!');
                     return false;
@@ -317,7 +317,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 .border {
     width: 10px;
     height: 100%;
@@ -421,8 +420,6 @@ export default {
     justify-content: center;
 }
 
-
-
 .ai-banner-title div {
     width: 5px;
     height: 5px;
@@ -443,7 +440,7 @@ export default {
     color: #42b4f2;
     padding-right: 5px;
 }
-.el-input{
+.el-input {
     width: 190px;
 }
 
@@ -455,5 +452,4 @@ export default {
     padding: 20px 10px 10px 10px;
     height: calc(100% - 40px);
 }
-
 </style>

@@ -2,22 +2,13 @@
     <div class="panorama-embed">
         <div v-if="loading" class="panorama-embed__status" v-loading="true" element-loading-text="正在加载最近全景点..."></div>
         <div v-else-if="error" class="panorama-embed__status panorama-embed__error">{{ error }}</div>
-        <verifypannelViewer
-            v-else-if="ready"
-            embed-mode
-            :current-obj="currentObj"
-            :task-list="taskList"
-            :batch-number="batchNumber"
-        />
+        <verifypannelViewer v-else-if="ready" embed-mode :current-obj="currentObj" :task-list="taskList" :batch-number="batchNumber" />
     </div>
 </template>
 
 <script>
 import verifypannelViewer from './verifypannelViewer.vue';
-import {
-  getNearestPanoramaPointApi,
-  getPanoramaImageApi, getPanoramaPointByCountryApi
-} from '@/api/commonApi';
+import { getNearestPanoramaPointApi, getPanoramaImageApi, getPanoramaPointByCountryApi } from '@/api/commonApi';
 
 function parseCoordinate(value) {
     if (value === undefined || value === null || value === '') {
@@ -30,9 +21,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
     const toRad = (deg) => (deg * Math.PI) / 180;
     const dLat = toRad(lat2 - lat1);
     const dLon = toRad(lon2 - lon1);
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
     return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
@@ -50,9 +39,7 @@ export default {
         };
     },
     async mounted() {
-        const longitude = parseCoordinate(
-            this.$route.query.longitude || this.$route.query.lon || this.$route.query.lng
-        );
+        const longitude = parseCoordinate(this.$route.query.longitude || this.$route.query.lon || this.$route.query.lng);
         const latitude = parseCoordinate(this.$route.query.latitude || this.$route.query.lat);
 
         if (Number.isNaN(longitude) || Number.isNaN(latitude)) {
@@ -125,9 +112,7 @@ export default {
 
             this.taskList = imageRes.data;
             const currentTask = this.taskList[0];
-            this.batchNumber = String(
-                currentTask.batchId || currentTask.batchNumber || pointData.batchId || pointData.batchNumber || ''
-            );
+            this.batchNumber = String(currentTask.batchId || currentTask.batchNumber || pointData.batchId || pointData.batchNumber || '');
             this.currentObj = {
                 imageId: currentTask.imageId,
                 imageName: currentTask.imageName,

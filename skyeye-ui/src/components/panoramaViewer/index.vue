@@ -1,15 +1,15 @@
 <template>
     <div style="height: 100%; width: 100%">
-        <div id="panoramaContainer"
-             style="position: relative"
-             :style="{ height: simpleMode || isThumbnailCollapsed ? '100%' : '80%' }"
-             @mousemove="mouseMoveFunction"
-             @mouseleave="MouseLeaveFunction"
-        >
+        <div
+            id="panoramaContainer"
+            style="position: relative"
+            :style="{ height: simpleMode || isThumbnailCollapsed ? '100%' : '80%' }"
+            @mousemove="mouseMoveFunction"
+            @mouseleave="MouseLeaveFunction">
             <div class="pannellum-layer" v-if="afterLoadPannellum"></div>
             <canvas id="overlay" ref="canvas"></canvas>
             <div class="show-yaw">
-                <div class="gongju_left">{{ formattedShotTime}}</div>
+                <div class="gongju_left">{{ formattedShotTime }}</div>
             </div>
             <div class="gt-toolbar-right">
                 <div v-if="isAutoRotating" class="gt-alarms-list" title="暂停自动播放" @click="autoPlay">
@@ -25,21 +25,19 @@
                     <img src="@/assets/images/change.png" />
                 </div>
             </div>
-            <div v-if="!simpleMode" class="toolbar" >
+            <div v-if="!simpleMode" class="toolbar">
                 <div @click="handleMeasure('measureDistance')" :class="{ baractive: activeToolBarType === 'measureDistance' }">
                     <span class="icon iconfont icon-icon-line-graph icon-toolbar"></span><span>测距</span>
                 </div>
                 <span style="color: #cccccc">|</span>
-                <div @click="handleMeasure('measureArea')" :class="{ baractive: activeToolBarType === 'measureArea'  }">
+                <div @click="handleMeasure('measureArea')" :class="{ baractive: activeToolBarType === 'measureArea' }">
                     <span class="icon iconfont icon-duobianxing icon-toolbar"></span><span>测面积</span>
                 </div>
                 <span style="color: #cccccc">|</span>
-                <div @click="handleClear"><span class="icon iconfont icon-qingchu icon-toolbar"></span><span>清除</span>
-                </div>
-
+                <div @click="handleClear"><span class="icon iconfont icon-qingchu icon-toolbar"></span><span>清除</span></div>
             </div>
             <div v-if="!simpleMode" class="select-gd">
-                <el-collapse >
+                <el-collapse>
                     <el-collapse-item title="业务图层" name="allLayers">
                         <div v-for="(item, index) in allLayers" :key="item.id" class="gd-item">
                             <el-checkbox v-model="item.check">{{ item.name }}</el-checkbox>
@@ -48,13 +46,12 @@
                 </el-collapse>
             </div>
         </div>
-        <div v-if="!simpleMode" class="thumbnail-footer" :class="{ 'collapsed': isThumbnailCollapsed }">
-
-             <div class="thumbnail-content" v-if="!isThumbnailCollapsed">
-               <div class="rfoot">
+        <div v-if="!simpleMode" class="thumbnail-footer" :class="{ collapsed: isThumbnailCollapsed }">
+            <div class="thumbnail-content" v-if="!isThumbnailCollapsed">
+                <div class="rfoot">
                     <el-button @click="prevImages" circle icon="el-icon-arrow-left" class="rleftbtn"></el-button>
                     <div class="thumbnail-container">
-                        <div class="dimg" v-for="(image, index) in taskList" :key="index" @click="handleClickDiv(image,index)">
+                        <div class="dimg" v-for="(image, index) in taskList" :key="index" @click="handleClickDiv(image, index)">
                             <img :src="url" :class="{ active: currentImage.batchName === image.batchName }" />
                             <span>{{ image.batchName }}</span>
                         </div>
@@ -63,10 +60,7 @@
                 </div>
             </div>
         </div>
-        <div v-if="!simpleMode"
-              @click="toggleThumbnail"
-              class="toggle-button"
-              :class="{ 'collapsed': isThumbnailCollapsed }">
+        <div v-if="!simpleMode" @click="toggleThumbnail" class="toggle-button" :class="{ collapsed: isThumbnailCollapsed }">
             <i :class="isThumbnailCollapsed ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"></i>
         </div>
     </div>
@@ -74,12 +68,9 @@
 
 <script>
 import screenfull from 'screenfull';
-import {
-    getPanoramaImageApi,
-    calculatePanoramaApi, getBufferLayerApi, getPointBufferLayerApi
-} from '@/api/commonApi';
-import {calculateTotalArea, calculateTotalDistance, imageToLatLon, latLonToYawPitch} from "@/utils/utils";
-import {sphericalToScreen, isPointInView, updateZoomButtonsState} from '@/utils/panoramaTools';
+import { getPanoramaImageApi, calculatePanoramaApi, getBufferLayerApi, getPointBufferLayerApi } from '@/api/commonApi';
+import { calculateTotalArea, calculateTotalDistance, imageToLatLon, latLonToYawPitch } from '@/utils/utils';
+import { sphericalToScreen, isPointInView, updateZoomButtonsState } from '@/utils/panoramaTools';
 export default {
     name: 'verifypannelViewer',
     //接收父组件传递的数据
@@ -89,18 +80,18 @@ export default {
         /** 精简模式：隐藏测距工具栏、业务图层、底部缩略图、多期对比 */
         simpleMode: {
             type: Boolean,
-            default: false,
+            default: false
         },
         /** 监管图斑 ID，用于全景 canvas 叠加蓝色监测图斑 */
         supervisionPolygonId: {
             type: [String, Number],
-            default: '',
+            default: ''
         },
         /** 可选：自定义全景图斑坐标计算接口（mock 环境） */
         customCalculatePanorama: {
             type: Function,
-            default: null,
-        },
+            default: null
+        }
     },
     data() {
         return {
@@ -109,7 +100,7 @@ export default {
             afterLoadPannellum: false,
             yawDegree: 0, //当前全景初始化角度
             currentImage: {},
-            currentIndex:null,//当前索引
+            currentIndex: null, //当前索引
             // 全景对象
             viewer: undefined,
             currentHfov: 0,
@@ -122,7 +113,7 @@ export default {
             baseUrl: process.env.VUE_APP_API_URL,
             currentYaw: 0, //当前全景图实时yaw角
             currentPitch: 0,
-            currentHfov:0,
+            currentHfov: 0,
             image_name: '',
             point_name: '',
             currentTask: {},
@@ -132,17 +123,17 @@ export default {
             showMap: false,
             taskList: [],
             hotSpotId: -1,
-            circleRadius:window.config.circleRadius,
-            activeToolBarType:'',
-            measureDistancePoints:[],
-            measureAreaPoints:[],
-            isMeasureDistance:false,
-            isMeasureArea:false,
-            minHfov:10,
-            maxHfov:120,
-            allLayers:[],
-            isThumbnailCollapsed:false,
-            supervisionPolygonPoints: null,
+            circleRadius: window.config.circleRadius,
+            activeToolBarType: '',
+            measureDistancePoints: [],
+            measureAreaPoints: [],
+            isMeasureDistance: false,
+            isMeasureArea: false,
+            minHfov: 10,
+            maxHfov: 120,
+            allLayers: [],
+            isThumbnailCollapsed: false,
+            supervisionPolygonPoints: null
         };
     },
     beforeDestroy() {
@@ -162,38 +153,31 @@ export default {
                 lat: latitude,
                 lon: longitude,
                 height: image.height ?? ref.height ?? 100,
-                yawDegree: image.yawDegree ?? 0,
+                yawDegree: image.yawDegree ?? 0
             };
         },
         //监听鼠标移入
-        mouseMoveFunction(event){
-            if(this.viewer) {
+        mouseMoveFunction(event) {
+            if (this.viewer) {
                 var coords = this.viewer.mouseEventToCoords(event);
                 const task = this.currentTask || {};
                 const lat = task.latitude ?? task.lat;
                 const lon = task.longitude ?? task.lon;
                 const height = task.height ?? 100;
                 if (lat == null || lon == null || coords == null) return;
-                const lat_lon = imageToLatLon(
-                    lat,
-                    lon,
-                    height,
-                    coords[1],
-                    coords[0],
-                    task.yawDegree ?? 0
-                );
+                const lat_lon = imageToLatLon(lat, lon, height, coords[1], coords[0], task.yawDegree ?? 0);
                 if (Number.isNaN(lat_lon[0]) || Number.isNaN(lat_lon[1])) return;
                 var customIcon = L.icon({
                     iconUrl: '../../static/guangbiao.png',
-                    iconSize: [32, 32], // 图标的尺寸
+                    iconSize: [32, 32] // 图标的尺寸
                     // 可选的其他图标样式选项
                 });
-                const r = this.isPointInBuffer(coords[1], coords[0])
+                const r = this.isPointInBuffer(coords[1], coords[0]);
                 if (r) {
                     this.currentLocationMarker = L.marker(lat_lon, {
                         icon: customIcon,
                         className: 'custom-cursor'
-                    })
+                    });
                 } else {
                     // 创建一个完全透明的自定义图标
                     const emptyIcon = L.divIcon({
@@ -207,31 +191,26 @@ export default {
                         interactive: true // 保持可交互性
                     });
                 }
-                this.$emit('panorama-mousemove', {currentLocationMarker: this.currentLocationMarker})
+                this.$emit('panorama-mousemove', { currentLocationMarker: this.currentLocationMarker });
             }
         },
         //鼠标离开全景图事件
-        MouseLeaveFunction(event){
+        MouseLeaveFunction(event) {
             // 创建一个完全透明的自定义图标
             const emptyIcon = L.divIcon({
                 className: 'empty-marker',
                 html: '', // 空内容
                 iconSize: [0, 0] // 零尺寸
             });
-            this.currentLocationMarker =  L.marker([0,0], {
+            this.currentLocationMarker = L.marker([0, 0], {
                 icon: emptyIcon,
                 interactive: true // 保持可交互性
             });
-            this.$emit('panorama-mousemove',{currentLocationMarker:this.currentLocationMarker})
+            this.$emit('panorama-mousemove', { currentLocationMarker: this.currentLocationMarker });
         },
         isPointInBuffer(targetYaw, targetPitch) {
             // 将目标yaw/pitch转换为屏幕坐标
-            const targetPoint = sphericalToScreen(
-                this.viewer,
-                targetPitch,
-                targetYaw,
-                this.canvas
-            );
+            const targetPoint = sphericalToScreen(this.viewer, targetPitch, targetYaw, this.canvas);
 
             // 使用Canvas的isPointInPath方法判断点是否在路径内
             this.ctx.beginPath();
@@ -257,31 +236,31 @@ export default {
             return this.ctx.isPointInPath(targetPoint[0], targetPoint[1]);
         },
         prevImages() {
-          if (this.currentIndex > 0) {
-             this.currentIndex--;
-             let image = this.taskList[this.currentIndex]
-             this.changeImage(image)
-          }
+            if (this.currentIndex > 0) {
+                this.currentIndex--;
+                let image = this.taskList[this.currentIndex];
+                this.changeImage(image);
+            }
         },
         nextImages() {
-          if (this.currentIndex < this.taskList.length - 1) {
-            this.currentIndex++;
-            let image = this.taskList[this.currentIndex]
-            this.changeImage(image)
-          }
+            if (this.currentIndex < this.taskList.length - 1) {
+                this.currentIndex++;
+                let image = this.taskList[this.currentIndex];
+                this.changeImage(image);
+            }
         },
 
-      async changeImage(image){
-          this.currentTask = this.normalizeCurrentTask(image);
-          this.currentImage = image;
-          const taskPath = image.imageId; // 假设任务数据中包含 task_path
-          this.yawDegree = image.yawDegree;
-          this.image_name = image.imageName;
-          await this.showPanorama(image);
-          this.$emit('imageSwitch', this.currentImage);
+        async changeImage(image) {
+            this.currentTask = this.normalizeCurrentTask(image);
+            this.currentImage = image;
+            const taskPath = image.imageId; // 假设任务数据中包含 task_path
+            this.yawDegree = image.yawDegree;
+            this.image_name = image.imageName;
+            await this.showPanorama(image);
+            this.$emit('imageSwitch', this.currentImage);
         },
 
-        async handleClickDiv(image,index) {
+        async handleClickDiv(image, index) {
             // this.isAutoRotating = true;
             // 根据需要处理点击事件
             this.currentIndex = index;
@@ -327,7 +306,7 @@ export default {
         async getPointPanoramaImage() {
             const data = {
                 pointId: this.pointId
-            }
+            };
             const res = await getPanoramaImageApi(data);
             if (res.code == 0) {
                 this.taskList = res.data;
@@ -361,9 +340,7 @@ export default {
             }
         },
         async loadSupervisionPolygonOverlay() {
-            const task = this.currentTask?.imageId
-                ? this.currentTask
-                : this.normalizeCurrentTask(this.currentPointObj || {});
+            const task = this.currentTask?.imageId ? this.currentTask : this.normalizeCurrentTask(this.currentPointObj || {});
             const imageId = task?.imageId || this.currentPointObj?.imageId;
             const polygon = this.currentPointObj?.polygon;
 
@@ -372,7 +349,7 @@ export default {
                 try {
                     const res = await fetchApi({
                         polygonDataId: this.supervisionPolygonId,
-                        imageId,
+                        imageId
                     });
                     if (res.code === 0 && res.data?.points?.length) {
                         this.supervisionPolygonPoints = this.normalizePanoramaPolygons(res.data.points);
@@ -396,14 +373,7 @@ export default {
                 return this.splitFlatPanoramaRings(points);
             }
 
-            if (
-                points.every(
-                    (ring) =>
-                        Array.isArray(ring) &&
-                        ring.length >= 3 &&
-                        ring.every((p) => this.isPanoramaCoordPair(p))
-                )
-            ) {
+            if (points.every((ring) => Array.isArray(ring) && ring.length >= 3 && ring.every((p) => this.isPanoramaCoordPair(p)))) {
                 return points.map((ring) => ring.slice());
             }
 
@@ -426,8 +396,7 @@ export default {
             let currentRing = [];
             const epsilon = 1e-4;
 
-            const isSameCoord = (a, b) =>
-                Math.abs(a[0] - b[0]) < epsilon && Math.abs(a[1] - b[1]) < epsilon;
+            const isSameCoord = (a, b) => Math.abs(a[0] - b[0]) < epsilon && Math.abs(a[1] - b[1]) < epsilon;
 
             points.forEach((pt) => {
                 if (!this.isPanoramaCoordPair(pt)) return;
@@ -454,12 +423,7 @@ export default {
             return polygons.length ? polygons : null;
         },
         isPanoramaCoordPair(value) {
-            return (
-                Array.isArray(value) &&
-                value.length >= 2 &&
-                typeof value[0] === 'number' &&
-                typeof value[1] === 'number'
-            );
+            return Array.isArray(value) && value.length >= 2 && typeof value[0] === 'number' && typeof value[1] === 'number';
         },
         /** 从 GeoJSON Polygon / MultiPolygon 提取外环坐标 */
         extractGeoJsonOuterRings(geom) {
@@ -473,9 +437,7 @@ export default {
             }
 
             if (type === 'MultiPolygon' || type === 'multiplePolygon' || type === 'multiPolygon') {
-                return coords
-                    .map((poly) => (Array.isArray(poly) ? poly[0] : null))
-                    .filter((ring) => Array.isArray(ring) && ring.length >= 3);
+                return coords.map((poly) => (Array.isArray(poly) ? poly[0] : null)).filter((ring) => Array.isArray(ring) && ring.length >= 3);
             }
 
             if (Array.isArray(coords[0]) && this.isGeoCoordPair(coords[0])) {
@@ -485,12 +447,7 @@ export default {
             return [];
         },
         isGeoCoordPair(value) {
-            return (
-                Array.isArray(value) &&
-                value.length >= 2 &&
-                !Number.isNaN(Number(value[0])) &&
-                !Number.isNaN(Number(value[1]))
-            );
+            return Array.isArray(value) && value.length >= 2 && !Number.isNaN(Number(value[0])) && !Number.isNaN(Number(value[1]));
         },
         convertGeoRingToPanoramaPoints(ring, task) {
             const droneLat = task.latitude ?? task.lat;
@@ -507,15 +464,7 @@ export default {
                 if (Number.isNaN(a) || Number.isNaN(b)) return;
                 const lat = Math.abs(a) > 90 ? b : a;
                 const lon = Math.abs(a) > 90 ? a : b;
-                const [yaw, pitch] = latLonToYawPitch(
-                    lat,
-                    lon,
-                    0,
-                    droneLat,
-                    droneLon,
-                    droneAlt,
-                    northOffset
-                );
+                const [yaw, pitch] = latLonToYawPitch(lat, lon, 0, droneLat, droneLon, droneAlt, northOffset);
                 points.push([pitch, yaw]);
             });
             return points.length >= 3 ? points : null;
@@ -574,27 +523,27 @@ export default {
                 this.isAutoRotating = false;
             }
             var coords = this.viewer.mouseEventToCoords(event);
-            if(this.isMeasureDistance){
+            if (this.isMeasureDistance) {
                 if (event.button === 2) {
                     //表示右击结束面绘制
                     this.isMeasureDistance = false;
                     return;
                 }
                 this.measureDistancePoints.push(coords);
-                this.drawMeasureLine()
-            }else if(this.isMeasureArea){
+                this.drawMeasureLine();
+            } else if (this.isMeasureArea) {
                 if (event.button === 2) {
                     //表示右击结束面绘制
                     this.isMeasureArea = false;
                     return;
                 }
                 this.measureAreaPoints.push(coords);
-                this.drawMeasureArea()
+                this.drawMeasureArea();
             }
         },
         async handleViewerLoad() {
             if (!this.currentTask.tileResolution) {
-                const jpgUrl =  '/panoramaUrl/static/temp/' + this.currentTask.imageName;
+                const jpgUrl = '/panoramaUrl/static/temp/' + this.currentTask.imageName;
                 this.viewer = pannellum.viewer('panoramaContainer', {
                     type: 'equirectangular', // 使用单张全景图模式
                     autoLoad: true,
@@ -628,9 +577,9 @@ export default {
                         path: '/%l/%s%y_%x',
                         fallbackPath: '/fallback/%s',
                         extension: 'png',
-                        tileResolution: this.currentTask.tileResolution? this.currentTask.tileResolution : 512,
-                        maxLevel: this.currentTask.maxLevel ? this.currentTask.maxLevel:5,
-                        cubeResolution: this.currentTask.cubeResolution?this.currentTask.cubeResolution : 4576
+                        tileResolution: this.currentTask.tileResolution ? this.currentTask.tileResolution : 512,
+                        maxLevel: this.currentTask.maxLevel ? this.currentTask.maxLevel : 5,
+                        cubeResolution: this.currentTask.cubeResolution ? this.currentTask.cubeResolution : 4576
                     },
                     autoRotate: 0,
                     autoRotateInactivityDelay: 0
@@ -643,10 +592,10 @@ export default {
             });
             //全程监听yaw的值,等待加载完成
             this.viewer.on('animatefinished', (event) => {
-                this.$emit('updateSectorYaw', { yaw: this.currentYaw,originYaw: this.yawDegree, pitch: this.currentPitch, hfov: this.currentHfov });
-                localStorage.setItem('initYaw',this.currentYaw)
-                localStorage.setItem('initPitch',this.currentPitch)
-                localStorage.setItem('initHfov',this.currentHfov)
+                this.$emit('updateSectorYaw', { yaw: this.currentYaw, originYaw: this.yawDegree, pitch: this.currentPitch, hfov: this.currentHfov });
+                localStorage.setItem('initYaw', this.currentYaw);
+                localStorage.setItem('initPitch', this.currentPitch);
+                localStorage.setItem('initHfov', this.currentHfov);
             });
             this.viewer.on('rendercanvas', (event) => {
                 this.currentYaw = this.viewer.getYaw();
@@ -660,23 +609,22 @@ export default {
                             yaw: this.currentYaw,
                             originYaw: this.yawDegree,
                             pitch: this.currentPitch,
-                            hfov: this.currentHfov,
+                            hfov: this.currentHfov
                         });
                     });
                 }
                 this.drawPolygons(); // 绘制多边形
-                this.drawMeasureLine()
-                this.drawMeasureArea()
-                this.allLayers.forEach((child)=>{
-                    if(child.check){
-                        this.drawGdPolygons()
+                this.drawMeasureLine();
+                this.drawMeasureArea();
+                this.allLayers.forEach((child) => {
+                    if (child.check) {
+                        this.drawGdPolygons();
                     }
-                })
+                });
                 if (this.currentHfov !== 100 && this.currentHfov !== 0 && this.isAutoRotating) {
                     this.viewer.setHfov(this.currentHfov);
                 }
-                updateZoomButtonsState(this.viewer,this.minHfov,this.maxHfov)
-
+                updateZoomButtonsState(this.viewer, this.minHfov, this.maxHfov);
             });
             this.canvas = this.$refs.canvas;
             this.canvas.width = this.viewer.getContainer().clientWidth;
@@ -688,15 +636,14 @@ export default {
             this.activeToolBarType = type;
             this.drawPolygonFlag = false;
             this.editFlag = false;
-            this.drawRectPolygonFlag= false;
-            if (this.activeToolBarType == 'measureDistance'){
-                this.isMeasureDistance = true
-
-            } else if (this.activeToolBarType == 'measureArea'){
-                this.isMeasureArea = true
+            this.drawRectPolygonFlag = false;
+            if (this.activeToolBarType == 'measureDistance') {
+                this.isMeasureDistance = true;
+            } else if (this.activeToolBarType == 'measureArea') {
+                this.isMeasureArea = true;
             }
         },
-        judgePoints(points){
+        judgePoints(points) {
             const screenPoints = [];
             const isInViews = [];
             points.forEach((coord) => {
@@ -708,14 +655,14 @@ export default {
             });
             if (isInViews.indexOf(true) === -1) return []; //所有点均不在视角范围内，不绘制多边形
             if (screenPoints.length === 0) return [];
-            return screenPoints
+            return screenPoints;
         },
         drawMeasureLine() {
             const color = ['red', 'rgba(190, 0, 0, 0.3)'];
             this.drawLine(this.measureDistancePoints, color);
         },
-        drawLine(points,color){
-            const screenPoints = this.judgePoints(points)
+        drawLine(points, color) {
+            const screenPoints = this.judgePoints(points);
             // 没有点或只有1个点，不绘制线（可保留点绘制）
             if (screenPoints.length < 2) {
                 if (screenPoints.length === 1) {
@@ -738,17 +685,28 @@ export default {
                 this.ctx.lineTo(screenPoints[i][0], screenPoints[i][1]); // 连接到第i个点
             }
             this.ctx.stroke(); // 绘制线条
-            if (!this.isMeasureDistance){
-                const points = []
+            if (!this.isMeasureDistance) {
+                const points = [];
                 for (let i = 0; i < this.measureDistancePoints.length; i++) {
-                    const coor = this.measureDistancePoints[i]
-                    const drawPoint = imageToLatLon(this.currentTask.latitude, this.currentTask.longitude, this.currentTask.height, coor[1], coor[0], this.currentTask.yawDegree)
+                    const coor = this.measureDistancePoints[i];
+                    const drawPoint = imageToLatLon(
+                        this.currentTask.latitude,
+                        this.currentTask.longitude,
+                        this.currentTask.height,
+                        coor[1],
+                        coor[0],
+                        this.currentTask.yawDegree
+                    );
                     points.push(L.latLng(drawPoint[0], drawPoint[1]));
                 }
-                const MEASURERESULT = calculateTotalDistance(points)
+                const MEASURERESULT = calculateTotalDistance(points);
                 this.ctx.font = '16px Arial';
                 this.ctx.fillStyle = 'white';
-                this.ctx.fillText(`${MEASURERESULT.toFixed(2)}米`, screenPoints[screenPoints.length - 1][0]+1, screenPoints[screenPoints.length - 1][1]+1);
+                this.ctx.fillText(
+                    `${MEASURERESULT.toFixed(2)}米`,
+                    screenPoints[screenPoints.length - 1][0] + 1,
+                    screenPoints[screenPoints.length - 1][1] + 1
+                );
             }
         },
         drawMeasureArea() {
@@ -788,26 +746,32 @@ export default {
                 this.ctx.closePath(); // 闭合路径以形成多边形
                 this.ctx.stroke(); // 描边
                 this.ctx.fill(); //填充多边形
-
             }
-            if (!this.isMeasureArea){
-                const points = []
+            if (!this.isMeasureArea) {
+                const points = [];
                 for (let i = 0; i < this.measureAreaPoints.length; i++) {
-                    const coor = this.measureAreaPoints[i]
-                    const drawPoint = imageToLatLon(this.currentTask.latitude, this.currentTask.longitude, this.currentTask.height, coor[1], coor[0], this.currentTask.yawDegree)
+                    const coor = this.measureAreaPoints[i];
+                    const drawPoint = imageToLatLon(
+                        this.currentTask.latitude,
+                        this.currentTask.longitude,
+                        this.currentTask.height,
+                        coor[1],
+                        coor[0],
+                        this.currentTask.yawDegree
+                    );
                     points.push(L.latLng(drawPoint[0], drawPoint[1]));
                 }
-                const MEASURERESULT = calculateTotalArea(points)
+                const MEASURERESULT = calculateTotalArea(points);
                 this.ctx.font = '16px Arial';
                 this.ctx.fillStyle = 'white';
                 const center = this.getPolygonCenterXY(screenPoints);
                 this.ctx.fillText(`${MEASURERESULT.toFixed(2)}平方米`, center[0] - 60, center[1]);
             }
         },
-        handleClear(){
-            this.measureDistancePoints = []
-            this.measureAreaPoints = []
-            this.activeToolBarType = ''
+        handleClear() {
+            this.measureDistancePoints = [];
+            this.measureAreaPoints = [];
+            this.activeToolBarType = '';
         },
         //获取多边形的中心坐标
         getPolygonCenterXY(polygon) {
@@ -819,20 +783,20 @@ export default {
             });
             return [sumX / polygon.length, sumY / polygon.length];
         },
-        handleSkipMulti(){
+        handleSkipMulti() {
             if (this.taskList.length >= 2) {
-                this.$emit('skipMulti')
-            }else {
-                this.$message.warning('该点位没有可对比的多期数据，暂不可查看！！')
+                this.$emit('skipMulti');
+            } else {
+                this.$message.warning('该点位没有可对比的多期数据，暂不可查看！！');
             }
         },
         async drawGdPolygons() {
-            for (let i = 0; i < this.allLayers.length; i++){
-                const child = this.allLayers[i]
-                if( child.check ){
+            for (let i = 0; i < this.allLayers.length; i++) {
+                const child = this.allLayers[i];
+                if (child.check) {
                     // 1. 若正在请求，等待后跳过
                     if (child.isLoading) {
-                        await new Promise(resolve => {
+                        await new Promise((resolve) => {
                             const timer = setInterval(() => {
                                 if (!child.isLoading) {
                                     clearInterval(timer);
@@ -848,14 +812,14 @@ export default {
                             const res = await this.getLayerBuffer(child);
                             child.gdPolygons = res.points; // 3. 赋值后清除标记
                         } catch (error) {
-                            console.error("请求失败：", error);
+                            console.error('请求失败：', error);
                         } finally {
                             child.isLoading = false;
                         }
                     }
                     child.gdPolygons.forEach((item) => {
                         const color = child.color;
-                        const points = item.points
+                        const points = item.points;
                         const screenPoints = [];
                         const isInViews = [];
                         points.forEach((coord) => {
@@ -886,47 +850,47 @@ export default {
             }
         },
         //获取全部需叠加在全景图层
-        async getBufferGD(){
-            let layerRes = await getBufferLayerApi()
-            if(layerRes.code === 0){
+        async getBufferGD() {
+            let layerRes = await getBufferLayerApi();
+            if (layerRes.code === 0) {
                 let tempLayers = layerRes.data;
-                for(let i = 0; i < tempLayers.length;i++){
-                    let child = tempLayers[i]
+                for (let i = 0; i < tempLayers.length; i++) {
+                    let child = tempLayers[i];
                     child.check = false;
-                    child.color= window.config.colorList[i] || '#09c9ea'
+                    child.color = window.config.colorList[i] || '#09c9ea';
                 }
                 this.allLayers = tempLayers;
-
-            }else{
+            } else {
                 this.$message.error(layerRes.msg);
             }
         },
-        getLayerBuffer( param ){
+        getLayerBuffer(param) {
             let op = {
                 panorama_image_id: this.currentTask.imageId,
                 resource_id: param.id
-            }
-            return getPointBufferLayerApi(op).then((res) => {
-                if (res.code === 0) {
-                    const gdPolygons = res.data.map((item) => ({ points: item }));
-                    return { points: gdPolygons, id: param.id }; // 直接 return 结果
-                } else {
-                    return { points: [], id: param.id }; // 错误时也 return 结果
-                }
-            }).catch((error) => {
-                // 捕获异常，返回兜底结果
-                return { points: [], id: param.id };
-            });
+            };
+            return getPointBufferLayerApi(op)
+                .then((res) => {
+                    if (res.code === 0) {
+                        const gdPolygons = res.data.map((item) => ({ points: item }));
+                        return { points: gdPolygons, id: param.id }; // 直接 return 结果
+                    } else {
+                        return { points: [], id: param.id }; // 错误时也 return 结果
+                    }
+                })
+                .catch((error) => {
+                    // 捕获异常，返回兜底结果
+                    return { points: [], id: param.id };
+                });
         },
         toggleThumbnail() {
             this.isThumbnailCollapsed = !this.isThumbnailCollapsed;
-        },
-
+        }
     },
     async mounted() {
-        console.log("全景图接收", this.pointId,this.currentPointObj);
+        console.log('全景图接收', this.pointId, this.currentPointObj);
         if (this.pointId !== -1) {
-            this.getBufferGD()
+            this.getBufferGD();
             await this.getPointPanoramaImage();
             if (this.taskList.length > 0) {
                 this.currentImage = this.taskList.find((item) => item.imageId === this.currentPointObj.imageId);
@@ -959,10 +923,9 @@ export default {
             return this.filteredData.length;
         },
         formattedShotTime() {
-            const timeMatch = this.currentImage?.imageName?.match(/(\d{4})(\d{2})(\d{2})\d{6}/)
-            return timeMatch ? `${timeMatch[1]}-${timeMatch[2]}-${timeMatch[3]}` : '未知日期'
+            const timeMatch = this.currentImage?.imageName?.match(/(\d{4})(\d{2})(\d{2})\d{6}/);
+            return timeMatch ? `${timeMatch[1]}-${timeMatch[2]}-${timeMatch[3]}` : '未知日期';
         }
-
     },
     watch: {
         supervisionPolygonId() {
@@ -977,703 +940,701 @@ export default {
             deep: true,
             handler() {
                 this.loadSupervisionPolygonOverlay();
-            },
-        },
+            }
+        }
     }
 };
 </script>
 
 <style scoped>
-    @import '@/css/pannellum.css';
-
-    #overlay {
-        z-index: 1000;
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none; /* 确保不会干扰Pannellum的交互 */
-    }
-    ::v-deep .transparent-dialog .el-dialog__headerbtn .el-icon-close:hover {
-        background-color: transparent;
-    }
-
-    #hotspot-buttons {
-        display: none;
-        position: absolute;
-        z-index: 100;
-        background-color: rgba(0, 0, 0, 0.6);
-    }
-
-    #hotspot-buttons button {
-        margin: 5px;
-        padding: 5px 10px;
-        cursor: pointer;
-        border: none;
-        background: none;
-        color: white;
-    }
-
-    #hotspot-buttons button :hover {
-        color: #2db6f4;
-    }
-
-    .detectlist,
-    .undetected-region-list {
-        margin-top: 10vh;
-        background-color: rgba(0, 0, 0, 0.4);
-        box-shadow: none;
-        z-index: 9999999;
-        color: #fff;
-        position: absolute;
-        right: 50px;
-        width: 300px;
-        height: 500px;
-        overflow: hidden;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .detectlist .title,
-    .undetected-region-list .title {
-        display: flex;
-        text-align: center;
-        border-bottom: 1px solid #fff;
-        padding-bottom: 10px;
-    }
-
-    .detectlist .title span,
-    .undetected-region-list .title span {
-        text-align: center;
-        font-weight: 700;
-        width: 98%;
-    }
-
-    ::v-deep .el-button--small.is-circle {
-        padding: 4px;
-    }
-
-    ::v-deep .el-table::before {
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        height: 0px;
-    }
-
-    ::v-deep .transparent-dialog {
-        background-color: rgba(0, 0, 0, 0.6); /* 半透明背景 */
-        box-shadow: none; /* 可选，移除阴影 */
-        z-index: 999;
-        color: #fff;
-    }
-
-    ::v-deep .el-dialog {
-        background-color: rgba(0, 0, 0, 0.4); /* 半透明背景 */
-        box-shadow: none; /* 可选，移除阴影 */
-        z-index: 999;
-        color: #fff;
-        position: absolute;
-        right: 50px;
-        width: 360px;
-    }
-
-    ::v-deep .el-dialog__body {
-        height: 200px;
-        overflow: auto;
-    }
-
-    ::v-deep .el-table,
-    ::v-deep.el-table tr,
-    ::v-deep .el-table th,
-    ::v-deep.el-table th.el-table__cell {
-        background-color: rgba(0, 0, 0, 0.1); /* 半透明背景 */
-        box-shadow: none; /* 可选，移除阴影 */
-        z-index: 999;
-        color: #fff;
-        overflow: auto;
-    }
-
-    ::v-deep .el-table__body tr:hover > td {
-        background-color: rgba(0, 0, 0, 0.6) !important;
-    }
-
-    ::v-deep .el-dialog__header,
-    ::v-deep .el-dialog__header {
-        text-align: center;
-        font-weight: 700;
-        border-bottom: 1px solid #fff;
-    }
-
-    ::v-deep .el-dialog__title,
-    ::v-deep .el-dialog__title {
-        color: #fff;
-        font-size: 16px;
-    }
-
-    ::v-deep .gt-od-list-data .el-dialog__body {
-        padding: 10px; /* 根据需要调整内边距 */
-        color: #fff;
-    }
-
-    ::v-deep .label-dialog .el-dialog {
-        position: absolute;
-        width: 400px;
-        left: 50%;
-        margin-left: -200px;
-        background-color: rgba(0, 0, 0, 0.6); /* 半透明背景 */
-        box-shadow: none; /* 可选，移除阴影 */
-        z-index: 999;
-        color: #fff;
-    }
-
-    ::v-deep .gt-toolbar-right {
-        position: absolute;
-        right: 10px;
-        top: 300px;
-        width: 40px;
-        z-index: 99999;
-        background-color: rgba(0, 0, 0, 0.5);
-        border-radius: 10px;
-        //margin-bottom: -10px;
-    }
-
-    ::v-deep .gt-toolbar-right div {
-        width: 40px;
-        height: 40px;
-        cursor: pointer;
-        text-align: center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    ::v-deep .gt-toolbar-right .gt-alarms-list img {
-        width: 24px;
-        height: 24px;
-    }
-
-    ::v-deep .transparent-dialog .el-dialog__header,
-    .label-dialog .el-dialog__header {
-        text-align: center;
-        font-weight: 700;
-        border-bottom: 1px solid #fff;
-    }
-
-    ::v-deep .transparent-dialog .el-dialog__title,
-    .label-dialog .el-dialog__title {
-        color: #fff;
-        font-size: 16px;
-    }
-
-    ::v-deep .transparent-dialog .el-dialog__body {
-        padding: 10px; /* 根据需要调整内边距 */
-        color: #fff;
-    }
-
-    ::v-deep .label-dialog .el-form-item__label {
-        color: #fff;
-        width: 80px;
-        text-align: left;
-    }
-
-    ::v-deep .pannellum-layer {
-        z-index: 9999;
-        position: fixed;
-        right: 3%;
-        top: 3%;
-    }
-
-    ::v-deep .el-radio .el-radio__input .el-radio__inner {
-        border-radius: 2px;
-    }
-
-    ::v-deep .custom-hotspot {
-        width: 25px;
-        height: 40px;
-        background-image: url('@/assets/images/marker-icon-blue.png');
-        background-size: 100% 100%;
-        position: absolute;
-        transform: translate(-50%, -50%);
-        z-index: 999;
-    }
-
-    ::v-deep .custom-hotspot2 {
-        width: 25px;
-        height: 40px;
-        background-image: url('@/assets/images/marker-icon-red.png');
-        background-size: 100% 100%;
-        position: absolute;
-        transform: translate(-50%, -50%);
-        z-index: 999;
-    }
-
-    ::v-deep .el-radio .el-radio__input.is-checked .el-radio__inner::after {
-        box-sizing: content-box;
-        content: '';
-        transition: transform 0.15s ease-in 0.05s;
-        transform-origin: center;
-        transform: rotate(-45deg) scaleY(1);
-        width: 6px;
-        height: 3px;
-        border: 2px solid white;
-        border-top: transparent;
-        border-right: transparent;
-        text-align: center;
-        display: block;
-        position: absolute;
-        top: 18%;
-        left: 18%;
-        vertical-align: middle;
-        border-radius: 0;
-        background: none;
-    }
-
-    ::v-deep .gt-img-desc {
-        width: 100%;
-        text-overflow: clip;
-        overflow: hidden;
-        height: 20px;
-        line-height: 20px;
-        white-space: nowrap;
-        text-align: center;
-        font-size: 10px;
-        color: #fff;
-        text-shadow: 3px 3px 3px #000;
-    }
-
-    ::v-deep div.pnlm-tooltip span {
-        visibility: visible;
-        width: 100px;
-        background-color: rgba(0, 0, 0, 0);
-    }
-
-    ::v-deep .map-container {
-        position: absolute;
-        bottom: 0; /* 距离底部10px */
-        left: 0; /* 距离左侧10px */
-        width: 300px;
-        height: 300px;
-        z-index: 9999999;
-        border: 1px solid #fff;
-        display: flex;
-        flex-direction: column;
-    }
-
-    ::v-deep .map-containerlarge {
-        position: absolute;
-        bottom: 0; /* 距离底部10px */
-        left: 0; /* 距离左侧10px */
-        width: 30%; /* 设定宽度 */
-        height: calc(100% - 60px);
-        z-index: 9999999;
-        border: 1px solid #fff;
-        display: flex;
-        flex-direction: column;
-    }
-
-    ::v-deep .leaflet-control-attribution {
-        display: none !important;
-    }
-
-    .gt-reback {
-        position: absolute;
-        right: 10px;
-        top: 100px;
-        width: 40px;
-        z-index: 800;
-        border: white;
-        margin-bottom: -10px;
-        width: 70px;
-        height: 30px;
-        text-align: center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 1rem;
-        cursor: pointer; /* 添加手型指针 */
-        background-color: white;
-    }
-
-    .ctrllayers,
-    .ctrllayerlarge {
-        position: absolute;
-        display: flex; /* 使用flex布局 */
-        flex-direction: column; /* 子元素按列排列 */
-        background: #fff;
-        border-radius: 5px;
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-    }
-
-    .ctrllayers {
-        left: 210px;
-        bottom: 200px;
-        z-index: 9999999;
-        width: 90px;
-        height: 70px;
-    }
-
-    .ctrllayerlarge {
-        left: 26%;
-        top: 92px;
-        bottom: 0px; /* 距离底部10px */
-        z-index: 9999999;
-        width: 90px;
-        height: 70px;
-    }
-
-    .ctrllayers label {
-        display: flex;
-        align-items: center; /* 垂直居中对齐子元素 */
-        padding: 5px; /* 移除默认的外边距 */
-    }
-
-    .ctrllayerlarge label {
-        display: flex;
-        align-items: center; /* 垂直居中对齐子元素 */
-        padding: 5px; /* 移除默认的外边距 */
-    }
-
-    .layer-checkbox {
-        margin-right: 8px;
-    }
-
-    .show-yaw {
-        width: 100%;
-        height: 30px;
-        z-index: 9999999;
-        position: absolute;
-        display: flex;
-        justify-content: center; /* 只需要声明一次 */
-        align-items: center;
-        font-size: 0.9rem;
-        color: black;
-        line-height: 30px; /* 设置行高与容器高度一致 */
-    }
-
-    .gongju_left {
-        width: 95%;
-        height: 100%;
-        overflow: hidden;
-        overflow-wrap: break-word; /* 允许在单词内换行 */
-        word-break: break-word; /* 允许在单词内换行 */
-        padding-left: 2px;
-        font-size: 20px;
-    }
-
-    .gongju_main {
-        width: 30%;
-        height: 100%;
-        justify-content: space-between;
-        text-align: center; /* 确保文本在水平方向上居中 */
-    }
-
-    .gongju_right {
-        width: 30%;
-        height: 100%;
-        text-align: right;
-    }
-
-    ::v-deep .highlight-row {
-        background-color: #6f6a6a !important; /* 你选择的颜色 */
-    }
-
-    ::v-deep .el-form-item--small .el-form-item__content,
-    .el-form-item--small .el-form-item__label {
-        line-height: 32px;
-        width: 205px;
-    }
-
-    .btn-uploading {
-        text-align: center;
-    }
-
-    .rectangle {
-        position: absolute;
-        border: 2px solid red;
-        background-color: #2a7be8;
-        z-index: 9999999;
-    }
-
-    .draw-canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-    }
-
-    ::v-deep .el-input__inner {
-        width: 90px;
-    }
-
-    ::v-deep .el-input {
-        display: inline-block;
-    }
-
-    .gt-query {
-        display: flex;
-        flex-direction: row;
-        padding-bottom: 10px;
-        justify-content: space-between;
-        padding-top: 10px;
-        border-bottom: 1px solid #fff;
-    }
-
-    ::v-deep .el-table__body,
-    .el-table__footer,
-    .el-table__header {
-        table-layout: fixed;
-        border-collapse: separate;
-        width: 300px !important;
-    }
-
-    ::v-deep .el-table__header {
-        table-layout: fixed;
-        border-collapse: separate;
-        width: 300px !important;
-    }
-
-    .tablenum {
-        width: 30px;
-        border-radius: 50%;
-        background-color: #2db6f4;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .model {
-        width: 25px;
-        height: 40px;
-        background-size: 100% 100%;
-        position: absolute;
-        transform: translate(-50%, -50%);
-        z-index: 999;
-    }
-
-    .map-container-header {
-        height: 32px;
-        line-height: 32px;
-        color: #666;
-        font-size: 16px;
-        display: flex;
-    }
-
-    .map-container-header div:first-child {
-        width: 96%;
-        background-color: white;
-    }
-
-    .map-container-header div:last-child {
-        flex: 1;
-        background-color: white;
-    }
-
-    .map-container-body {
-        width: 100%;
-        flex: 1;
-    }
-
-    .map-container-header .el-icon-arrow-left {
-        cursor: pointer;
-    }
-
-    .arrow-right {
-        position: absolute;
-        bottom: 100px;
-        left: 4px;
-        width: 26px;
-        height: 26px;
-        z-index: 9999;
-        border: 1px solid #999;
-        background-color: #fff;
-        border-radius: 3px;
-    }
-
-    .arrow-right i {
-        width: 26px;
-        height: 26px;
-        font-size: 14px;
-        color: black;
-        font-weight: bold;
-        text-align: center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .hotspot-image {
-        width: 50px; /* 热点图片的宽度 */
-        height: 50px; /* 热点图片的高度 */
-        border-radius: 50%; /* 如果需要，可以设置圆形 */
-        cursor: pointer; /* 鼠标悬停时的指针样式 */
-    }
-    .rfoot {
-        display: flex;
-        align-items: center;
-        width: calc(100% - 20px);
-        margin: 5px 10px;
-        height: 100%;
-        overflow: hidden;
-    }
-    .rleftbtn {
-        border: 1px solid black;
-        color: black;
-        margin-left: 5px;
-    }
-    .rleftbtn:hover {
-        background-color: #1da2ff;
-    }
-    .rrightbtn {
-        border: 1px solid black;
-        color: black;
-
-        margin-right: 0px;
-    }
-    .rrightbtn:hover {
-        background-color: #1da2ff;
-    }
-
-    .thumbnail-container {
-        white-space: nowrap;
-        overflow-x: auto;
-        height: auto;
-        margin: 0 10px;
-        height: 90%;
-    }
+@import '@/css/pannellum.css';
+
+#overlay {
+    z-index: 1000;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* 确保不会干扰Pannellum的交互 */
+}
+::v-deep .transparent-dialog .el-dialog__headerbtn .el-icon-close:hover {
+    background-color: transparent;
+}
+
+#hotspot-buttons {
+    display: none;
+    position: absolute;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+#hotspot-buttons button {
+    margin: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: white;
+}
+
+#hotspot-buttons button :hover {
+    color: #2db6f4;
+}
+
+.detectlist,
+.undetected-region-list {
+    margin-top: 10vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    box-shadow: none;
+    z-index: 9999999;
+    color: #fff;
+    position: absolute;
+    right: 50px;
+    width: 300px;
+    height: 500px;
+    overflow: hidden;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.detectlist .title,
+.undetected-region-list .title {
+    display: flex;
+    text-align: center;
+    border-bottom: 1px solid #fff;
+    padding-bottom: 10px;
+}
+
+.detectlist .title span,
+.undetected-region-list .title span {
+    text-align: center;
+    font-weight: 700;
+    width: 98%;
+}
+
+::v-deep .el-button--small.is-circle {
+    padding: 4px;
+}
+
+::v-deep .el-table::before {
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 0px;
+}
+
+::v-deep .transparent-dialog {
+    background-color: rgba(0, 0, 0, 0.6); /* 半透明背景 */
+    box-shadow: none; /* 可选，移除阴影 */
+    z-index: 999;
+    color: #fff;
+}
+
+::v-deep .el-dialog {
+    background-color: rgba(0, 0, 0, 0.4); /* 半透明背景 */
+    box-shadow: none; /* 可选，移除阴影 */
+    z-index: 999;
+    color: #fff;
+    position: absolute;
+    right: 50px;
+    width: 360px;
+}
+
+::v-deep .el-dialog__body {
+    height: 200px;
+    overflow: auto;
+}
+
+::v-deep .el-table,
+::v-deep.el-table tr,
+::v-deep .el-table th,
+::v-deep.el-table th.el-table__cell {
+    background-color: rgba(0, 0, 0, 0.1); /* 半透明背景 */
+    box-shadow: none; /* 可选，移除阴影 */
+    z-index: 999;
+    color: #fff;
+    overflow: auto;
+}
+
+::v-deep .el-table__body tr:hover > td {
+    background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+::v-deep .el-dialog__header,
+::v-deep .el-dialog__header {
+    text-align: center;
+    font-weight: 700;
+    border-bottom: 1px solid #fff;
+}
+
+::v-deep .el-dialog__title,
+::v-deep .el-dialog__title {
+    color: #fff;
+    font-size: 16px;
+}
+
+::v-deep .gt-od-list-data .el-dialog__body {
+    padding: 10px; /* 根据需要调整内边距 */
+    color: #fff;
+}
+
+::v-deep .label-dialog .el-dialog {
+    position: absolute;
+    width: 400px;
+    left: 50%;
+    margin-left: -200px;
+    background-color: rgba(0, 0, 0, 0.6); /* 半透明背景 */
+    box-shadow: none; /* 可选，移除阴影 */
+    z-index: 999;
+    color: #fff;
+}
+
+::v-deep .gt-toolbar-right {
+    position: absolute;
+    right: 10px;
+    top: 300px;
+    width: 40px;
+    z-index: 99999;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    //margin-bottom: -10px;
+}
+
+::v-deep .gt-toolbar-right div {
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+::v-deep .gt-toolbar-right .gt-alarms-list img {
+    width: 24px;
+    height: 24px;
+}
+
+::v-deep .transparent-dialog .el-dialog__header,
+.label-dialog .el-dialog__header {
+    text-align: center;
+    font-weight: 700;
+    border-bottom: 1px solid #fff;
+}
+
+::v-deep .transparent-dialog .el-dialog__title,
+.label-dialog .el-dialog__title {
+    color: #fff;
+    font-size: 16px;
+}
+
+::v-deep .transparent-dialog .el-dialog__body {
+    padding: 10px; /* 根据需要调整内边距 */
+    color: #fff;
+}
+
+::v-deep .label-dialog .el-form-item__label {
+    color: #fff;
+    width: 80px;
+    text-align: left;
+}
+
+::v-deep .pannellum-layer {
+    z-index: 9999;
+    position: fixed;
+    right: 3%;
+    top: 3%;
+}
+
+::v-deep .el-radio .el-radio__input .el-radio__inner {
+    border-radius: 2px;
+}
+
+::v-deep .custom-hotspot {
+    width: 25px;
+    height: 40px;
+    background-image: url('@/assets/images/marker-icon-blue.png');
+    background-size: 100% 100%;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 999;
+}
+
+::v-deep .custom-hotspot2 {
+    width: 25px;
+    height: 40px;
+    background-image: url('@/assets/images/marker-icon-red.png');
+    background-size: 100% 100%;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 999;
+}
+
+::v-deep .el-radio .el-radio__input.is-checked .el-radio__inner::after {
+    box-sizing: content-box;
+    content: '';
+    transition: transform 0.15s ease-in 0.05s;
+    transform-origin: center;
+    transform: rotate(-45deg) scaleY(1);
+    width: 6px;
+    height: 3px;
+    border: 2px solid white;
+    border-top: transparent;
+    border-right: transparent;
+    text-align: center;
+    display: block;
+    position: absolute;
+    top: 18%;
+    left: 18%;
+    vertical-align: middle;
+    border-radius: 0;
+    background: none;
+}
+
+::v-deep .gt-img-desc {
+    width: 100%;
+    text-overflow: clip;
+    overflow: hidden;
+    height: 20px;
+    line-height: 20px;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 10px;
+    color: #fff;
+    text-shadow: 3px 3px 3px #000;
+}
+
+::v-deep div.pnlm-tooltip span {
+    visibility: visible;
+    width: 100px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+::v-deep .map-container {
+    position: absolute;
+    bottom: 0; /* 距离底部10px */
+    left: 0; /* 距离左侧10px */
+    width: 300px;
+    height: 300px;
+    z-index: 9999999;
+    border: 1px solid #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+::v-deep .map-containerlarge {
+    position: absolute;
+    bottom: 0; /* 距离底部10px */
+    left: 0; /* 距离左侧10px */
+    width: 30%; /* 设定宽度 */
+    height: calc(100% - 60px);
+    z-index: 9999999;
+    border: 1px solid #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+::v-deep .leaflet-control-attribution {
+    display: none !important;
+}
+
+.gt-reback {
+    position: absolute;
+    right: 10px;
+    top: 100px;
+    width: 40px;
+    z-index: 800;
+    border: white;
+    margin-bottom: -10px;
+    width: 70px;
+    height: 30px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1rem;
+    cursor: pointer; /* 添加手型指针 */
+    background-color: white;
+}
+
+.ctrllayers,
+.ctrllayerlarge {
+    position: absolute;
+    display: flex; /* 使用flex布局 */
+    flex-direction: column; /* 子元素按列排列 */
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.ctrllayers {
+    left: 210px;
+    bottom: 200px;
+    z-index: 9999999;
+    width: 90px;
+    height: 70px;
+}
+
+.ctrllayerlarge {
+    left: 26%;
+    top: 92px;
+    bottom: 0px; /* 距离底部10px */
+    z-index: 9999999;
+    width: 90px;
+    height: 70px;
+}
+
+.ctrllayers label {
+    display: flex;
+    align-items: center; /* 垂直居中对齐子元素 */
+    padding: 5px; /* 移除默认的外边距 */
+}
+
+.ctrllayerlarge label {
+    display: flex;
+    align-items: center; /* 垂直居中对齐子元素 */
+    padding: 5px; /* 移除默认的外边距 */
+}
+
+.layer-checkbox {
+    margin-right: 8px;
+}
+
+.show-yaw {
+    width: 100%;
+    height: 30px;
+    z-index: 9999999;
+    position: absolute;
+    display: flex;
+    justify-content: center; /* 只需要声明一次 */
+    align-items: center;
+    font-size: 0.9rem;
+    color: black;
+    line-height: 30px; /* 设置行高与容器高度一致 */
+}
+
+.gongju_left {
+    width: 95%;
+    height: 100%;
+    overflow: hidden;
+    overflow-wrap: break-word; /* 允许在单词内换行 */
+    word-break: break-word; /* 允许在单词内换行 */
+    padding-left: 2px;
+    font-size: 20px;
+}
+
+.gongju_main {
+    width: 30%;
+    height: 100%;
+    justify-content: space-between;
+    text-align: center; /* 确保文本在水平方向上居中 */
+}
+
+.gongju_right {
+    width: 30%;
+    height: 100%;
+    text-align: right;
+}
+
+::v-deep .highlight-row {
+    background-color: #6f6a6a !important; /* 你选择的颜色 */
+}
+
+::v-deep .el-form-item--small .el-form-item__content,
+.el-form-item--small .el-form-item__label {
+    line-height: 32px;
+    width: 205px;
+}
+
+.btn-uploading {
+    text-align: center;
+}
+
+.rectangle {
+    position: absolute;
+    border: 2px solid red;
+    background-color: #2a7be8;
+    z-index: 9999999;
+}
+
+.draw-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+::v-deep .el-input__inner {
+    width: 90px;
+}
+
+::v-deep .el-input {
+    display: inline-block;
+}
+
+.gt-query {
+    display: flex;
+    flex-direction: row;
+    padding-bottom: 10px;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-bottom: 1px solid #fff;
+}
+
+::v-deep .el-table__body,
+.el-table__footer,
+.el-table__header {
+    table-layout: fixed;
+    border-collapse: separate;
+    width: 300px !important;
+}
+
+::v-deep .el-table__header {
+    table-layout: fixed;
+    border-collapse: separate;
+    width: 300px !important;
+}
+
+.tablenum {
+    width: 30px;
+    border-radius: 50%;
+    background-color: #2db6f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.model {
+    width: 25px;
+    height: 40px;
+    background-size: 100% 100%;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 999;
+}
+
+.map-container-header {
+    height: 32px;
+    line-height: 32px;
+    color: #666;
+    font-size: 16px;
+    display: flex;
+}
+
+.map-container-header div:first-child {
+    width: 96%;
+    background-color: white;
+}
+
+.map-container-header div:last-child {
+    flex: 1;
+    background-color: white;
+}
+
+.map-container-body {
+    width: 100%;
+    flex: 1;
+}
+
+.map-container-header .el-icon-arrow-left {
+    cursor: pointer;
+}
+
+.arrow-right {
+    position: absolute;
+    bottom: 100px;
+    left: 4px;
+    width: 26px;
+    height: 26px;
+    z-index: 9999;
+    border: 1px solid #999;
+    background-color: #fff;
+    border-radius: 3px;
+}
+
+.arrow-right i {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+    color: black;
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hotspot-image {
+    width: 50px; /* 热点图片的宽度 */
+    height: 50px; /* 热点图片的高度 */
+    border-radius: 50%; /* 如果需要，可以设置圆形 */
+    cursor: pointer; /* 鼠标悬停时的指针样式 */
+}
+.rfoot {
+    display: flex;
+    align-items: center;
+    width: calc(100% - 20px);
+    margin: 5px 10px;
+    height: 100%;
+    overflow: hidden;
+}
+.rleftbtn {
+    border: 1px solid black;
+    color: black;
+    margin-left: 5px;
+}
+.rleftbtn:hover {
+    background-color: #1da2ff;
+}
+.rrightbtn {
+    border: 1px solid black;
+    color: black;
+
+    margin-right: 0px;
+}
+.rrightbtn:hover {
+    background-color: #1da2ff;
+}
+
+.thumbnail-container {
+    white-space: nowrap;
+    overflow-x: auto;
+    height: auto;
+    margin: 0 10px;
+    height: 90%;
+}
+.dimg {
+    width: 120px;
+    height: calc(100% - 40px);
+    display: inline-block;
+    margin-right: 10px;
+    margin-top: 20px;
+}
+/* 针对小屏幕优化 */
+@media (max-width: 600px) {
     .dimg {
-        width: 120px;
-        height: calc(100% - 40px);
-        display: inline-block;
-        margin-right: 10px;
-        margin-top: 20px
+        width: 120px; /* 更窄的屏幕使用更小的图片宽度 */
     }
-    /* 针对小屏幕优化 */
-    @media (max-width: 600px) {
-        .dimg {
-            width: 120px; /* 更窄的屏幕使用更小的图片宽度 */
-        }
-    }
-    .dimg span {
-        display: block;
-        text-align: center;
-    }
-    .dimg img {
-        width: 90%; /* 缩略图的宽度 */
-        height: 90%;
-        margin: 0 5px;
-        cursor: pointer;
-        border: 2px solid transparent;
-    }
+}
+.dimg span {
+    display: block;
+    text-align: center;
+}
+.dimg img {
+    width: 90%; /* 缩略图的宽度 */
+    height: 90%;
+    margin: 0 5px;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
 
-    .dimg img.active {
-        border: 5px solid #1da2ff;
-    }
-    .toolbar {
-        width: 25%;
-        height: 30px;
-        position: absolute;
-        top: 10px;
-        right: 30px;
-        border-radius: 5px;
-        z-index: 999;
-        font-weight: bold;
-        line-height: 35px;
-        background-color: rgb(218 213 213 / 38%);
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        padding: 0 20px;
-        color: black;
-    }
-    .toolbar div {
-        cursor: pointer;
-    }
-    .toolbar div:hover {
-        color: #1890ff;
-    }
-    .baractive {
-        color: #1890ff;
-    }
-    .select-gd{
-        z-index: 9999999;
-        position: absolute;
-        font-size: 0.9rem;
-        color: black;
-        line-height: 32px;
-        top: 40px;
-        left: 10px;
-        height: 32px;
+.dimg img.active {
+    border: 5px solid #1da2ff;
+}
+.toolbar {
+    width: 25%;
+    height: 30px;
+    position: absolute;
+    top: 10px;
+    right: 30px;
+    border-radius: 5px;
+    z-index: 999;
+    font-weight: bold;
+    line-height: 35px;
+    background-color: rgb(218 213 213 / 38%);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0 20px;
+    color: black;
+}
+.toolbar div {
+    cursor: pointer;
+}
+.toolbar div:hover {
+    color: #1890ff;
+}
+.baractive {
+    color: #1890ff;
+}
+.select-gd {
+    z-index: 9999999;
+    position: absolute;
+    font-size: 0.9rem;
+    color: black;
+    line-height: 32px;
+    top: 40px;
+    left: 10px;
+    height: 32px;
+}
+::v-deep .el-collapse-item__header {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    line-height: 32px;
+    color: #303133;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: border-bottom-color 0.3s;
+    outline: 0;
+    border-bottom: none;
+    background-color: rgb(218 213 213 / 38%);
+    margin-left: 0px;
+    padding: 0 10px;
+}
+::v-deep .el-collapse {
+    border-top: none;
+    border-bottom: none;
+    padding: 0 10px;
+}
+::v-deep .el-collapse-item__wrap {
+    border-bottom: none;
+    background-color: rgb(218 213 213 / 38%);
+    padding: 10px;
+}
 
-    }
-    ::v-deep .el-collapse-item__header {
-        display: flex;
-        align-items: center;
-        height: 32px;
-        line-height: 32px;
-        color: #303133;
-        cursor: pointer;
-        font-size: 0.9rem;
-        font-weight: 500;
-        transition: border-bottom-color .3s;
-        outline: 0;
-        border-bottom:none;
-        background-color: rgb(218 213 213 / 38%);
-        margin-left: 0px;
-        padding:0 10px
-    }
-    ::v-deep .el-collapse {
-        border-top: none;
-        border-bottom: none;
-        padding:0 10px
-    }
-    ::v-deep .el-collapse-item__wrap {
-        border-bottom: none;
-        background-color: rgb(218 213 213 / 38%);
-        padding:10px
-    }
+.thumbnail-footer {
+    position: relative;
+    height: 20%;
+    background-color: #f2f0f0;
+    overflow: hidden;
+}
+.thumbnail-footer.collapsed {
+    height: 0; /* 折叠后的高度 */
+}
+.toggle-button {
+    position: absolute;
+    left: 75%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 20px;
+    background-color: #ddd;
+    border-radius: 0 0 5px 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 1000;
+}
 
-    .thumbnail-footer {
-        position: relative;
-        height: 20%;
-        background-color: #f2f0f0;
-        overflow: hidden;
-    }
-    .thumbnail-footer.collapsed {
-        height: 0; /* 折叠后的高度 */
-    }
-    .toggle-button {
-        position: absolute;
-        left: 75%;
-        transform: translateX(-50%);
-        width: 60px;
-        height: 20px;
-        background-color: #ddd;
-        border-radius: 0 0 5px 5px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        z-index: 1000;
-    }
+.toggle-button:not(.collapsed) {
+    bottom: calc(20% - 20px);
+}
 
-    .toggle-button:not(.collapsed) {
-        bottom: calc(20% - 20px);
-    }
+.toggle-button.collapsed {
+    bottom: 0;
+}
 
-    .toggle-button.collapsed {
-        bottom: 0;
-    }
-
-    .toggle-button:hover {
-        background-color: #ccc;
-    }
-    .toggle-button i {
-        font-size: 12px;
-        color: #666;
-    }
-    .thumbnail-content {
-        height: 100%;
-    }
-
+.toggle-button:hover {
+    background-color: #ccc;
+}
+.toggle-button i {
+    font-size: 12px;
+    color: #666;
+}
+.thumbnail-content {
+    height: 100%;
+}
 </style>

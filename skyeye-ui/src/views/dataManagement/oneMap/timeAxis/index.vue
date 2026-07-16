@@ -3,56 +3,42 @@
         <div class="year-show">
             <span class="label-span">时间</span>
             <div class="timeline">
-                <i
-                        class="el-icon-arrow-left"
-                        @click="prevItem"
-                        :class="{ disabled: isFirstItemActive }"
-                ></i>
+                <i class="el-icon-arrow-left" @click="prevItem" :class="{ disabled: isFirstItemActive }"></i>
                 <!-- 固定线条 -->
                 <div class="line-container">
-<!--                    <div class="line" ref="line"></div>-->
+                    <!--                    <div class="line" ref="line"></div>-->
                 </div>
                 <!-- 可滚动的圆点 -->
                 <div
-                        class="circles-container"
-                        ref="circlesContainer"
-                        :class="{ 'justify-center': !needsScroll && centerWhenFew }"
-                        @touchstart="handleTouchStart"
-                        @touchend="handleTouchEnd"
-                        @touchmove="handleTouchMove"
-                >
-<!--                    @touchmove="handleTouchMove"-->
+                    class="circles-container"
+                    ref="circlesContainer"
+                    :class="{ 'justify-center': !needsScroll && centerWhenFew }"
+                    @touchstart="handleTouchStart"
+                    @touchend="handleTouchEnd"
+                    @touchmove="handleTouchMove">
+                    <!--                    @touchmove="handleTouchMove"-->
                     <div
-                            v-for="(item, index) in allItems"
-                            :key="item.key"
-                            :class="{
-                              'circle': item.type === 'year',
-                              'smallcircle': item.type === 'month',
-                              'active': item.isActive,
-                              'hover': item.isHover
-                            }"
-                            :style="getItemStyle(index)"
-                            @mouseover="hoverItem(index)"
-                            @mouseout="unhoverItem(index)"
-                            @click="activateItem(index)"
-                    >
+                        v-for="(item, index) in allItems"
+                        :key="item.key"
+                        :class="{
+                            circle: item.type === 'year',
+                            smallcircle: item.type === 'month',
+                            active: item.isActive,
+                            hover: item.isHover
+                        }"
+                        :style="getItemStyle(index)"
+                        @mouseover="hoverItem(index)"
+                        @mouseout="unhoverItem(index)"
+                        @click="activateItem(index)">
                         <div v-if="item.type === 'year'" class="circle-content">
                             {{ item.value }}
                         </div>
-                        <div
-                                v-if="item.type === 'month' && (item.isHover || item.isActive)"
-                                class="month-content"
-                        >
-                            {{ item.value.split('-')[1]+'月'}}
+                        <div v-if="item.type === 'month' && (item.isHover || item.isActive)" class="month-content">
+                            {{ item.value.split('-')[1] + '月' }}
                         </div>
                     </div>
                 </div>
-                <i
-                        class="el-icon-arrow-right"
-                        @click="nextItem"
-                        :class="{ disabled: isLastItemActive }"
-                        style="position: absolute;right: 20px"
-                ></i>
+                <i class="el-icon-arrow-right" @click="nextItem" :class="{ disabled: isLastItemActive }" style="position: absolute; right: 20px"></i>
                 <i class="el-icon-refresh refresh" @click="resetScroll"></i>
             </div>
         </div>
@@ -60,12 +46,11 @@
 </template>
 
 <script>
-import {getTimeAxisDataApi} from "@/api/commonApi";
-import colorSpaceNode from "three/addons/nodes/display/ColorSpaceNode";
+import { getTimeAxisDataApi } from '@/api/commonApi';
+import colorSpaceNode from 'three/addons/nodes/display/ColorSpaceNode';
 
 export default {
-    props:{
-    },
+    props: {},
     data() {
         return {
             rawTimelineItems: [],
@@ -74,11 +59,11 @@ export default {
             isScrolling: false,
             activeIndex: -1,
             itemBaseWidth: 30, // 每个项目的基础占位宽度
-            minSpacing: 20,     // 最小间距
+            minSpacing: 20, // 最小间距
             needsScroll: false, // 是否需要滚动
-            centerWhenFew: false ,// 少量项目时是否居中(设为false表示均匀分布)
+            centerWhenFew: false, // 少量项目时是否居中(设为false表示均匀分布)
             currrentActivateData: '',
-            containerWidth:0
+            containerWidth: 0
         };
     },
     computed: {
@@ -91,20 +76,20 @@ export default {
     },
     methods: {
         initTimelineItems() {
-            this.allItems = this.rawTimelineItems.flatMap(item => {
+            this.allItems = this.rawTimelineItems.flatMap((item) => {
                 const yearObj = {
                     type: 'year',
                     value: item.year,
                     isActive: false,
-                    isHover: false,
+                    isHover: false
                     // key: `year-${item.year}`
                 };
 
-                const monthObjs = item.month_list.map(month => ({
+                const monthObjs = item.month_list.map((month) => ({
                     type: 'month',
                     value: `${item.year}-${month}`,
                     isActive: false,
-                    isHover: false,
+                    isHover: false
                     // key: `month-${item.year}-${month}`
                 }));
 
@@ -129,9 +114,9 @@ export default {
             this.containerWidth = containerWidth;
             // 计算所有项目需要的总宽度
             const totalContentWidth = this.allItems.length * this.itemBaseWidth;
-            if (totalContentWidth > containerWidth){
-                this.needsScroll = true
-            }else{
+            if (totalContentWidth > containerWidth) {
+                this.needsScroll = true;
+            } else {
                 this.centerWhenFew = true;
             }
 
@@ -147,17 +132,16 @@ export default {
                 return {
                     margin: `0 ${this.minSpacing}px`
                 };
-
             }
             // 不需要滚动时的均匀分布逻辑
             if (this.centerWhenFew) {
-                const itemBaseWidth = 15
-                const remainingSpace = this.containerWidth - (this.allItems.length * itemBaseWidth) -50;
-                const rightDistance = remainingSpace / (this.allItems.length-1);
+                const itemBaseWidth = 15;
+                const remainingSpace = this.containerWidth - this.allItems.length * itemBaseWidth - 50;
+                const rightDistance = remainingSpace / (this.allItems.length - 1);
 
                 // 居中模式
                 if (index === 0) {
-                    return { margin: `0 ${rightDistance}px 0 25px` };  //上 右 下 左
+                    return { margin: `0 ${rightDistance}px 0 25px` }; //上 右 下 左
                 }
                 if (index === this.allItems.length - 1) {
                     return { margin: `0 25px 0 0` };
@@ -173,14 +157,14 @@ export default {
         },
         activateItem(index) {
             if (index >= 0 && index < this.allItems.length && !this.allItems[index].isActive) {
-                this.allItems.forEach(item => item.isActive = false);
+                this.allItems.forEach((item) => (item.isActive = false));
                 this.allItems[index].isActive = true;
                 this.activeIndex = index;
                 if (this.needsScroll) {
                     this.scrollToActiveItem();
                 }
-                this.currrentActivateData = this.allItems[index].value
-                this.$emit('handleDateChange', this.currrentActivateData)
+                this.currrentActivateData = this.allItems[index].value;
+                this.$emit('handleDateChange', this.currrentActivateData);
             }
         },
         scrollToActiveItem() {
@@ -194,10 +178,7 @@ export default {
             const containerRect = container.getBoundingClientRect();
             const activeRect = activeElement.getBoundingClientRect();
 
-            const targetPosition = container.scrollLeft +
-                (activeRect.left - containerRect.left) -
-                (container.clientWidth / 2) +
-                (activeRect.width / 2);
+            const targetPosition = container.scrollLeft + (activeRect.left - containerRect.left) - container.clientWidth / 2 + activeRect.width / 2;
 
             const maxScroll = container.scrollWidth - container.clientWidth;
             const finalPosition = Math.max(0, Math.min(targetPosition, maxScroll));
@@ -217,21 +198,20 @@ export default {
             }
         },
         nextItem() {
-
-                if (this.activeIndex < this.allItems.length - 1) {
-                    this.activateItem(this.activeIndex + 1);
-                }
+            if (this.activeIndex < this.allItems.length - 1) {
+                this.activateItem(this.activeIndex + 1);
+            }
         },
         resetScroll() {
             // this.activateItem(0);
-            this.allItems.forEach(item => item.isActive = false);
+            this.allItems.forEach((item) => (item.isActive = false));
             this.activeIndex = -1;
 
             if (this.needsScroll) {
                 this.scrollToActiveItem();
             }
-            this.currrentActivateData = ''
-            this.$emit('handleDateChange', this.currrentActivateData)
+            this.currrentActivateData = '';
+            this.$emit('handleDateChange', this.currrentActivateData);
         },
         handleTouchStart(e) {
             this.touchStartX = e.touches[0].clientX;
@@ -259,18 +239,17 @@ export default {
                 });
             }
         },
-        async getTimeAxisData(){
+        async getTimeAxisData() {
             const res = await getTimeAxisDataApi();
             if (res.code === 0) {
                 this.rawTimelineItems = res.data.rawTimelineItems;
-            }else{
+            } else {
                 this.$message.error(res.msg);
             }
-
         }
     },
     async mounted() {
-        await this.getTimeAxisData()
+        await this.getTimeAxisData();
         this.initTimelineItems();
         window.addEventListener('resize', this.handleResize);
     },
@@ -316,9 +295,8 @@ export default {
     top: 19px;
     transform: translateY(-50%);
     z-index: 1;
-    background-image: linear-gradient(to right, #f5f7fa,#c3cfe2,  #c3cfe2,#f5f7fa);
+    background-image: linear-gradient(to right, #f5f7fa, #c3cfe2, #c3cfe2, #f5f7fa);
     margin-left: 17px;
-
 }
 
 .line {
@@ -338,7 +316,6 @@ export default {
     -ms-overflow-style: none;
     z-index: 2;
     margin-left: 20px;
-
 }
 
 .circles-container.justify-center {
@@ -348,7 +325,8 @@ export default {
     display: none;
 }
 
-.circle, .smallcircle {
+.circle,
+.smallcircle {
     position: relative;
     flex-shrink: 0;
     width: 30px;
@@ -416,7 +394,7 @@ i {
     cursor: pointer;
     flex-shrink: 0;
     z-index: 3;
-    color: #2DB6F4;
+    color: #2db6f4;
     font-weight: bold;
     margin-top: 10px;
 }

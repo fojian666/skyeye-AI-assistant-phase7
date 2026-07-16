@@ -23,10 +23,10 @@ export default {
             type: Object,
             required: true
         },
-        cardStatus:{
+        cardStatus: {
             //所有的业务状态集合
             type: Array,
-            required: true,
+            required: true
         }
     },
     data() {
@@ -37,17 +37,21 @@ export default {
             //线索状态标签css的类
             return {
                 'status-checked': this.data.clue_status === 1,
-                'status-unchecked': this.data.clue_status === 0,  //待审核
+                'status-unchecked': this.data.clue_status === 0, //待审核
                 'status-process': this.data.clue_status === 2 || this.data.clue_status === 3, //疑似
-                'status-done': this.data.clue_status === 5,  //有效
+                'status-done': this.data.clue_status === 5 //有效
             };
         },
-        currentStatus(){
+        currentStatus() {
             //当前线索状态
-            if(this.data.clue_status === 3){
-                return this.cardStatus.filter(item=>{return item.value===2})[0].name
+            if (this.data.clue_status === 3) {
+                return this.cardStatus.filter((item) => {
+                    return item.value === 2;
+                })[0].name;
             }
-            return this.cardStatus.filter(item=>{return item.value===this.data.clue_status})[0].name
+            return this.cardStatus.filter((item) => {
+                return item.value === this.data.clue_status;
+            })[0].name;
         }
     },
     methods: {},
@@ -57,79 +61,76 @@ export default {
 
 <style lang="scss" scoped>
 .se-card-container {
-  width: 100%;
-  height: 100%;
-  padding-right: 5px;
-  cursor: pointer;
+    width: 100%;
+    height: 100%;
+    padding-right: 5px;
+    cursor: pointer;
 }
 ::v-deep .el-card__header,
 ::v-deep .el-card__body {
-  padding-top: 5px;//设置卡片内边距
-  padding-bottom: 5px;
+    padding-top: 5px; //设置卡片内边距
+    padding-bottom: 5px;
 }
-.clearfix span{
-  white-space: nowrap; /* 不换行 */
-  text-overflow: ellipsis; /* 超出部分显示省略号 */
-  font-size: 14px;
+.clearfix span {
+    white-space: nowrap; /* 不换行 */
+    text-overflow: ellipsis; /* 超出部分显示省略号 */
+    font-size: 14px;
 }
 .body {
-  white-space: nowrap; /* 不换行 */
-  text-overflow: ellipsis; /* 超出部分显示省略号 */
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
+    white-space: nowrap; /* 不换行 */
+    text-overflow: ellipsis; /* 超出部分显示省略号 */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
 }
-.body p{
-  margin-bottom: 2px;
-  font-size: 12px;
+.body p {
+    margin-bottom: 2px;
+    font-size: 12px;
 }
 .status {
-  position: absolute;
-  right: -25px;
-  top: 10px;
-  width: 100px;
-  height: 25px;
-  line-height: 25px;
-  text-align: center;
-  color: #fff;
-  font-size: 14px;
-  transform: rotate(45deg);
-  -ms-transform: rotate(45deg);
-  -o-transform: rotate(45deg);
-  -webkit-transform: rotate(45deg);
+    position: absolute;
+    right: -25px;
+    top: 10px;
+    width: 100px;
+    height: 25px;
+    line-height: 25px;
+    text-align: center;
+    color: #fff;
+    font-size: 14px;
+    transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
 }
 .status-checked {
-  background: #27be82;
+    background: #27be82;
 }
 .status-unchecked {
-  background: #ff6452;
+    background: #ff6452;
 }
-.status-process{
-  background: #11a8ed;
+.status-process {
+    background: #11a8ed;
 }
-.status-done{
-  background: #62de1c;
+.status-done {
+    background: #62de1c;
 }
-::v-deep .el-card .el-card__header{
-  height: 20%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+::v-deep .el-card .el-card__header {
+    height: 20%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
-::v-deep .el-card .el-card__body{
-  height: 80%;
+::v-deep .el-card .el-card__body {
+    height: 80%;
 }
 
 @media (max-height: 900px) {
-  .clearfix span{
-    font-size: 10px;
-  }
-  .body p{
-    font-size: 8px;
-  }
-
+    .clearfix span {
+        font-size: 10px;
+    }
+    .body p {
+        font-size: 8px;
+    }
 }
-
-
 </style>

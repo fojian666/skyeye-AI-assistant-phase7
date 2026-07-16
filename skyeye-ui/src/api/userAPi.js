@@ -11,6 +11,6 @@ export const postLoginByCodeApi = (data) => {
     return request({
         url: `/api/system/user/temp-login`,
         method: 'post',
-        data,
-    })
+        data
+    });
 };

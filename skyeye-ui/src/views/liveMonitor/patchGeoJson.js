@@ -2,10 +2,7 @@ import proj4 from 'proj4';
 
 const PATCH_SOURCE_CRS = 'EPSG:4528';
 
-proj4.defs(
-    PATCH_SOURCE_CRS,
-    '+proj=tmerc +lat_0=0 +lon_0=120 +k=1 +x_0=40500000 +y_0=0 +ellps=GRS80 +units=m +no_defs'
-);
+proj4.defs(PATCH_SOURCE_CRS, '+proj=tmerc +lat_0=0 +lon_0=120 +k=1 +x_0=40500000 +y_0=0 +ellps=GRS80 +units=m +no_defs');
 
 function getFirstCoordinate(coords) {
     if (typeof coords[0] === 'number') {

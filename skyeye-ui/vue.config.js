@@ -85,36 +85,36 @@ module.exports = defineConfig({
                         var: 'L',
                         path: 'dist/iclient-leaflet-es6.js',
                         style: 'dist/iclient-leaflet.min.css'
-                    },
+                    }
                 ],
                 prodUrl: isProduction ? '/static/lib/cdn/:name/:path' : '/static/lib/cdn/:name/:path'
-            },
+            }
         ]);
 
         config.module
-          .rule('md')
-          .test(/\.md/)
-          .use('vue-loader')
-          .loader('vue-loader')
-          .end()
-          .use('vue-markdown-loader')
-          .loader('vue-markdown-loader/lib/markdown-compiler')
-          .options({
-              raw: true,
-              preventExtract: true
-          });
+            .rule('md')
+            .test(/\.md/)
+            .use('vue-loader')
+            .loader('vue-loader')
+            .end()
+            .use('vue-markdown-loader')
+            .loader('vue-markdown-loader/lib/markdown-compiler')
+            .options({
+                raw: true,
+                preventExtract: true
+            });
 
         config.module
-          .rule('js')
-          .use('babel-loader')
-          .loader('babel-loader')
-          .tap((options) => {
-              return {
-                  ...options,
-                  presets: ['@babel/preset-env'],
-                  plugins: ['@babel/plugin-proposal-optional-chaining', '@babel/plugin-proposal-nullish-coalescing-operator']
-              };
-          });
+            .rule('js')
+            .use('babel-loader')
+            .loader('babel-loader')
+            .tap((options) => {
+                return {
+                    ...options,
+                    presets: ['@babel/preset-env'],
+                    plugins: ['@babel/plugin-proposal-optional-chaining', '@babel/plugin-proposal-nullish-coalescing-operator']
+                };
+            });
     },
     configureWebpack: {
         plugins: [

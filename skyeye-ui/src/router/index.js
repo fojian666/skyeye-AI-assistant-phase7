@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-import store from "@/store";
+import store from '@/store';
 import { checkMenuPermission, subPage } from '@/utils/utils';
 import { performAutoLogin } from '@/utils/autoLogin';
 
@@ -14,7 +14,7 @@ export const subRoutes = [
             title: '门户',
             requireAuth: true
         },
-        component: () => import('@/views/portal/index.vue'),
+        component: () => import('@/views/portal/index.vue')
     },
     {
         path: '/',
@@ -44,7 +44,7 @@ export const subRoutes = [
             {
                 path: 'algorithm-detail',
                 name: 'AlgorithmDetail',
-                component: () => import('@/views/algorithm-mall/AlgorithmDetail.vue'),
+                component: () => import('@/views/algorithm-mall/AlgorithmDetail.vue')
             }
         ]
     },
@@ -73,7 +73,7 @@ export const subRoutes = [
                     title: '一张图',
                     requireAuth: true
                 },
-                component: () => import('@/views/dataManagement/oneMap'),
+                component: () => import('@/views/dataManagement/oneMap')
             },
             {
                 path: '/data-management/panorama-image',
@@ -82,7 +82,7 @@ export const subRoutes = [
                     title: '全景图片展示',
                     requireAuth: true
                 },
-                component: () => import('@/views/dataManagement/panoramaImage'),
+                component: () => import('@/views/dataManagement/panoramaImage')
             },
             {
                 path: '/data-management/table',
@@ -101,7 +101,7 @@ export const subRoutes = [
                     requireAuth: true
                 },
                 component: () => import('@/views/dataManagement/orderManagement')
-            },
+            }
         ]
     },
     {
@@ -120,7 +120,7 @@ export const subRoutes = [
                     title: '任务管理',
                     requireAuth: true
                 },
-                component: () => import('@/views/taskManagementModule/verifyClue'),
+                component: () => import('@/views/taskManagementModule/verifyClue')
             },
             {
                 path: '/task-mgmt/multi-comparison',
@@ -129,7 +129,7 @@ export const subRoutes = [
                     title: '对比',
                     requireAuth: true
                 },
-                component: () => import('@/views/taskManagementModule/verifyClue/multiComparison'),
+                component: () => import('@/views/taskManagementModule/verifyClue/multiComparison')
             },
             {
                 path: '/task-mgmt/data-upload',
@@ -138,8 +138,8 @@ export const subRoutes = [
                     title: '数据上传管理',
                     requireAuth: true
                 },
-                component: () => import('@/views/taskManagementModule/dataUploadManagement'),
-            },
+                component: () => import('@/views/taskManagementModule/dataUploadManagement')
+            }
         ]
     },
     {
@@ -158,7 +158,7 @@ export const subRoutes = [
                     title: '线索总览',
                     requireAuth: true
                 },
-                component: () => import('@/views/panoramicDetection/clueView'),
+                component: () => import('@/views/panoramicDetection/clueView')
             },
             {
                 path: '/panoramic-detection/grid-management',
@@ -167,7 +167,7 @@ export const subRoutes = [
                     title: '网格管理',
                     requireAuth: true
                 },
-                component: () => import('@/views/panoramicDetection/gridManagement'),
+                component: () => import('@/views/panoramicDetection/gridManagement')
             },
             {
                 path: '/panoramic-detection/map-view',
@@ -176,7 +176,7 @@ export const subRoutes = [
                     title: '线索统计',
                     requireAuth: true
                 },
-                component: () => import('@/views/panoramicDetection/mapView'),
+                component: () => import('@/views/panoramicDetection/mapView')
             },
             {
                 path: '/panoramic-detection/task-management',
@@ -185,7 +185,7 @@ export const subRoutes = [
                     title: '批次管理',
                     requireAuth: true
                 },
-                component: () => import('@/views/panoramicDetection/taskManagement'),
+                component: () => import('@/views/panoramicDetection/taskManagement')
             },
             {
                 path: '/panoramic-detection/panorama-upload',
@@ -203,7 +203,7 @@ export const subRoutes = [
                     title: '全景检测',
                     requireAuth: true
                 },
-                component: () => import('@/views/panoramicDetection/mainDetection'),
+                component: () => import('@/views/panoramicDetection/mainDetection')
             },
             {
                 path: '/panoramic-detection/statistical-analysis',
@@ -212,7 +212,7 @@ export const subRoutes = [
                     title: '大屏',
                     requireAuth: true
                 },
-                component: () => import('@/views/panoramicDetection/statisticalAnalysis/Index.vue'),
+                component: () => import('@/views/panoramicDetection/statisticalAnalysis/Index.vue')
                 // component:()=>import('@/views/panoramicDetection/statisticalAnalysis/index1.vue'),
             },
             {
@@ -222,7 +222,7 @@ export const subRoutes = [
                     title: '线索查询',
                     requireAuth: true
                 },
-                component: () => import('@/views/panoramicDetection/verifyClue'),
+                component: () => import('@/views/panoramicDetection/verifyClue')
             },
             {
                 path: '/panoramic-detection/multiComparision',
@@ -231,7 +231,7 @@ export const subRoutes = [
                     title: '对比',
                     requireAuth: true
                 },
-                component: () => import('@/views/panoramicDetection/verifyClue/multiComparison'),
+                component: () => import('@/views/panoramicDetection/verifyClue/multiComparison')
             },
             {
                 path: '/panoramic-detection/scene',
@@ -240,7 +240,7 @@ export const subRoutes = [
                     title: '场景管理',
                     requireAuth: true
                 },
-                component: () => import('@/views/panoramicDetection/sceneManagement'),
+                component: () => import('@/views/panoramicDetection/sceneManagement')
             },
             {
                 path: '/panoramic-detection/report',
@@ -249,7 +249,7 @@ export const subRoutes = [
                     title: '报告管理',
                     requireAuth: true
                 },
-                component: () => import('@/views/panoramicDetection/reportManagement'),
+                component: () => import('@/views/panoramicDetection/reportManagement')
             },
             {
                 path: '/panoramic-detection/main-detection-temp',
@@ -258,7 +258,7 @@ export const subRoutes = [
                     title: '临时上传',
                     requireAuth: true
                 },
-                component:()=>import('@/views/panoramicDetection/tempMainDetection'),
+                component: () => import('@/views/panoramicDetection/tempMainDetection')
             },
             {
                 path: '/panoramic-detection/panorama-change-detection',
@@ -267,7 +267,7 @@ export const subRoutes = [
                     title: '变化检测',
                     requireAuth: true
                 },
-                component:()=>import('@/views/panoramicDetection/panoramaChangeDetection'),
+                component: () => import('@/views/panoramicDetection/panoramaChangeDetection')
             },
             {
                 path: '/panoramic-detection/frame-area',
@@ -277,7 +277,7 @@ export const subRoutes = [
                     requireAuth: true
                 },
                 component: () => import('@/views/panoramicDetection/frameArea')
-            },
+            }
         ]
     },
 
@@ -355,7 +355,7 @@ export const subRoutes = [
                     requireAuth: true
                 },
                 component: () => import('@/views/routePlanning/components/panoramicPointPlanning.vue')
-            },
+            }
         ]
     },
     {
@@ -363,7 +363,6 @@ export const subRoutes = [
         name: 'Details',
         component: () => import('@/views/intelligentMonitoring/objectDetection/details')
     },
-
 
     {
         path: '/resource-center',
@@ -454,8 +453,7 @@ export const subRoutes = [
                     title: '用户信息',
                     requireAuth: true
                 },
-                component: () =>
-                    import('@/views/resource-center/system-management/user-info')
+                component: () => import('@/views/resource-center/system-management/user-info')
             },
             {
                 path: '/resource-center/system-management/log-view',
@@ -464,8 +462,7 @@ export const subRoutes = [
                     title: '日志查看',
                     requireAuth: true
                 },
-                component: () =>
-                    import('@/views/resource-center/system-management/log-view')
+                component: () => import('@/views/resource-center/system-management/log-view')
             },
             {
                 path: '/resource-center/system-management/menu-management',
@@ -474,8 +471,7 @@ export const subRoutes = [
                     title: '菜单管理',
                     requireAuth: true
                 },
-                component: () =>
-                    import('@/views/resource-center/system-management/menu-management')
+                component: () => import('@/views/resource-center/system-management/menu-management')
             },
             {
                 path: '/resource-center/system-management/data-dict',
@@ -484,8 +480,7 @@ export const subRoutes = [
                     title: '字典管理',
                     requireAuth: true
                 },
-                component: () =>
-                    import('@/views/resource-center/system-management/dataDict/DictType.vue')
+                component: () => import('@/views/resource-center/system-management/dataDict/DictType.vue')
             },
             {
                 path: '/resource-center/system-management/data-dict-value',
@@ -494,8 +489,7 @@ export const subRoutes = [
                     title: '枚举管理',
                     requireAuth: true
                 },
-                component: () =>
-                    import('@/views/resource-center/system-management/dataDict/DictValue.vue')
+                component: () => import('@/views/resource-center/system-management/dataDict/DictValue.vue')
             },
             {
                 path: '/resource-center/system-management/role-management',
@@ -626,7 +620,7 @@ export const subRoutes = [
                     requireAuth: true
                 },
                 component: () => import('@/views/clueVerify/taskManagement')
-            },
+            }
         ]
     },
     {
@@ -655,7 +649,7 @@ export const subRoutes = [
                     requireAuth: true
                 },
                 component: () => import('@/views/pattern-verifiy/taskManagement')
-            },
+            }
         ]
     },
     {
@@ -665,7 +659,7 @@ export const subRoutes = [
             title: '数据综合展示',
             requireAuth: true
         },
-        component: () => import('@/views/statisticalAnalysis/index.vue'),
+        component: () => import('@/views/statisticalAnalysis/index.vue')
     },
     {
         path: '/intelligent',
@@ -683,7 +677,7 @@ export const subRoutes = [
                     title: '智能处理分析',
                     requireAuth: true
                 },
-                component: () => import('@/views/intelligent/interpretationTaskManagement'),
+                component: () => import('@/views/intelligent/interpretationTaskManagement')
             },
             {
                 path: '/intelligent/processing-analysis',
@@ -692,7 +686,7 @@ export const subRoutes = [
                     title: '智能处理分析',
                     requireAuth: true
                 },
-                component: () => import('@/views/intelligent/processingAnalysis'),
+                component: () => import('@/views/intelligent/processingAnalysis')
             },
             {
                 path: '/intelligent/land-change',
@@ -701,7 +695,7 @@ export const subRoutes = [
                     title: '地类变化',
                     requireAuth: true
                 },
-                component: () => import('@/views/intelligent/land-change'),
+                component: () => import('@/views/intelligent/land-change')
             },
 
             {
@@ -711,7 +705,7 @@ export const subRoutes = [
                     title: '变化检测详情',
                     requireAuth: true
                 },
-                component: () => import('@/views/intelligent/land-change/land-change-details'),
+                component: () => import('@/views/intelligent/land-change/land-change-details')
             },
             {
                 path: '/intelligent/land-change/land-change-details/spot-view',
@@ -720,7 +714,7 @@ export const subRoutes = [
                     title: '变化检测详情',
                     requireAuth: true
                 },
-                component: () => import('@/views/intelligent/land-change/land-change-details/spot-view'),
+                component: () => import('@/views/intelligent/land-change/land-change-details/spot-view')
             },
             {
                 path: '/intelligent/land-dividing',
@@ -729,7 +723,7 @@ export const subRoutes = [
                     title: '地类分割',
                     requireAuth: true
                 },
-                component: () => import('@/views/intelligent/land-dividing'),
+                component: () => import('@/views/intelligent/land-dividing')
             },
             {
                 path: '/intelligent/land-dividing/land-dividing-details',
@@ -738,7 +732,7 @@ export const subRoutes = [
                     title: '地类分割详情',
                     requireAuth: true
                 },
-                component: () => import('@/views/intelligent/land-dividing/land-dividing-details'),
+                component: () => import('@/views/intelligent/land-dividing/land-dividing-details')
             },
             {
                 path: '/intelligent/land-dividing/land-dividing-details/spot-view',
@@ -747,8 +741,8 @@ export const subRoutes = [
                     title: '变化检测详情',
                     requireAuth: true
                 },
-                component: () => import('@/views/intelligent/land-dividing/land-dividing-details/spot-view'),
-            },
+                component: () => import('@/views/intelligent/land-dividing/land-dividing-details/spot-view')
+            }
         ]
     },
     {
@@ -758,8 +752,8 @@ export const subRoutes = [
             title: 'AI 助手设置',
             requireAuth: true
         },
-        component: () => import('@/views/aiSettings/index.vue'),
-    },
+        component: () => import('@/views/aiSettings/index.vue')
+    }
 ];
 
 const routes = [
@@ -826,7 +820,6 @@ const routes = [
     }
 ];
 
-
 const router = new VueRouter({
     routes,
     mode: 'history',
@@ -834,34 +827,35 @@ const router = new VueRouter({
 });
 // 工具函数：获取 URL 中的 code 参数（写在这或放 utils 都行）
 function getQueryParam(name) {
-    const reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i')
-    const r = window.location.search.substr(1).match(reg)
-    if (r != null) return decodeURIComponent(r[2])
-    return null
+    const reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
+    const r = window.location.search.substr(1).match(reg);
+    if (r != null) return decodeURIComponent(r[2]);
+    return null;
 }
 export default router;
 //配置访问限制
 router.beforeEach((to, from, next) => {
-    const code = getQueryParam('code')
+    const code = getQueryParam('code');
 
     // 如果有 code，直接走 SSO 登录，不进入原有登录逻辑
     if (code) {
-        console.log('检测到 code 参数，执行单点登录：', code)
+        console.log('检测到 code 参数，执行单点登录：', code);
 
         // 调用后台接口：用 code 换 token + 用户信息
-        store.dispatch('user/ssoLoginByCode', code).then(res => {
-            // 登录成功 → 去掉 url 里的 code，避免重复触发
-            next({ path: to.path, query: {}, replace: true })
-        }).catch(err => {
-            console.error('SSO 登录失败', err)
-            next()
-        })
-        return // 必须 return，不往下走
+        store
+            .dispatch('user/ssoLoginByCode', code)
+            .then((res) => {
+                // 登录成功 → 去掉 url 里的 code，避免重复触发
+                next({ path: to.path, query: {}, replace: true });
+            })
+            .catch((err) => {
+                console.error('SSO 登录失败', err);
+                next();
+            });
+        return; // 必须 return，不往下走
     }
-    const hasAutoLoginRoute = to.matched.some((record) => record.meta.autoLogin)
-        && window.config?.overviewAutoLogin?.enabled !== false;
-    const forceAutoLogin = to.matched.some((record) => record.meta.forceAutoLogin)
-        && window.config?.overviewAutoLogin?.enabled !== false;
+    const hasAutoLoginRoute = to.matched.some((record) => record.meta.autoLogin) && window.config?.overviewAutoLogin?.enabled !== false;
+    const forceAutoLogin = to.matched.some((record) => record.meta.forceAutoLogin) && window.config?.overviewAutoLogin?.enabled !== false;
 
     const enterWithAutoLogin = () => {
         store.commit('user/SET_CURRENT_USER', {
@@ -901,15 +895,18 @@ router.beforeEach((to, from, next) => {
             if (store.state.user.currentUser.id) {
                 next();
             } else {
-                store.dispatch('user/queryUserInfo').then(() => {
-                    next();
-                }).catch(() => {
-                    if (hasAutoLoginRoute) {
-                        enterWithAutoLogin();
-                    } else {
-                        next({ path: '/login', query: { redirect: to.fullPath } });
-                    }
-                });
+                store
+                    .dispatch('user/queryUserInfo')
+                    .then(() => {
+                        next();
+                    })
+                    .catch(() => {
+                        if (hasAutoLoginRoute) {
+                            enterWithAutoLogin();
+                        } else {
+                            next({ path: '/login', query: { redirect: to.fullPath } });
+                        }
+                    });
             }
         } else if (hasAutoLoginRoute) {
             enterWithAutoLogin();
@@ -921,4 +918,3 @@ router.beforeEach((to, from, next) => {
         next();
     }
 });
-

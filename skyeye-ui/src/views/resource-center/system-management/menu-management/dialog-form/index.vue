@@ -1,12 +1,5 @@
 <template>
-    <el-dialog
-        :title="title"
-        :visible.sync="dialogVisible"
-        width="50vw"
-        custom-class="rc-light-dialog"
-        @closed="dialogClosed"
-        @open="openOpened"
-    >
+    <el-dialog :title="title" :visible.sync="dialogVisible" width="50vw" custom-class="rc-light-dialog" @closed="dialogClosed" @open="openOpened">
         <el-form ref="formRef" :rules="rules" :model="formData" label-width="100px">
             <el-form-item label="父节点：" prop="cascaderValue">
                 <el-cascader
@@ -160,10 +153,7 @@ export default {
     methods: {
         buildCascaderOptions(nodeData) {
             const menuTree = JSON.parse(JSON.stringify(nodeData || []));
-            return [
-                { id: 0, caption: '根目录', leaf: true },
-                ...menuTree
-            ];
+            return [{ id: 0, caption: '根目录', leaf: true }, ...menuTree];
         },
         findMenuPath(nodes, targetId, path = []) {
             for (const node of nodes) {

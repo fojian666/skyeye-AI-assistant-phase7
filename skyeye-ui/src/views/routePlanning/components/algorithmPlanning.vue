@@ -2333,14 +2333,14 @@ export default {
 <style lang="scss">
 /* ======== 亮色主题：左侧栏全部子元素 ======== */
 html[data-theme='light'] .left {
-  border-right: 1px solid #e2e8f0 !important;
-  background: linear-gradient(180deg, #f8fafc 0%, #eef1f5 100%) !important;
-  box-shadow: 4px 0 14px rgba(0,0,0,0.06) !important;
+    border-right: 1px solid #e2e8f0 !important;
+    background: linear-gradient(180deg, #f8fafc 0%, #eef1f5 100%) !important;
+    box-shadow: 4px 0 14px rgba(0, 0, 0, 0.06) !important;
 }
 html[data-theme='light'] .sidebar-header,
 html[data-theme='light'] .sidebar-footer {
-  background: #f1f5f9 !important;
-  border-color: #e2e8f0 !important;
+    background: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
 }
 html[data-theme='light'] .sidebar-heading > div,
 html[data-theme='light'] .sidebar-heading i,
@@ -2354,7 +2354,7 @@ html[data-theme='light'] .route-card-main strong,
 html[data-theme='light'] .aircraft-card-info,
 html[data-theme='light'] .dataset-summary,
 html[data-theme='light'] .processing-title {
-  color: #1e293b !important;
+    color: #1e293b !important;
 }
 html[data-theme='light'] .sidebar-heading small,
 html[data-theme='light'] .card-title small,
@@ -2366,72 +2366,72 @@ html[data-theme='light'] .history-empty,
 html[data-theme='light'] .route-card-main span,
 html[data-theme='light'] .aircraft-history-card small,
 html[data-theme='light'] .footer-status span {
-  color: #64748b !important;
+    color: #64748b !important;
 }
 html[data-theme='light'] .sidebar-card,
 html[data-theme='light'] .summary-item,
 html[data-theme='light'] .aircraft-history-card,
 html[data-theme='light'] .history-route-card {
-  background: #ffffff !important;
-  border-color: #e2e8f0 !important;
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
 }
 html[data-theme='light'] .aircraft-history-card.active {
-  border-color: #2563eb !important;
+    border-color: #2563eb !important;
 }
 html[data-theme='light'] .sidebar-tabs button {
-  color: #64748b !important;
+    color: #64748b !important;
 }
 html[data-theme='light'] .sidebar-tabs button:hover {
-  color: #1e293b !important;
-  background: rgba(37,99,235,0.05) !important;
+    color: #1e293b !important;
+    background: rgba(37, 99, 235, 0.05) !important;
 }
 html[data-theme='light'] .sidebar-tabs button.active {
-  color: #2563eb !important;
-  border-bottom-color: #2563eb !important;
-  background: linear-gradient(180deg, transparent, rgba(37,99,235,0.08)) !important;
+    color: #2563eb !important;
+    border-bottom-color: #2563eb !important;
+    background: linear-gradient(180deg, transparent, rgba(37, 99, 235, 0.08)) !important;
 }
 html[data-theme='light'] .sidebar-tabs button em {
-  background: #2563eb !important;
+    background: #2563eb !important;
 }
 html[data-theme='light'] .upload-row {
-  border-color: #e2e8f0 !important;
+    border-color: #e2e8f0 !important;
 }
 html[data-theme='light'] .processing-panel {
-  background: #f8fafc !important;
-  border-color: #e2e8f0 !important;
-  color: #1e293b !important;
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #1e293b !important;
 }
 html[data-theme='light'] .result-overview > div {
-  background: linear-gradient(180deg, rgba(37,99,235,0.06), rgba(37,99,235,0.02)) !important;
-  border-color: #e2e8f0 !important;
+    background: linear-gradient(180deg, rgba(37, 99, 235, 0.06), rgba(37, 99, 235, 0.02)) !important;
+    border-color: #e2e8f0 !important;
 }
 html[data-theme='light'] .result-empty {
-  border-color: #e2e8f0 !important;
+    border-color: #e2e8f0 !important;
 }
 html[data-theme='light'] .history-empty {
-  border-color: #e2e8f0 !important;
+    border-color: #e2e8f0 !important;
 }
 html[data-theme='light'] .route-layer-switch {
-  background: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  color: #1e293b !important;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08) !important;
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #1e293b !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08) !important;
 }
 html[data-theme='light'] .sidebar-resizer span {
-  background: rgba(37,99,235,0.35) !important;
-  box-shadow: 0 0 6px rgba(37,99,235,0.25) !important;
+    background: rgba(37, 99, 235, 0.35) !important;
+    box-shadow: 0 0 6px rgba(37, 99, 235, 0.25) !important;
 }
 html[data-theme='light'] .sidebar-scroll {
-  scrollbar-color: rgba(37,99,235,0.25) rgba(0,0,0,0.05) !important;
+    scrollbar-color: rgba(37, 99, 235, 0.25) rgba(0, 0, 0, 0.05) !important;
 }
 html[data-theme='light'] .sidebar-scroll::-webkit-scrollbar-thumb {
-  background: rgba(37,99,235,0.25) !important;
+    background: rgba(37, 99, 235, 0.25) !important;
 }
 html[data-theme='light'] .history-capture-select label {
-  color: #475569 !important;
+    color: #475569 !important;
 }
 html[data-theme='light'] .route-card-index,
 html[data-theme='light'] .route-card-actions ::v-deep .el-button {
-  color: #2563eb !important;
+    color: #2563eb !important;
 }
 </style>

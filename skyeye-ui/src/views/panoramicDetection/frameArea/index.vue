@@ -218,7 +218,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 .se-content-right-body {
     width: 100%;
     height: 100%;
@@ -229,12 +228,12 @@ export default {
 }
 
 .se-data-table {
-  margin-top: 20px;
-  flex-grow: 1;
-  height: calc(100% - 100px);
+    margin-top: 20px;
+    flex-grow: 1;
+    height: calc(100% - 100px);
 }
 .se-filter-form .el-form-item {
-  margin: 0 30px 0 0;
+    margin: 0 30px 0 0;
 }
 
 .icon {
@@ -244,8 +243,8 @@ export default {
 }
 
 .right-content-body {
-  padding: 10px;
-  height: calc(100% - 60px);
+    padding: 10px;
+    height: calc(100% - 60px);
 }
 
 .el-input-group {
@@ -254,8 +253,6 @@ export default {
     border-collapse: separate;
     border-spacing: 0;
 }
-
-
 
 .el-icon-folder-opened {
     color: white;
@@ -270,10 +267,10 @@ export default {
     color: #ff9500;
 }
 .el-pagination {
-  bottom: 10px;
-  right: 30px;
-  margin-right: 0px;
-  float: right;
-  position: fixed;
+    bottom: 10px;
+    right: 30px;
+    margin-right: 0px;
+    float: right;
+    position: fixed;
 }
 </style>

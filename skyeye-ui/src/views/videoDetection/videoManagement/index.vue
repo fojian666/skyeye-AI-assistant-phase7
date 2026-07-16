@@ -7,11 +7,9 @@
             </div>
             <div class="left-content-body">
                 <div class="left-form">
-                    <el-form ref="form" :model="form" :rules="rules" label-position="left" label-width="90px"
-                             style="margin-top: 10px">
+                    <el-form ref="form" :model="form" :rules="rules" label-position="left" label-width="90px" style="margin-top: 10px">
                         <el-form-item prop="name" label="任务名称:">
-                            <el-input v-model="form.name" placeholder="请输入任务名称">
-                            </el-input>
+                            <el-input v-model="form.name" placeholder="请输入任务名称"> </el-input>
                         </el-form-item>
 
                         <el-form-item label="上传视频:" prop="inputPath">
@@ -30,23 +28,16 @@
                             </el-upload>
                         </el-form-item>
                         <el-form-item prop="frameInterval" label="抽帧间隔:">
-                            <el-input v-model="form.frameInterval" type="number"
-                                      placeholder="请输入间隔时长">
+                            <el-input v-model="form.frameInterval" type="number" placeholder="请输入间隔时长">
                                 <template slot="append">秒</template>
                             </el-input>
                         </el-form-item>
                         <el-form-item prop="shotTime" label="拍摄时间:">
-                            <el-date-picker
-                                v-model="form.shotTime"
-                                type="date"
-                                placeholder="选择日期">
-                            </el-date-picker>
+                            <el-date-picker v-model="form.shotTime" type="date" placeholder="选择日期"> </el-date-picker>
                         </el-form-item>
                         <el-form-item prop="selectedModel" label="模型场景:">
                             <el-select v-model="form.modelSceneList" placeholder="请选择" clearable multiple>
-                                <el-option v-for="item in modelSceneList" :key="item.id" :label="item.name"
-                                           :value="item.id">
-                                </el-option>
+                                <el-option v-for="item in modelSceneList" :key="item.id" :label="item.name" :value="item.id"> </el-option>
                             </el-select>
                         </el-form-item>
 
@@ -69,7 +60,7 @@
                     <!--数据筛选-->
                     <el-form :inline="true" size="medium" :model="filterInfo" ref="filterInfo">
                         <el-form-item>
-                            <el-input v-model="filterInfo.name" placeholder="请输入任务名称" class="custom-elinput-height"/>
+                            <el-input v-model="filterInfo.name" placeholder="请输入任务名称" class="custom-elinput-height" />
                         </el-form-item>
                         <el-form-item class="search-button">
                             <el-button type="primary" size="mini" @click="getVideoTaskList">查询</el-button>
@@ -87,14 +78,13 @@
                         v-for="(item, index) in videoTaskList"
                         :key="item.taskId || index"
                         @click="openVideoDialog(item)"
-                        style="cursor: pointer;"
-                    >
+                        style="cursor: pointer">
                         <!-- 视频封面/缩略图 -->
                         <div class="card-cover">
                             <!-- 修复2：给播放图标添加@click.stop，避免事件冒泡冲突 -->
                             <div class="play-icon" @click.stop></div>
                             <!-- 假封面图，可替换为实际视频封面 -->
-                            <img :src="item.coverUrl" alt="视频封面" class="cover-img">
+                            <img :src="item.coverUrl" alt="视频封面" class="cover-img" />
                             <!-- 任务状态标签 -->
                             <div class="status-tag" :class="getStatusColor(item.status)">
                                 {{ statusText(item.status) }}
@@ -126,19 +116,10 @@
 
                             <!-- 模型场景标签 -->
                             <div class="tag-group">
-                                <el-tag
-                                    v-for="(tag, idx) in item.modelSceneList.slice(0, 3)"
-                                    :key="idx"
-                                    size="small"
-                                    type="info"
-                                >
+                                <el-tag v-for="(tag, idx) in item.modelSceneList.slice(0, 3)" :key="idx" size="small" type="info">
                                     {{ tag.modelSceneName }}
                                 </el-tag>
-                                <el-tag
-                                    v-if="item.modelSceneList.length > 3"
-                                    size="small"
-                                    type="warning"
-                                >
+                                <el-tag v-if="item.modelSceneList.length > 3" size="small" type="warning">
                                     +{{ item.modelSceneList.length - 3 }}
                                 </el-tag>
                             </div>
@@ -176,28 +157,17 @@
 
         <!-- 视频播放弹窗 -->
         <!-- 修复3：移除draggable（旧版Element Plus不支持，会导致渲染异常），确保v-model绑定正确 -->
-        <el-dialog
-            :visible.sync="videoDialogVisible"
-            title="视频播放"
-            width="80%"
-        >
+        <el-dialog :visible.sync="videoDialogVisible" title="视频播放" width="80%">
             <div class="video-player-container">
                 <!-- 修复4：添加muted属性，解决浏览器自动播放限制（否则play()会报错） -->
-                <video
-                    ref="videoPlayer"
-                    :src="currentVideoUrl"
-                    controls
-                    autoplay
-                    muted
-                    class="video-player"
-                >
-                    您的浏览器不支持HTML5视频播放
-                </video>
+                <video ref="videoPlayer" :src="currentVideoUrl" controls autoplay muted class="video-player">您的浏览器不支持HTML5视频播放</video>
             </div>
             <div class="video-task-info" v-show="currentTask">
                 <h4>任务信息：{{ currentTask.name || '' }}</h4>
                 <div class="task-detail">
-                    <span>状态：<span :class="getStatusColor(currentTask.status)">{{ statusText(currentTask.status) }}</span></span>
+                    <span
+                        >状态：<span :class="getStatusColor(currentTask.status)">{{ statusText(currentTask.status) }}</span></span
+                    >
                     <span>抽帧间隔：{{ currentTask.frameInterval }}秒</span>
                     <span>检测线索：{{ currentTask.clueCount }}条</span>
                 </div>
@@ -210,15 +180,17 @@
 import {
     addVideoTaskApi,
     deleteVideoTaskApi,
-    getVideoTaskListApi,downloadReportApi,
-    getModelSceneListApi, getDownloadVideoClueFileApi
-} from "@/api/commonApi";
-import staticTable from "@/views/intelligent/interpretationTaskManagement/component/staticTable";
+    getVideoTaskListApi,
+    downloadReportApi,
+    getModelSceneListApi,
+    getDownloadVideoClueFileApi
+} from '@/api/commonApi';
+import staticTable from '@/views/intelligent/interpretationTaskManagement/component/staticTable';
 
 export default {
     name: 'videoManagement',
     components: {
-        staticTable,
+        staticTable
     },
     data() {
         return {
@@ -228,10 +200,10 @@ export default {
             fileList: [],
             form: {
                 frameInterval: '', //抽帧间隔
-                name: '',//项目名称
+                name: '', //项目名称
                 shotTime: '',
-                threshold: '50',//碎斑阈值
-                modelSceneList: [],  //表单中的模型类别
+                threshold: '50', //碎斑阈值
+                modelSceneList: [], //表单中的模型类别
                 fileId: ''
             },
             dataCount: 12, // 假数据总数
@@ -240,8 +212,8 @@ export default {
                 pageIndex: 1,
                 pageSize: 8 // 卡片布局默认每页6个
             }, //筛选参数
-            headers: {Authorization: 'Bearer ' + sessionStorage.getItem('token') || 'unknown'},
-            serverPaths: [],  //获取共享路径下额所有影像路径
+            headers: { Authorization: 'Bearer ' + sessionStorage.getItem('token') || 'unknown' },
+            serverPaths: [], //获取共享路径下额所有影像路径
             modelSceneList: [], //模型类别
             showTable: false,
             translationStatus: [],
@@ -251,10 +223,10 @@ export default {
             openDialog: false,
             loading: false,
             rules: {
-                name: [{required: true, message: '请输入任务名称', trigger: 'blur'}],
-                shotTime: [{required: true, message: '请选择拍摄时间', trigger: 'blur'}],
-                frameInterval: [{required: true, message: '请输入抽帧间隔', trigger: 'blur'}],
-                selectedModel: [{required: true, message: '请选择模型类型', trigger: 'blur'}],
+                name: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
+                shotTime: [{ required: true, message: '请选择拍摄时间', trigger: 'blur' }],
+                frameInterval: [{ required: true, message: '请输入抽帧间隔', trigger: 'blur' }],
+                selectedModel: [{ required: true, message: '请选择模型类型', trigger: 'blur' }]
             },
             // 视频播放弹窗相关（确认初始值正确）
             videoDialogVisible: false,
@@ -265,7 +237,7 @@ export default {
     computed: {
         fileUploadUrl() {
             return '/lais/site/inspection/video-interpretation-task/file-upload';
-        },
+        }
     },
     watch: {},
     created() {
@@ -281,10 +253,9 @@ export default {
         // 初始化假数据
         initFakeData() {
             // 模拟不同状态的任务数据
-
         },
         async download(row) {
-            const res = await getDownloadVideoClueFileApi(row.taskId)
+            const res = await getDownloadVideoClueFileApi(row.taskId);
             if (!res) {
                 this.$message.error('请先处理待判读线索！');
                 return;
@@ -309,7 +280,7 @@ export default {
         openVideoDialog(task) {
             this.videoDialogVisible = true; // 优先赋值，确保Dialog弹出
 
-            console.log(this.videoDialogVisible)
+            console.log(this.videoDialogVisible);
             console.log('点击卡片，触发openVideoDialog', task); // 调试日志
             this.currentTask = task;
             this.currentVideoUrl = task.videoUrl;
@@ -317,7 +288,7 @@ export default {
             this.$nextTick(() => {
                 const video = this.$refs.videoPlayer;
                 if (video) {
-                    video.play().catch(err => {
+                    video.play().catch((err) => {
                         console.log('视频自动播放失败（浏览器限制）：', err);
                         // 即使播放失败，也不影响Dialog显示
                     });
@@ -326,7 +297,7 @@ export default {
         },
         // 停止视频播放（弹窗关闭前）
         stopVideoPlay() {
-            console.log(11111)
+            console.log(11111);
             const video = this.$refs.videoPlayer;
             if (video) {
                 video.pause();
@@ -338,7 +309,7 @@ export default {
         },
         // 处理查看事件
         handleDataView(row) {
-            this.$router.push({path: `/video-detection/clue-view/${row.taskId}`})
+            this.$router.push({ path: `/video-detection/clue-view/${row.taskId}` });
         },
         // 重置模糊查询
         resetTaskList() {
@@ -380,8 +351,8 @@ export default {
             // 注释真实接口，使用假数据
             const resp = await getVideoTaskListApi(this.filterInfo);
             if (resp.code === 0) {
-              this.videoTaskList = resp.data;
-              this.dataCount = resp.total;
+                this.videoTaskList = resp.data;
+                this.dataCount = resp.total;
             }
         },
         handleRemoveFile(file, fileList) {
@@ -402,21 +373,32 @@ export default {
         },
         getStatusColor(status) {
             switch (status) {
-                case 0: return 'status-pending'; // 待检测
-                case 1: return 'status-processing'; // 进行中
-                case 2: return 'status-success'; // 已完成
-                case 3: return 'status-error'; // 报错
-                case 4: return 'status-stop'; // 已终止
-                default: return 'status-stop';
+                case 0:
+                    return 'status-pending'; // 待检测
+                case 1:
+                    return 'status-processing'; // 进行中
+                case 2:
+                    return 'status-success'; // 已完成
+                case 3:
+                    return 'status-error'; // 报错
+                case 4:
+                    return 'status-stop'; // 已终止
+                default:
+                    return 'status-stop';
             }
         },
         statusText(status) {
             switch (status) {
-                case 0: return '待检测';
-                case 1: return '进行中';
-                case 2: return '已完成';
-                case 3: return '报错';
-                default: return '已终止';
+                case 0:
+                    return '待检测';
+                case 1:
+                    return '进行中';
+                case 2:
+                    return '已完成';
+                case 3:
+                    return '报错';
+                default:
+                    return '已终止';
             }
         },
         //初始化表单
@@ -429,24 +411,24 @@ export default {
                 shotTime: '',
                 modelSceneList: [],
                 fileId: ''
-            }
+            };
             this.fileList = [];
         },
         //获取所有检测模型
         async getModelSceneList() {
             const params = {
-                "pageIndex": -1,
-                "pageSize": 10,
-                "name": ""
-            }
+                pageIndex: -1,
+                pageSize: 10,
+                name: ''
+            };
             // 模拟模型场景数据（替换真实接口）
             this.modelSceneList = [
-                {id: 1, name: '人员检测'},
-                {id: 2, name: '消防设施'},
-                {id: 3, name: '车辆违规'},
-                {id: 4, name: '设备异常'},
-                {id: 5, name: '人员闯入'},
-                {id: 6, name: '违章停车'}
+                { id: 1, name: '人员检测' },
+                { id: 2, name: '消防设施' },
+                { id: 3, name: '车辆违规' },
+                { id: 4, name: '设备异常' },
+                { id: 5, name: '人员闯入' },
+                { id: 6, name: '违章停车' }
             ];
 
             // 真实接口逻辑（保留）
@@ -456,7 +438,7 @@ export default {
             // } else {
             //   this.$message.error(res.msg)
             // }
-            this.loading = false
+            this.loading = false;
         },
         //开始检测
         async startDetection() {
@@ -470,15 +452,15 @@ export default {
 
             const paras = {
                 name: this.form.name,
-                videoType: "",
+                videoType: '',
                 modelSceneList: this.form.modelSceneList,
                 shotTime: this.form.shotTime,
                 frameInterval: this.form.frameInterval,
                 fileId: this.form.fileId
-            }
+            };
 
             // 模拟创建任务（替换真实接口）
-            this.$message.success(this.form.name + " 任务已创建成功！");
+            this.$message.success(this.form.name + ' 任务已创建成功！');
             // 新增假任务数据
             this.videoTaskList.unshift({
                 taskId: 'task_' + Date.now(),
@@ -488,9 +470,9 @@ export default {
                 shotTime: this.form.shotTime,
                 clueCount: 0,
                 effectiveClueCount: 0,
-                modelSceneList: this.form.modelSceneList.map(id => {
-                    const model = this.modelSceneList.find(item => item.id === id);
-                    return {id, modelSceneName: model ? model.name : '未知场景'};
+                modelSceneList: this.form.modelSceneList.map((id) => {
+                    const model = this.modelSceneList.find((item) => item.id === id);
+                    return { id, modelSceneName: model ? model.name : '未知场景' };
                 }),
                 coverUrl: `https://picsum.photos/400/220?random=${Math.random()}`,
                 videoUrl: 'https://cdn.pixabay.com/video/2021/07/04/119326-564756236_large.mp4'
@@ -514,50 +496,52 @@ export default {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
-            }).then(async () => {
-                let taskIds = [];
-                if (row && row.taskId) {
-                    // 单个删除
-                    taskIds = [row.taskId];
-                } else {
-                    // 批量删除
-                    taskIds = this.selectedTask;
-                }
+            })
+                .then(async () => {
+                    let taskIds = [];
+                    if (row && row.taskId) {
+                        // 单个删除
+                        taskIds = [row.taskId];
+                    } else {
+                        // 批量删除
+                        taskIds = this.selectedTask;
+                    }
 
-                if (taskIds.length === 0) {
-                    this.$message.warning('请选择要删除的任务！');
-                    return;
-                }
+                    if (taskIds.length === 0) {
+                        this.$message.warning('请选择要删除的任务！');
+                        return;
+                    }
 
-                // 模拟删除（替换真实接口）
-                this.videoTaskList = this.videoTaskList.filter(item => !taskIds.includes(item.taskId));
-                this.dataCount = this.videoTaskList.length;
-                this.$message.success("任务删除成功！");
-                this.selectedTask = [];
-                this.getVideoTaskList();
+                    // 模拟删除（替换真实接口）
+                    this.videoTaskList = this.videoTaskList.filter((item) => !taskIds.includes(item.taskId));
+                    this.dataCount = this.videoTaskList.length;
+                    this.$message.success('任务删除成功！');
+                    this.selectedTask = [];
+                    this.getVideoTaskList();
 
-                // 真实接口逻辑（保留）
-                // const res = await deleteVideoTaskApi(taskIds);
-                // if (res.code === 0) {
-                //   this.$message.success("任务删除成功！");
-                //   this.getVideoTaskList();
-                //   this.selectedTask = [];
-                // } else {
-                //   this.$message.error(res.msg);
-                // }
-            }).catch((error) => {
-                console.log(error);
-                this.$message({
-                    type: 'info',
-                    message: '已取消删除'
+                    // 真实接口逻辑（保留）
+                    // const res = await deleteVideoTaskApi(taskIds);
+                    // if (res.code === 0) {
+                    //   this.$message.success("任务删除成功！");
+                    //   this.getVideoTaskList();
+                    //   this.selectedTask = [];
+                    // } else {
+                    //   this.$message.error(res.msg);
+                    // }
+                })
+                .catch((error) => {
+                    console.log(error);
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
                 });
-            });
         },
         closeDialog() {
             this.openDialog = false;
-        },
-    },
-}
+        }
+    }
+};
 </script>
 
 <style lang="scss" scoped>
@@ -568,15 +552,11 @@ export default {
     display: flex;
 }
 
-
-
 .border {
     width: 1px;
     height: 100%;
     background-color: #ccc;
 }
-
-
 
 // 卡片布局核心样式
 .card-list {
@@ -788,14 +768,12 @@ export default {
 
 // 原有样式适配
 
-
 .right-content-body {
     padding: 10px 10px 10px 10px;
     height: calc(100% - 40px);
     display: flex;
     flex-direction: column;
 }
-
 
 .page {
     margin-top: auto;
@@ -816,7 +794,6 @@ export default {
     width: 95%;
     height: 80%;
 }
-
 
 ::v-deep .left-form .el-input {
     width: 200px;

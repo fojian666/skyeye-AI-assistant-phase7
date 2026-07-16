@@ -1,20 +1,8 @@
 <template>
     <div class="color-input-picker">
         <div class="color-preview" :style="{ backgroundColor: displayColor }"></div>
-        <a-input
-            class="color-input"
-            :value="inputValue"
-            placeholder="#FF0000 或 #F00"
-            @input="handleInput"
-            @blur="handleInputBlur"
-        />
-        <el-color-picker
-            :value="pickerValue"
-            :show-alpha="false"
-            popper-append-to-body
-            class="color-picker"
-            @change="handlePickerChange"
-        />
+        <a-input class="color-input" :value="inputValue" placeholder="#FF0000 或 #F00" @input="handleInput" @blur="handleInputBlur" />
+        <el-color-picker :value="pickerValue" :show-alpha="false" popper-append-to-body class="color-picker" @change="handlePickerChange" />
     </div>
 </template>
 
@@ -26,12 +14,12 @@ export default {
     props: {
         value: {
             type: String,
-            default: '#FF0000',
-        },
+            default: '#FF0000'
+        }
     },
     data() {
         return {
-            inputValue: this.value || '#FF0000',
+            inputValue: this.value || '#FF0000'
         };
     },
     computed: {
@@ -40,12 +28,12 @@ export default {
         },
         displayColor() {
             return this.pickerValue;
-        },
+        }
     },
     watch: {
         value(next) {
             this.inputValue = next || '';
-        },
+        }
     },
     methods: {
         emitColor(color) {
@@ -77,8 +65,8 @@ export default {
             const normalized = normalizeHexColor(color);
             this.inputValue = normalized;
             this.emitColor(normalized);
-        },
-    },
+        }
+    }
 };
 </script>
 

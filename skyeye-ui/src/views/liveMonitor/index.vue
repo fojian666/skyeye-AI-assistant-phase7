@@ -10,12 +10,8 @@
                     </span>
                 </div>
                 <div class="track-panel__row">航点：{{ trackPoints.length }}</div>
-                <div class="track-panel__row" v-if="latestTrackPoint">
-                    高度：{{ formatTrackValue(latestTrackPoint.height) }} m
-                </div>
-                <div class="track-panel__row" v-if="latestTrackPoint">
-                    风速：{{ formatTrackValue(latestTrackPoint.wind_speed) }} m/s
-                </div>
+                <div class="track-panel__row" v-if="latestTrackPoint">高度：{{ formatTrackValue(latestTrackPoint.height) }} m</div>
+                <div class="track-panel__row" v-if="latestTrackPoint">风速：{{ formatTrackValue(latestTrackPoint.wind_speed) }} m/s</div>
                 <el-button size="mini" type="text" class="track-panel__clear" @click="clearTrack">清空航线</el-button>
             </div>
         </div>
@@ -29,12 +25,7 @@
                         size="small"
                         class="video-panel__nest-select"
                         @change="handleNestChange">
-                        <el-option
-                            v-for="item in uavList"
-                            :key="item.id"
-                            :label="item.name"
-                            :value="item.id">
-                        </el-option>
+                        <el-option v-for="item in uavList" :key="item.id" :label="item.name" :value="item.id"> </el-option>
                     </el-select>
 
                     <div class="video-panel__actions">
@@ -59,8 +50,7 @@
                         :src="localVideoSrc"
                         playsinline
                         preload="auto"
-                        @ended="handleVideoEnded">
-                    </video>
+                        @ended="handleVideoEnded"></video>
                 </div>
             </div>
         </div>
@@ -166,9 +156,9 @@ export default {
             }
 
             const resolutions = [
-                1.40625, 0.703125, 0.3515625, 0.17578125, 0.087890625, 0.0439453125, 0.02197265625, 0.010986328125, 0.0054931640625,
-                0.00274658203125, 0.001373291015625, 0.0006866455078125, 0.00034332275390625, 0.000171661376953125, 0.0000858306884765625,
-                0.00004291534423828125, 0.000021457672119140625, 0.000010728836059570312, 0.000005364418029785156
+                1.40625, 0.703125, 0.3515625, 0.17578125, 0.087890625, 0.0439453125, 0.02197265625, 0.010986328125, 0.0054931640625, 0.00274658203125,
+                0.001373291015625, 0.0006866455078125, 0.00034332275390625, 0.000171661376953125, 0.0000858306884765625, 0.00004291534423828125,
+                0.000021457672119140625, 0.000010728836059570312, 0.000005364418029785156
             ];
             let myCrs = L.CRS.EPSG3857;
             if (this.projectCity !== 'nanjing' && L.Proj && L.Proj.CRS) {
@@ -350,9 +340,7 @@ export default {
                 dashArray: '10, 8'
             }).addTo(this.map);
 
-            this.routeDroneMarker = L.marker(nestLatLng, { icon: this.getDroneIcon() })
-                .bindPopup('点击拉流后开始飞行')
-                .addTo(this.map);
+            this.routeDroneMarker = L.marker(nestLatLng, { icon: this.getDroneIcon() }).bindPopup('点击拉流后开始飞行').addTo(this.map);
 
             this.flightPatchCenter = patchCenter;
         },
@@ -379,15 +367,8 @@ export default {
         startFlightMission(nestLatLng, patchCenter) {
             this.flyAlongRoute(nestLatLng, patchCenter, () => {
                 if (!this.routeDroneMarker) return;
-                const distance = calculateDistance(
-                    nestLatLng[0],
-                    nestLatLng[1],
-                    patchCenter[0],
-                    patchCenter[1]
-                );
-                this.routeDroneMarker.bindPopup(
-                    `<div>已到达图斑，停留 30s</div><div>航程：${distance.toFixed(0)} m</div>`
-                );
+                const distance = calculateDistance(nestLatLng[0], nestLatLng[1], patchCenter[0], patchCenter[1]);
+                this.routeDroneMarker.bindPopup(`<div>已到达图斑，停留 30s</div><div>航程：${distance.toFixed(0)} m</div>`);
                 this.routeWaitTimer = setTimeout(() => {
                     this.routeWaitTimer = null;
                     this.flyAlongRoute(patchCenter, nestLatLng, () => {
@@ -779,8 +760,7 @@ export default {
                 return;
             }
             const now = new Date();
-            const secondsSinceMidnight =
-                now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+            const secondsSinceMidnight = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
             this.playbackPosition = secondsSinceMidnight % duration;
         },
 
@@ -1037,7 +1017,7 @@ export default {
     font-size: 15px;
     line-height: 1.6;
 }
-::v-deep .leaflet-control-rotate-toggle{
-    display: none!important;
+::v-deep .leaflet-control-rotate-toggle {
+    display: none !important;
 }
 </style>

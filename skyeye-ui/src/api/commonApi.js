@@ -870,7 +870,6 @@ export const deleteUploadByIdApi = (data) => {
     });
 };
 
-
 /**
  * @description  获取已经上传的全景点位
  */
@@ -889,7 +888,6 @@ export const submitReviewApi = (data) => {
         data
     });
 };
-
 
 //删除任务
 export const batchDeleteTaskApi = (data) => {
@@ -1281,21 +1279,21 @@ export const getLogsInfoApi = (data) => {
 export const postInformationPush = (data) => {
     return request({
         url: `/api/panorama/information_push`,
-            method: 'post',
-            data
-        });
-    };
+        method: 'post',
+        data
+    });
+};
 
-    export const deleteTaskApi = (data) => {
-        return request({
-            url: `/api/panorama/polygon-task/del`,
-            method: 'post',
-            data
-        });
-    };
+export const deleteTaskApi = (data) => {
+    return request({
+        url: `/api/panorama/polygon-task/del`,
+        method: 'post',
+        data
+    });
+};
 
-    export const exportPolygon = (data) => {
-        return request({
+export const exportPolygon = (data) => {
+    return request({
         url: `/lais/site/inspection/polygon-task/export_polygon?id=${data}`,
         method: 'get',
         responseType: 'blob'
@@ -1459,8 +1457,6 @@ export const getRegionDataApi = () => {
     });
 };
 
-
-
 /**
  * @description 获取系统名字
  */
@@ -1537,29 +1533,28 @@ export const getSmallMapApi = () => {
 export const getBatchInfoByIdApi = (pk_id) => {
     return request({
         url: `/api/panorama/batch/get-batch-by-id?batch_id=${pk_id}`,
-        method: 'get',
+        method: 'get'
     });
 };
 //获取指定范围内的耕地
 export const getPointBufferGDApi = (data) => {
     return request({
         url: `/api/panorama/get_buffer_gd?panorama_image_id=${data}`,
-        method: 'get',
-
+        method: 'get'
     });
 };
 //获取服务列表
 export const getBufferLayerApi = () => {
     return request({
         url: `/api/resource/get-buffer-list`,
-        method: 'get',
+        method: 'get'
     });
 };
 //请求后台获取服务图斑
 export const getPointBufferLayerApi = (data) => {
     return request({
         url: `/api/panorama/get_buffer_gd?panorama_image_id=${data.panorama_image_id}&resource_id=${data.resource_id}`,
-        method: 'get',
+        method: 'get'
     });
 };
 
@@ -1641,7 +1636,7 @@ export const addMultivariateDataApi = (data) => {
 export const getNestDataApi = () => {
     return request({
         url: `/api/resource/nest/list`,
-        method: 'post',
+        method: 'post'
     });
 };
 /**
@@ -1691,7 +1686,7 @@ export const getTopViewDataApi = (data) => {
 export const getTimeAxisDataApi = () => {
     return request({
         url: `/api/resource/get_time_axis`,
-        method: 'get',
+        method: 'get'
     });
 };
 
@@ -1707,7 +1702,7 @@ export const getInterpretationResultByApi = (data) => {
 export const getStaticInfoApi = () => {
     return request({
         url: `/api/interpretation/interpretation-task-result/get_stat_info`,
-        method: 'get',
+        method: 'get'
     });
 };
 
@@ -1715,7 +1710,7 @@ export const getStaticInfoApi = () => {
 export const getDetailResultApi = (id) => {
     return request({
         url: `/api/interpretation/interpretation-task-result/get_detail_result/${id}`,
-        method: 'get',
+        method: 'get'
     });
 };
 
@@ -1723,7 +1718,7 @@ export const getDetailResultApi = (id) => {
 export const getModelListApi = () => {
     return request({
         url: `/lais/site/inspection/interpretation_task/get_models`,
-        method: 'get',
+        method: 'get'
     });
 };
 
@@ -1731,7 +1726,7 @@ export const getModelListApi = () => {
 export const getServerPathApi = () => {
     return request({
         url: `/lais/site/inspection/interpretation_task/get_server_paths`,
-        method: 'get',
+        method: 'get'
     });
 };
 
@@ -1739,7 +1734,7 @@ export const getServerPathApi = () => {
 export const getProcessStatusApi = (id) => {
     return request({
         url: `/lais/site/inspection/interpretation_task/get_process_status/${id}`,
-        method: 'get',
+        method: 'get'
     });
 };
 
@@ -1756,14 +1751,14 @@ export const addInterpretationTaskApi = (data) => {
 export const getRedisCountApi = () => {
     return request({
         url: `/lais/site/inspection/interpretation_task/get_redis_count`,
-        method: 'get',
+        method: 'get'
     });
 };
 //获取gpu信息
 export const getGpuFreeMemoryApi = () => {
     return request({
         url: `/lais/site/inspection/interpretation_task/get_gpu_free_memory`,
-        method: 'get',
+        method: 'get'
     });
 };
 //数据验证
@@ -1779,7 +1774,7 @@ export const dataVerifyApi = (data) => {
 export const batchDeleteInterpretationTaskApi = (data) => {
     return request({
         url: `/lais/site/inspection/interpretation_task/delete_task?ids=${data}`,
-        method: 'get',
+        method: 'get'
     });
 };
 
@@ -1796,7 +1791,7 @@ export const getTableDataApi = (data) => {
 export const taskStopApi = (data) => {
     return request({
         url: `/lais/site/inspection/interpretation_task/task_stop/${data}`,
-        method: 'get',
+        method: 'get'
     });
 };
 //下载文件
@@ -1892,7 +1887,7 @@ export const deleteRegionApi = (data) => {
 export const getParentRegionApi = (data) => {
     return request({
         url: `/api/system/region/parent?region_level=${data}`,
-        method: 'get',
+        method: 'get'
     });
 };
 //新增标注

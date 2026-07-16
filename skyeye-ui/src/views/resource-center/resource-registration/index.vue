@@ -17,16 +17,11 @@
                 <div class="form-box-content">
                     <el-form ref="ruleForm" :model="form" :rules="rules" label-width="120px">
                         <el-form-item label="服务名称" prop="name" class="spacing">
-                            <el-input
-                                v-model="form.name"
-                                placeholder='请输入服务名称，如"南京市_0.3m_2022年"' />
+                            <el-input v-model="form.name" placeholder='请输入服务名称，如"南京市_0.3m_2022年"' />
                         </el-form-item>
 
                         <el-form-item v-if="activeKey === '影像服务'" label="影像切片服务" prop="restUrl">
-                            <el-input
-                                v-model.trim="form.restUrl"
-                                placeholder="请输入 REST 服务地址"
-                                @change="onRestUrlChange" />
+                            <el-input v-model.trim="form.restUrl" placeholder="请输入 REST 服务地址" @change="onRestUrlChange" />
                         </el-form-item>
                         <el-form-item label="影像服务类别" prop="gisServiceType">
                             <el-select
@@ -34,25 +29,15 @@
                                 placeholder="---请选择影像服务类别---"
                                 popper-class="rc-light-popper"
                                 style="width: 100%">
-                                <el-option
-                                    v-for="item in serverTypeList"
-                                    :key="item.value"
-                                    :label="item.label"
-                                    :value="item.value" />
+                                <el-option v-for="item in serverTypeList" :key="item.value" :label="item.label" :value="item.value" />
                             </el-select>
                         </el-form-item>
                         <el-form-item v-if="activeKey === '业务栅格数据服务'" label="业务切片服务" prop="restUrl">
-                            <el-input
-                                v-model.trim="form.restUrl"
-                                placeholder="请输入 REST 服务地址"
-                                @change="onRestUrlChange" />
+                            <el-input v-model.trim="form.restUrl" placeholder="请输入 REST 服务地址" @change="onRestUrlChange" />
                         </el-form-item>
 
                         <el-form-item v-if="activeKey === '业务矢量数据服务'" label="成果要素服务" prop="dataUrl">
-                            <el-input
-                                v-model.trim="form.dataUrl"
-                                placeholder="请输入矢量服务地址"
-                                @change="changeHandler" />
+                            <el-input v-model.trim="form.dataUrl" placeholder="请输入矢量服务地址" @change="changeHandler" />
                         </el-form-item>
                         <el-form-item label="数据类型" class="spacing" prop="service_type">
                             <el-select
@@ -60,11 +45,7 @@
                                 placeholder="---请选择数据类型---"
                                 popper-class="rc-light-popper"
                                 style="width: 100%">
-                                <el-option
-                                    v-for="item in serviceType"
-                                    :key="item.id"
-                                    :label="item.value"
-                                    :value="item.value" />
+                                <el-option v-for="item in serviceType" :key="item.id" :label="item.value" :value="item.value" />
                             </el-select>
                         </el-form-item>
                         <el-form-item
@@ -79,11 +60,7 @@
                                 style="width: 100%"
                                 @change="selectDatasource"
                                 @focus="focusDatasource">
-                                <el-option
-                                    v-for="item in datasourceNames"
-                                    :key="item.id"
-                                    :label="item.value"
-                                    :value="item.value" />
+                                <el-option v-for="item in datasourceNames" :key="item.id" :label="item.value" :value="item.value" />
                             </el-select>
                         </el-form-item>
 
@@ -98,11 +75,7 @@
                                 popper-class="rc-light-popper"
                                 style="width: 100%"
                                 @focus="focusDatasetNames">
-                                <el-option
-                                    v-for="item in datasetNames"
-                                    :key="item.id"
-                                    :label="item.value"
-                                    :value="item.value" />
+                                <el-option v-for="item in datasetNames" :key="item.id" :label="item.value" :value="item.value" />
                             </el-select>
                         </el-form-item>
 
@@ -111,16 +84,8 @@
                             label="服务主题"
                             class="spacing"
                             prop="data_type">
-                            <el-select
-                                v-model="form.data_type"
-                                placeholder="请选择数据类别"
-                                popper-class="rc-light-popper"
-                                style="width: 100%">
-                                <el-option
-                                    v-for="item in options"
-                                    :key="item.value"
-                                    :label="item.label"
-                                    :value="item.value" />
+                            <el-select v-model="form.data_type" placeholder="请选择数据类别" popper-class="rc-light-popper" style="width: 100%">
+                                <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
                             </el-select>
                         </el-form-item>
 
@@ -131,12 +96,7 @@
 
                             <el-form-item label="线条粗细" class="spacing" prop="polygonWeight">
                                 <div class="width-input-row">
-                                    <el-input-number
-                                        v-model="form.polygonWeight"
-                                        :min="1"
-                                        :max="20"
-                                        :precision="0"
-                                        style="width: 120px" />
+                                    <el-input-number v-model="form.polygonWeight" :min="1" :max="20" :precision="0" style="width: 120px" />
                                     <span class="unit-suffix">px</span>
                                 </div>
                             </el-form-item>
@@ -206,25 +166,25 @@
  * @Description: 资源注册
  */
 
-import { postResourceApi,getRegionInfoListApi } from '@/api/commonApi';
-import axios from "axios";
+import { postResourceApi, getRegionInfoListApi } from '@/api/commonApi';
+import axios from 'axios';
 import ColorInputPicker from '@/components/ColorInputPicker/index.vue';
 import { isValidHexColor, normalizeHexColor } from '@/utils/colorHex';
 
 const VECTOR_STYLE_DEFAULTS = {
     polygonColor: '#FF0000',
     polygonWeight: 1,
-    polygonOpacity: 0,
+    polygonOpacity: 0
 };
 
 export default {
     name: 'ResourceRegistration',
     components: {
-        ColorInputPicker,
+        ColorInputPicker
     },
     data() {
         const validRestUrl = (rule, value, callback) => {
-          return callback()
+            return callback();
         };
         const validDataUrl = (rule, value, callback) => {
             if (value.indexOf('iserver') !== -1 || value.indexOf('arcgis') !== -1 || value.indexOf('geoserver') !== -1) {
@@ -299,7 +259,7 @@ export default {
             callback();
         };
         return {
-            geoserverBaseUrl:window.config.geoserverBaseUrl,
+            geoserverBaseUrl: window.config.geoserverBaseUrl,
             remarkLabel: '备\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0注',
             options: [
                 { value: '网格服务', label: '网格服务' },
@@ -335,12 +295,12 @@ export default {
                 otherText: '',
                 data_type: undefined,
                 orderIndex: undefined,
-                isShow:0,
-                isShowOnPanoramaImage:0,
-                gisServiceType:null,
+                isShow: 0,
+                isShowOnPanoramaImage: 0,
+                gisServiceType: null,
                 polygonColor: VECTOR_STYLE_DEFAULTS.polygonColor,
                 polygonWeight: VECTOR_STYLE_DEFAULTS.polygonWeight,
-                polygonOpacity: VECTOR_STYLE_DEFAULTS.polygonOpacity,
+                polygonOpacity: VECTOR_STYLE_DEFAULTS.polygonOpacity
             },
             rules: {
                 name: [
@@ -371,9 +331,7 @@ export default {
                         trigger: 'blur'
                     }
                 ],
-                datasets_name: [
-                    { required: true, message: '请选择数据集！', trigger: 'change' }
-                ],
+                datasets_name: [{ required: true, message: '请选择数据集！', trigger: 'change' }],
                 datasource_name: [{ required: true, message: '请选择数据集！', trigger: 'change' }],
                 append_time: [
                     {
@@ -424,17 +382,17 @@ export default {
                 ],
                 polygonColor: [
                     { validator: validPolygonColor, trigger: 'blur' },
-                    { validator: validPolygonColor, trigger: 'change' },
+                    { validator: validPolygonColor, trigger: 'change' }
                 ],
                 polygonWeight: [
                     { validator: requireVectorStyle('请输入线条粗细！'), trigger: 'blur' },
                     { validator: validpolygonWeight, trigger: 'blur' },
-                    { validator: validpolygonWeight, trigger: 'change' },
+                    { validator: validpolygonWeight, trigger: 'change' }
                 ],
                 polygonOpacity: [
                     { validator: requireVectorStyle('请设置图层透明度！'), trigger: 'change' },
-                    { validator: validPolygonOpacity, trigger: 'change' },
-                ],
+                    { validator: validPolygonOpacity, trigger: 'change' }
+                ]
             },
             filterCountyData: [],
             countyList: [],
@@ -464,11 +422,10 @@ export default {
                 { id: 2, value: '资源调查数据' },
                 { id: 3, value: '低空业务数据' }
             ],
-            datasetNames: [],
+            datasetNames: []
         };
     },
     methods: {
-
         //获取区域的级联数据
         async getRegionOptions() {
             const res = await getRegionInfoListApi();
@@ -538,7 +495,7 @@ export default {
                 orderIndex: Number(this.form.orderIndex),
                 isShow: this.form.isShow,
                 isShowOnPanoramaImage: this.form.isShowOnPanoramaImage,
-                gisServiceType: this.form.gisServiceType,
+                gisServiceType: this.form.gisServiceType
             };
             if (this.activeKey === '业务矢量数据服务') {
                 params.polygonColor = normalizeHexColor(this.form.polygonColor);
@@ -594,9 +551,9 @@ export default {
         selectDatasource(value) {
             this.datasetNames = [];
             if (this.form.gisServiceType === '1') {
-                this.axios.get(`${this.form.dataUrl}/datasources/${value}/datasets.json`, {withCredentials: false}).then((res) => {
+                this.axios.get(`${this.form.dataUrl}/datasources/${value}/datasets.json`, { withCredentials: false }).then((res) => {
                     res.data.datasetNames.forEach((item, i) => {
-                        this.datasetNames.push({value: item, id: i});
+                        this.datasetNames.push({ value: item, id: i });
                     });
                 });
             } else if (this.isGeoserverService()) {
@@ -609,28 +566,25 @@ export default {
             this.datasourceNames = [];
             try {
                 // 调用 Geoserver REST API 获取工作空间
-                const response = await axios.get(
-                    `${this.geoserverBaseUrl}/rest/workspaces.json`,
-                    {
-                        // 如果 Geoserver 配置了认证，需要添加用户名密码
-                        auth: {
-                            username: 'admin', // 默认用户名
-                            password: 'geoserver' // 默认密码（实际项目中需修改）
-                        },
-                      // 关键：允许携带跨域认证信息（与 GeoServer 的 cors.support.credentials 对应）
-                      withCredentials: true,
-                      // 请求头配置（可选，确保与 GeoServer 允许的 headers 一致）
-                      headers: {
+                const response = await axios.get(`${this.geoserverBaseUrl}/rest/workspaces.json`, {
+                    // 如果 Geoserver 配置了认证，需要添加用户名密码
+                    auth: {
+                        username: 'admin', // 默认用户名
+                        password: 'geoserver' // 默认密码（实际项目中需修改）
+                    },
+                    // 关键：允许携带跨域认证信息（与 GeoServer 的 cors.support.credentials 对应）
+                    withCredentials: true,
+                    // 请求头配置（可选，确保与 GeoServer 允许的 headers 一致）
+                    headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                      }
+                        Accept: 'application/json'
                     }
-                );
+                });
 
                 // 解析响应数据（Geoserver 返回格式：{ workspaces: { workspace: [...] } }）
                 if (response.data.workspaces && response.data.workspaces.workspace) {
                     response.data.workspaces.workspace.forEach((item, i) => {
-                        this.datasourceNames.push({value: item.name, id: item.name});
+                        this.datasourceNames.push({ value: item.name, id: item.name });
                     });
                 } else {
                     this.datasourceNames = [];
@@ -657,20 +611,17 @@ export default {
             this.datasetNames = [];
             try {
                 // 调用 Geoserver REST API 获取指定工作空间下的图层
-                const response = await axios.get(
-                    `${this.geoserverBaseUrl}/rest/workspaces/${this.form.datasource_name}/layers.json`,
-                    {
-                        auth: {
-                            username: 'admin',
-                            password: 'geoserver'
-                        }
+                const response = await axios.get(`${this.geoserverBaseUrl}/rest/workspaces/${this.form.datasource_name}/layers.json`, {
+                    auth: {
+                        username: 'admin',
+                        password: 'geoserver'
                     }
-                );
+                });
 
                 // 解析响应数据（Geoserver 返回格式：{ layers: { layer: [...] } }）
                 if (response.data.layers && response.data.layers.layer) {
                     response.data.layers.layer.forEach((item, i) => {
-                        this.datasetNames.push({value: item.name, id: item.name});
+                        this.datasetNames.push({ value: item.name, id: item.name });
                     });
                 } else {
                     this.datasetNames = [];
@@ -810,5 +761,4 @@ h4 {
     width: 100%;
     background-color: #fff;
 }
-
 </style>

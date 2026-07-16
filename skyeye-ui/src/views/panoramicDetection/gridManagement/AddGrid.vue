@@ -77,7 +77,7 @@
 </template>
 
 <script>
-import { uploadGridData,getRegionInfoListApi } from '@/api/commonApi';
+import { uploadGridData, getRegionInfoListApi } from '@/api/commonApi';
 export default {
     name: 'GridAddDialog',
     data() {
@@ -86,7 +86,7 @@ export default {
             pointSampleUrl: window.config.pointSampleUrl,
             formRules: {
                 gridFile: [{ required: true, message: '请上传网格数据', trigger: ['blur', 'change'] }],
-              panoramicPointFile: [{ required: true, message: '请上传全景点数据', trigger: ['blur', 'change'] }],
+                panoramicPointFile: [{ required: true, message: '请上传全景点数据', trigger: ['blur', 'change'] }],
                 county: [{ required: true, message: '请选择行政区', trigger: ['blur', 'change'] }]
             },
             upProgress: 0, //上传进度
@@ -217,9 +217,6 @@ export default {
     justify-content: center;
     margin-top: 10px;
 }
-
-
-
 
 ::v-deep .el-select .el-input__inner {
     background: rgba(255, 255, 255, 0.1);

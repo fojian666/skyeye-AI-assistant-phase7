@@ -12,12 +12,11 @@
                     class="vcard"
                     :class="getCardStatusClass(item)"
                     :style="borderStyle(index)"
-                    @click="handleCardClick(index, item)"
-                >
+                    @click="handleCardClick(index, item)">
                     <span class="vcard-status" :class="getCardStatusClass(item)">
                         {{ getFlightStatusText(item.status) }}
                     </span>
-                    <div class="card-title">{{ item.polygonType}}{{ item.id }}</div>
+                    <div class="card-title">{{ item.polygonType }}{{ item.id }}</div>
                     <div class="card-divider"></div>
                     <div class="card-info">
                         <span>经度: {{ item.longitude }}</span>
@@ -63,8 +62,7 @@
                         :polygon-only-mode="true"
                         :map-view-mode="mapDisplayMode"
                         :site-image-path="siteImagePath"
-                        @clickMarker="handleMapMarkerClick"
-                    />
+                        @clickMarker="handleMapMarkerClick" />
                 </div>
                 <div class="panel-container">
                     <plot-top-view-panel
@@ -78,8 +76,7 @@
                         @plot-polygon-ready="handlePlotPolygonReady"
                         @panorama-yaw-change="handlePanoramaYawChange"
                         @detail-extra="handleDetailExtra"
-                        @back="handleClueReBack('-1')"
-                    />
+                        @back="handleClueReBack('-1')" />
                 </div>
             </div>
         </div>
@@ -90,22 +87,15 @@
 import PlotTopViewPanel from '@/views/taskManagementModule/verifyClue/components/PlotTopViewPanel.vue';
 import smallMap from '@/views/taskManagementModule/components/smallMap/index.vue';
 import {
-  TASK_MGMT_USE_MOCK,
-  getSupervisionProjectListApi,
-  buildSupervisionProjectListParams,
-  getSupervisionPolygonListApi,
-  buildSupervisionPolygonListParams,
-  TASK_TYPE_DATA_TYPE_MAP,
+    TASK_MGMT_USE_MOCK,
+    getSupervisionProjectListApi,
+    buildSupervisionProjectListParams,
+    getSupervisionPolygonListApi,
+    buildSupervisionPolygonListParams,
+    TASK_TYPE_DATA_TYPE_MAP
 } from '@/api/taskMgmtApi';
-import {
-  mockGetSupervisionProjectListApi,
-  mockGetSupervisionPolygonListApi,
-} from '@/views/taskManagementModule/mock/taskApi';
-import {
-  adaptProjectDetail,
-  adaptPolygonDetail,
-  adaptPolygonList,
-} from '@/views/taskManagementModule/utils/projectListAdapter';
+import { mockGetSupervisionProjectListApi, mockGetSupervisionPolygonListApi } from '@/views/taskManagementModule/mock/taskApi';
+import { adaptProjectDetail, adaptPolygonDetail, adaptPolygonList } from '@/views/taskManagementModule/utils/projectListAdapter';
 
 export default {
     name: 'TaskMgmtVerifyDetail',
@@ -113,8 +103,8 @@ export default {
     props: {
         taskId: {
             type: String,
-            required: true,
-        },
+            required: true
+        }
     },
     data() {
         return {
@@ -128,7 +118,7 @@ export default {
             mapTaskList: [],
             total_todo_count: 0,
             showSmallMap: false,
-            taskType:null,
+            taskType: null,
             currentYaw: 0,
             noDetectionAreaList: [],
             routes: [],
@@ -138,17 +128,17 @@ export default {
             listPage: {
                 page: 1,
                 pageSize: 5,
-                total: 0,
+                total: 0
             },
             listLoading: false,
             showPolygonList: false,
-            siteImagePath: '',
+            siteImagePath: ''
         };
     },
     computed: {
         taskNumber() {
             return this.taskId;
-        },
+        }
     },
     methods: {
         normalizeMapTask(item) {
@@ -156,7 +146,7 @@ export default {
                 ...item,
                 latitude: item.latitude != null ? item.latitude : item.lat,
                 longitude: item.longitude != null ? item.longitude : item.lon,
-                height: item.height != null ? item.height : 100,
+                height: item.height != null ? item.height : 100
             };
         },
         toggle_list(flag) {
@@ -175,22 +165,19 @@ export default {
             this.taskType = this.$route.query.taskType || 'temp_land_restore';
             const params = buildSupervisionProjectListParams({
                 id: this.taskNumber,
-                taskType:this.taskType,
+                taskType: this.taskType,
                 pageIndex: 1,
-                pageSize: 1,
+                pageSize: 1
             });
-            const fetchApi = TASK_MGMT_USE_MOCK
-                ? mockGetSupervisionProjectListApi
-                : getSupervisionProjectListApi;
+            const fetchApi = TASK_MGMT_USE_MOCK ? mockGetSupervisionProjectListApi : getSupervisionProjectListApi;
             try {
                 const res = await fetchApi(params);
                 if (res.code === 0 && res.data) {
                     const { routes } = adaptProjectDetail(res.data, this.taskNumber);
-                    const detail = Array.isArray(res.data) ? (res.data[0] || {}) : res.data;
+                    const detail = Array.isArray(res.data) ? res.data[0] || {} : res.data;
                     this.routes = routes;
-                    this.total_todo_count = detail.todo_count != null
-                        ? detail.todo_count
-                        : (detail.count != null ? detail.count : (res.total != null ? res.total : 0));
+                    this.total_todo_count =
+                        detail.todo_count != null ? detail.todo_count : detail.count != null ? detail.count : res.total != null ? res.total : 0;
                     if (this.listPage.total === 0 && res.total != null) {
                         this.listPage.total = res.total;
                     }
@@ -209,11 +196,9 @@ export default {
             const params = buildSupervisionPolygonListParams({
                 pageIndex: this.listPage.page,
                 pageSize: this.listPage.pageSize,
-                supervisionProjectId: this.taskNumber,
+                supervisionProjectId: this.taskNumber
             });
-            const fetchApi = TASK_MGMT_USE_MOCK
-                ? mockGetSupervisionPolygonListApi
-                : getSupervisionPolygonListApi;
+            const fetchApi = TASK_MGMT_USE_MOCK ? mockGetSupervisionPolygonListApi : getSupervisionPolygonListApi;
             this.listLoading = true;
             try {
                 const res = await fetchApi({ ...params, dataType });
@@ -292,7 +277,7 @@ export default {
             return {
                 ...plotTask,
                 plotLatitude: plotLat,
-                plotLongitude: plotLon,
+                plotLongitude: plotLon
             };
         },
         syncMapPlotView(expectedPlotId) {
@@ -328,7 +313,7 @@ export default {
                 pageSize: 1,
                 id: item.id,
                 supervisionProjectId: item.supervisionProjectId || this.taskNumber,
-                polygonType: item.polygonType,
+                polygonType: item.polygonType
             });
             try {
                 const res = await getSupervisionPolygonListApi(params);
@@ -359,7 +344,7 @@ export default {
         },
         handleDetailExtra(payload) {
             const imagePath = payload && payload.imagePath != null ? payload.imagePath : '';
-            if(this.taskType === 'mountain_water') {
+            if (this.taskType === 'mountain_water') {
                 this.siteImagePath = imagePath;
             }
         },
@@ -394,7 +379,7 @@ export default {
                 ...task,
                 polygon,
                 id: plotTask.id,
-                polygonType: plotTask.polygonType,
+                polygonType: plotTask.polygonType
             };
             const lat = mapTask.latitude != null ? mapTask.latitude : mapTask.lat;
             const lon = mapTask.longitude != null ? mapTask.longitude : mapTask.lon;
@@ -416,7 +401,7 @@ export default {
 
             this.currentTask = {
                 ...mapTask,
-                ...this.buildPlotMapTask(plotTask),
+                ...this.buildPlotMapTask(plotTask)
             };
 
             if (this.mapDisplayMode !== 'panorama') return;
@@ -441,9 +426,7 @@ export default {
             }
         },
         handleMapMarkerClick(task) {
-            const index = this.taskList.findIndex(
-                (item) => item.id === task.id || item.imageId === task.imageId || item.pointId === task.pointId
-            );
+            const index = this.taskList.findIndex((item) => item.id === task.id || item.imageId === task.imageId || item.pointId === task.pointId);
             if (index !== -1) {
                 this.handleCardClick(index, this.taskList[index]);
             }
@@ -459,7 +442,7 @@ export default {
         },
         borderStyle(index) {
             return {
-                border: this.activeIndex === index ? '2px solid #11A8ED' : '1px solid #0A579E',
+                border: this.activeIndex === index ? '2px solid #11A8ED' : '1px solid #0A579E'
             };
         },
         normalizeFlightStatus(status) {
@@ -470,10 +453,8 @@ export default {
             return this.normalizeFlightStatus(status) === 1 ? '数据已飞' : '数据未飞';
         },
         getCardStatusClass(item) {
-            return this.normalizeFlightStatus(item && item.status) === 1
-                ? 'vcard--flown'
-                : 'vcard--pending';
-        },
+            return this.normalizeFlightStatus(item && item.status) === 1 ? 'vcard--flown' : 'vcard--pending';
+        }
     },
     watch: {
         taskId() {
@@ -492,7 +473,7 @@ export default {
                     smallMapRef.map.invalidateSize();
                 }
             });
-        },
+        }
     },
     mounted() {
         const username = localStorage.getItem('username');
@@ -513,7 +494,7 @@ export default {
                 }
             }
         });
-    },
+    }
 };
 </script>
 
@@ -578,7 +559,7 @@ export default {
 .rzhixian {
     flex: 0 0 1px;
     height: 100%;
-    background-color: #E4E7ED;
+    background-color: #e4e7ed;
 }
 
 .vtitle {
@@ -622,7 +603,7 @@ export default {
 
 .vcard {
     position: relative;
-    border: 1px solid #0A579E;
+    border: 1px solid #0a579e;
     margin-bottom: 8px;
     cursor: pointer;
     background-color: rgba(10, 87, 158, 0.12);
@@ -707,8 +688,15 @@ export default {
 }
 
 @keyframes status-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.55; transform: scale(0.85); }
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.55;
+        transform: scale(0.85);
+    }
 }
 
 .list-empty {
@@ -755,14 +743,14 @@ export default {
 .card-divider {
     height: 1px;
     width: 100%;
-    background-color: #0A579E;
+    background-color: #0a579e;
 }
 
 .card-info {
     font-size: 12px;
     display: flex;
     flex-direction: column;
-    padding: 6px 10px ;
+    padding: 6px 10px;
     color: #ccc;
 }
 
@@ -786,7 +774,7 @@ export default {
 .fangkuai {
     width: 30px;
     height: 30px;
-    background-color: #2DB6F4;
+    background-color: #2db6f4;
     margin-top: 8px;
     display: flex;
     justify-content: center;
